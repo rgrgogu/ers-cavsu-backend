@@ -26,7 +26,7 @@ const obj = new Schema({
     role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
     status: { type: String, required: true, index: true, default: 'For Review', enum: ['For Review', 'Partially Verified', 'Fully Verified', 'Denied'] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
-    profile: { type: Schema.Types.ObjectId, ref: 'profile' },
+    profile: { type: Schema.Types.ObjectId, ref: 'profile', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
