@@ -9,12 +9,12 @@ const CheckUser = async (result, password, res) => {
         throw new Error(`Wrong password.`)
     }
 
-    if (["Denied", "For Review"].includes(result[0].acc_status) || result[0].isArchived) {
-        console.log(["Denied", "For Review"].includes(result[0].acc_status))
-        console.log(!result[0].isArchived)
-        console.log(["Denied", "For Review"].includes(result[0].acc_status) || !result[0].isArchived)
-        throw new Error(`Your account is not eligible for the system. Contact the administrator.`)
-    }
+    // if (["Denied", "For Review"].includes(result[0].acc_status) || result[0].isArchived) {
+    //     console.log(["Denied", "For Review"].includes(result[0].acc_status))
+    //     console.log(!result[0].isArchived)
+    //     console.log(["Denied", "For Review"].includes(result[0].acc_status) || !result[0].isArchived)
+    //     throw new Error(`Your account is not eligible for the system. Contact the administrator.`)
+    // }
 
     return true;
 }

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require("dotenv");
 const cors = require("cors");
+const cookieparser = require('cookie-parser');
 const express = require("express");
 const ConnectDB = require("./global/config/DB");
 const SocketIO = require("./global/config/SocketIO")
@@ -14,6 +15,7 @@ const server = SocketIO(app)
 
 // Middleware
 app.use(express.json());
+app.use(cookieparser());
 app.use(cors({ origin: "*", credentials: true, optionSuccessStatus: 200 }));
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
