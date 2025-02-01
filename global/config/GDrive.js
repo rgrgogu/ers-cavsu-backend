@@ -7,7 +7,7 @@ const jwtClient = new google.auth.JWT(
     process.env.PKEY_CLIENT_EMAIL,
     null,
     process.env.PKEY_PRIVATE_KEY,
-    process.env.PKEY_SCOPES
+    [process.env.PKEY_SCOPES, process.env.PKEY_SCOPES_1]
 );
 
 jwtClient.authorize(function (err, tokens) {

@@ -25,6 +25,18 @@ const obj = new Schema({
 }, {
     virtuals: {
         id: { get() { return this._id; } },
+        fullName: {
+            get() {
+                const trimmed = `${this.name.middlename} ${this.name.lastname} ${this.name.extension}`;
+                return `${this.name.firstname} ${trimmed.trim()}`.toUpperCase();
+            }
+        },
+        fullNameInitial: {
+            get() {
+                const trimmed = `${this.name.middlename === '' ? '' : this.name.middlename[0] + '.'} ${this.name.lastname} ${this.name.extension}`;
+                return `${this.name.firstname} ${trimmed.trim()}`.toUpperCase();
+            }
+        },
     },
     toJSON: { virtuals: true },
     toObject: { virtuals: true },

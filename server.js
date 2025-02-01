@@ -7,6 +7,7 @@ const ConnectDB = require("./global/config/DB");
 const SocketIO = require("./global/config/SocketIO")
 
 const account_login = require('./src/applicant/account_login/account_login.route');
+const profile = require('./src/applicant/profile/profile.route');
 
 dotenv.config();
 ConnectDB();
@@ -30,6 +31,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use("/api/applicant/auth", account_login);
+app.use("/api/applicant/profile", profile);
 
 app.get("/", (req, res) => {
     res.status(200).json({
