@@ -45,16 +45,7 @@ const obj = new Schema({
 
 // Middleware to generate user_id before saving
 obj.pre('save', async function (next) {
-    if (!this.user_id && this.role === 'Applicant') {
-        const User = mongoose.model('User', obj);
-        const count = await User.countDocuments() + 1; // Get the next count
-        const year = new Date().getFullYear();
-
-        // Format count with leading zeros to be 6 digits
-        const paddedCount = count.toString().padStart(6, '0');
-
-        this.user_id = `${year}A${paddedCount}`; // e.g., 2025A000001
-    }
+    
     next();
 });
 

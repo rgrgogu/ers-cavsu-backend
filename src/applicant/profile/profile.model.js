@@ -29,7 +29,9 @@ const personal_info = new Schema({
     nationality: { type: String },
     address: { type: address, default: { ...address }},
     disabled: { type: Boolean, default: false},
-    indigenous: { type: Boolean, default: false}
+    disablity: { type: String, default: ''},
+    indigenous: { type: Boolean, default: false},
+    indigenous_group: { type: String, default: ''},
 })
 
 const fam_struct = new Schema({

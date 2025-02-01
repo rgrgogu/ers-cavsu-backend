@@ -61,10 +61,17 @@ const Refresh = async (req, res) => {
 
 const RegisterApplicant = async (req, res) => {
   try {
+    const count = await User.countDocuments() + 1; // Get the next count
+    const year = new Date().getFullYear();
+
+    // Format count with leading zeros to be 6 digits
+    const paddedCount = count.toString().padStart(6, '0');
+    const user_id = `${year}A${paddedCount}`; // e.g., 2025A000001
+
     const acc = req.body;
     acc.password = await BCrypt.hash(acc.password)
-    await User.create({...acc})
-    res.sendStatus(201);
+    const data = await User.create({...acc, user_id: user_id})
+    res.status(201).json({ message: 'User created', data });
   } catch (error) {
     res.status(400).json({ error: error.message })
   }
