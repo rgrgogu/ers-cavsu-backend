@@ -6,7 +6,7 @@ const express = require("express");
 const ConnectDB = require("./global/config/DB");
 const SocketIO = require("./global/config/SocketIO")
 
-const account_login = require('./src/account_login/account_login.route');
+const account_login = require('./src/applicant/account_login/account_login.route');
 
 dotenv.config();
 ConnectDB();
@@ -29,11 +29,11 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use("/api/auth", account_login);
+app.use("/api/applicant/auth", account_login);
 
 app.get("/", (req, res) => {
     res.status(200).json({
-        message: "Welcome to Barangay E-Services Management System's API",
+        message: "Welcome to ERS CAVSU System's API",
     });
 });
 

@@ -9,22 +9,17 @@ const name = new Schema({
     extension: { type: String, default: '' },
 }, { _id: false });
 
-// email: {
-//     type: String, required: true, index: true, validate: [
-//         (val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val),
-//     ],
-// },
-
 const obj = new Schema({
     user_id: { type: String, index: true },
+    email: { type: String, required: true, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)]},
     name: { type: name, required: true, default: { ...name } },
     birthdate: { type: Date, required: true },
-    campus: { type: String, required: true, index: true },
-    department: { type: String, required: true, index: true },
+    campus: { type: String, required: true, index: true, default: "Bacoor" },
+    department: { type: String, required: true, index: true, enum: ['College', 'Masteral', 'Doctoral'] },
     username: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
-    status: { type: String, required: true, index: true, default: 'For Review', enum: ['For Review', 'Partially Verified', 'Fully Verified', 'Denied'] },
+    status: { type: String, required: true, index: true, default: 'For Review', enum: ['For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed'] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
     profile: { type: Schema.Types.ObjectId, ref: 'profile', default: null },
 }, {

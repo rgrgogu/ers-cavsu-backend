@@ -3,16 +3,16 @@ const mongoose = require("mongoose");
 const User = require("./account_login.model");
 const Profile = require("../profile/profile.model")
 
-const BCrypt = require("../../global/config/BCrypt");
+const BCrypt = require("../../../global/config/BCrypt");
 // const { Send, sendEmail } = require("../../global/config/Nodemailer");
 
 // const GenerateID = require("../../global/functions/GenerateID");
 // // const GeneratePIN = require("../../global/functions/GeneratePIN");
 // const GetAccountType = require("../../global/functions/GetAccountType");
 // const ReturnValidID = require("../../global/functions/ReturnValidID");
-const { CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../global/functions/CreateToken");
+const { CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
 // const ValidateInput = require("../../global/functions/ValidateInput");
-const CheckUser = require("../../global/functions/CheckUser");
+const CheckUser = require("../../../global/functions/CheckUser");
 
 const Login = async (req, res) => {
   try {

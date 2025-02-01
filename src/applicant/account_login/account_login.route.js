@@ -7,8 +7,8 @@ const {
     RegisterApplicant
 } = require("./account_login.controller");
 
-const upload = require("../../global/config/Multer");
-const RequireAuth = require("../../global/middleware/RequireAuth");
+const upload = require("../../../global/config/Multer");
+const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 router.post("/login", Login);
 router.post("/refresh", Refresh);
