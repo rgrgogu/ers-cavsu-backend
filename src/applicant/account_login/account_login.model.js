@@ -46,4 +46,4 @@ obj.pre('save', async function (next) {
     next();
 });
 
-module.exports = mongoose.model("account_login", obj);
+module.exports = mongoose.model("applicant_account_login", obj);

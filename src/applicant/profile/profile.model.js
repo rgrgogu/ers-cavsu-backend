@@ -77,4 +77,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-module.exports = mongoose.model("profile", obj);
+module.exports = mongoose.model("applicant_profile", obj);
