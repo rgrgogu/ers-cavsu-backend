@@ -54,7 +54,7 @@ const CreateAdmissionGuide = async (req, res) => {
             const { id, name } = await UploadFiles(file, folder_id);
 
             group_files.push({
-                link: `https://drive.google.com/thumbnail?id=${file.id}&sz=w1000`,
+                link: `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,
                 id,
                 name
             })
@@ -68,7 +68,76 @@ const CreateAdmissionGuide = async (req, res) => {
     }
 }
 
+const EditAdmissionGuide = async (req, res) => {
+    try {
+        const id = req.params.id
+        const {folder_id, user_id} = req.query;
+        const { body, files } = req
+        const DOCUMENT_MAX_SIZE = 1024 * 1024;
+        const data = JSON.parse(body.obj)
+        const deletedList = JSON.parse(body.deleted)
+
+        let group_files = []
+
+        if (files.length != 0) {
+            let err = [];
+
+            for (const file of files) {
+                if (file.size > DOCUMENT_MAX_SIZE) {
+                    err.push({ error: `File ${file.originalname} exceeds ${DOCUMENT_MAX_SIZE / 1024}KB limit.` })
+                    console.log(err)
+                }
+            }
+
+            if (err.length != 0)
+                return res.status(400).json(err);
+
+            for (const file of files) {
+                const { id, name } = await UploadFiles(file, folder_id);
+    
+                group_files.push({
+                    link: `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,
+                    id,
+                    name
+                })
+            }
+        }
+        
+        const result = await Model.findByIdAndUpdate(
+            {_id: id}, // The ID of the document you want to update
+            {
+                $set: {
+                    ...data,
+                    updated_by: user_id, // Update the created_by field if needed
+                },
+                // Conditionally update group_files only if files are provided
+                ...(files && files.length > 0 ? { $push: { group_files: group_files }  } : {}),
+            },
+            { new: true } // Return the updated document
+        );
+
+        if(deletedList.length !== 0) {
+            for (const file of deletedList){
+                console.log(file._id)
+                await DeleteFiles(file.id);
+            }
+
+            const del_arr = deletedList.map((item) => item.id)
+
+            const output = await Model.updateOne(
+                { _id: id }, // Find the group by its ID
+                { $pull: { group_files: { id: { $in: del_arr } } } } // Pull the file(s) with matching ID
+            )
+        }
+
+        res.status(200).json({ message: 'Data edited successfully', result });
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+}
+
 module.exports = {
     GetAllAdmissionGuide,
     CreateAdmissionGuide,
+    EditAdmissionGuide
 };
