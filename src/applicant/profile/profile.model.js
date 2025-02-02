@@ -88,6 +88,7 @@ const obj = new Schema({
     educational_profile: {type: educational_profile, default: {...educational_profile}, required: true},
     upload_reqs: {type: upload_reqs, default: {...upload_reqs}},
     appointment: {type: Date, required: true},
+    folder_id: {type: String, default: '', required: true},
 }, {
     virtuals: {
         id: { get() { return this._id; } },

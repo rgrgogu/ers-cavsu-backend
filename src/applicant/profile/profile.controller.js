@@ -37,7 +37,7 @@ const SubmitApplication = async (req, res) => {
             return res.status(400).json(err);
     }
 
-    const {id_pic, documents } = await UploadApplicantFiles(req.files, APPLICANT_ID, doc_type)
+    const {folder_id, id_pic, documents } = await UploadApplicantFiles(req.files, APPLICANT_ID, doc_type)
 
     const result = await Profile.create({
         ...profile,
@@ -45,7 +45,8 @@ const SubmitApplication = async (req, res) => {
             ...profile.applicant_profile,
             id_pic: {...id_pic}
         },
-        upload_reqs: {files: [...documents]}
+        upload_reqs: {files: [...documents]},
+        folder_id
     })
 
     await User.findOneAndUpdate(

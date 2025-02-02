@@ -6,8 +6,11 @@ const express = require("express");
 const ConnectDB = require("./global/config/DB");
 const SocketIO = require("./global/config/SocketIO")
 
+const admin_account_login = require('./src/admin/admin_account_login/admin_account_login.route');
+const admin_profile = require('./src/admin/admin_account_profile/admin_profile.route');
 const account_login = require('./src/applicant/account_login/account_login.route');
 const profile = require('./src/applicant/profile/profile.route');
+const website = require('./src/cavsu/admission_guide/admission_guide.route');
 
 dotenv.config();
 ConnectDB();
@@ -30,8 +33,13 @@ app.use((req, res, next) => {
 });
 
 // Routes
+app.use("/api/admin/auth", admin_account_login);
+app.use("/api/admin/profile", admin_profile);
+
 app.use("/api/applicant/auth", account_login);
 app.use("/api/applicant/profile", profile);
+
+app.use("/api/admin/website", website);
 
 app.get("/", (req, res) => {
     res.status(200).json({

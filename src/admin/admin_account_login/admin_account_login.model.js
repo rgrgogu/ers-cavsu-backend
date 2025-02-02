@@ -14,12 +14,9 @@ const obj = new Schema({
     email: { type: String, required: true, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)]},
     name: { type: name, required: true, default: { ...name } },
     birthdate: { type: Date, required: true },
-    campus: { type: String, required: true, index: true, default: "Bacoor" },
-    department: { type: String, required: true, index: true, enum: ['College', 'Masteral', 'Doctoral'] },
     username: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
-    status: { type: String, required: true, index: true, default: 'For Review', enum: ['For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed'] },
+    role: { type: String, required: true, index: true, default: 'Admin'},
     isArchived: { type: Boolean, required: true, index: true, default: false },
     profile: { type: Schema.Types.ObjectId, ref: 'applicant_profile', default: null },
 }, {
@@ -33,7 +30,7 @@ const obj = new Schema({
         },
         fullNameInitial: {
             get() {
-                const trimmed = this.name.middlename === '' ? '' : `${this.name.middlename[0] + '.'} ${this.name.lastname} ${this.name.extension}`;
+                const trimmed = this.name.middlename === '' ? `${this.name.lastname} ${this.name.extension}` : `${this.name.middlename[0] + '.'} ${this.name.lastname} ${this.name.extension}`;
                 return `${this.name.firstname} ${trimmed.trim()}`.toUpperCase();
             }
         },
@@ -43,10 +40,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-// Middleware to generate user_id before saving
-obj.pre('save', async function (next) {
-    
-    next();
-});
-
-module.exports = mongoose.model("applicant_account_login", obj);
+module.exports = mongoose.model("admin_account_login", obj);

@@ -37,7 +37,7 @@ const UploadApplicantFiles = async (files, id, doc_type) => {
         }
     }
 
-    return { id_pic, documents }
+    return { folder_id, id_pic, documents }
 }
 
 module.exports = UploadApplicantFiles
