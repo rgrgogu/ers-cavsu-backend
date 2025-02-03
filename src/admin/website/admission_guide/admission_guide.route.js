@@ -8,8 +8,8 @@ const {
     ArchiveAdmissionGuide
 } = require("./admission_guide.controller");
 
-const upload = require("../../../global/config/Multer");
-const RequireAuth = require("../../../global/middleware/RequireAuth");
+const upload = require("../../../../global/config/Multer");
+const RequireAuth = require("../../../../global/middleware/RequireAuth");
 
 const uploadFields = upload.array("files", 10);
 

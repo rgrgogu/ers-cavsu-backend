@@ -7,10 +7,9 @@ const obj = new Schema({
     position: { type: String, default: '', required: true},
     contact: { type: String, default: '', required: true},
     email: { type: String, default: '', index: true, required: true},
-    year: {type: Date, required: true},
-    isArchived: {type: Boolean, default: false, required: true},
-    updated_by: {type: Schema.Types.ObjectId, ref: 'account_login', required: true},
-    created_by: {type: Schema.Types.ObjectId, ref: 'account_login', required: true}
+    isArchived: {type: Boolean, default: false},
+    updated_by: {type: Schema.Types.ObjectId, ref: 'admin_account_login', default: null},
+    created_by: {type: Schema.Types.ObjectId, ref: 'admin_account_login', default: null}
 }, {
     virtuals: {
         id: { get() { return this._id; } },

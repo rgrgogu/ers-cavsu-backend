@@ -1,14 +1,14 @@
 const mongoose = require("mongoose");
 
-const Model = require("./admission_guide.model");
+const Model = require("./events.model");
 const {
     CreateBrgyFolder,
     CreateFolder,
     UploadFiles,
     DeleteFiles,
-} = require("../../../global/utils/Drive");
+} = require("../../../../global/utils/Drive");
 
-const GetAllAdmissionGuide = async (req, res) => {
+const GetAllEvents = async (req, res) => {
     try {
         const archive = req.query.archive;
 
@@ -29,7 +29,7 @@ const GetAllAdmissionGuide = async (req, res) => {
     }
 }
 
-const CreateAdmissionGuide = async (req, res) => {
+const CreateEvents = async (req, res) => {
     try {
         const id = req.query.id
         const { body, files } = req
@@ -51,7 +51,7 @@ const CreateAdmissionGuide = async (req, res) => {
                 return res.status(400).json(err);
         }
 
-        const folder_id = await CreateFolder(data.group_name, process.env.ADMISSION_GUIDE_GDRIVE_FOLDER);
+        const folder_id = await CreateFolder(data.title, process.env.ADMISSION_GUIDE_GDRIVE_FOLDER);
 
         for (const file of files) {
             const { id, name } = await UploadFiles(file, folder_id);
@@ -71,7 +71,7 @@ const CreateAdmissionGuide = async (req, res) => {
     }
 }
 
-const EditAdmissionGuide = async (req, res) => {
+const EditEvents = async (req, res) => {
     try {
         const id = req.params.id
         const {folder_id, user_id} = req.query;
@@ -139,7 +139,7 @@ const EditAdmissionGuide = async (req, res) => {
     }
 }
 
-const ArchiveAdmissionGuide = async (req, res) => {
+const ArchiveEvents = async (req, res) => {
     try {
         const id = req.params.id;
         const archive = req.query.archive
@@ -161,8 +161,8 @@ const ArchiveAdmissionGuide = async (req, res) => {
 }
 
 module.exports = {
-    GetAllAdmissionGuide,
-    CreateAdmissionGuide,
-    EditAdmissionGuide,
-    ArchiveAdmissionGuide
+    GetAllEvents,
+    CreateEvents,
+    EditEvents,
+    ArchiveEvents
 };
