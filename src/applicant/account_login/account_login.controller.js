@@ -18,7 +18,7 @@ const Login = async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await User.find({ username: username },);
-    const valid = await CheckUser(user, password, "Admin");
+    const valid = await CheckUser(user, password, "Applicant");
 
     if (valid) {
       const accessToken = CreateAccessToken(user._id)
