@@ -19,7 +19,7 @@ const obj = new Schema({
     username: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
-    status: { type: String, required: true, index: true, default: 'For Review', enum: ['For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed'] },
+    status: { type: String, required: true, index: true, default: 'Created', enum: ['Created', 'For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed'] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
     profile: { type: Schema.Types.ObjectId, ref: 'applicant_profile', default: null },
 }, {
