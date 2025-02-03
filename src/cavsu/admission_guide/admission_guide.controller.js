@@ -21,6 +21,7 @@ const GetAllAdmissionGuide = async (req, res) => {
                 path: 'updated_by',
                 select: 'name',
             })
+            .sort({ updatedAt: -1 })
 
         res.status(200).json(result);
     } catch (error) {
