@@ -10,7 +10,9 @@ const {
 
 const GetAllAdmissionGuide = async (req, res) => {
     try {
-        const result = await Model.find({})
+        const archive = req.query.archive;
+
+        const result = await Model.find({isArchived: archive})
             .populate({
                 path: 'created_by',
                 select: 'name',
@@ -136,8 +138,30 @@ const EditAdmissionGuide = async (req, res) => {
     }
 }
 
+const ArchiveAdmissionGuide = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const archive = req.query.archive
+        
+        const result = await Model.findByIdAndUpdate(
+            {_id: id}, // The ID of the document you want to update
+            {
+                $set: {
+                    isArchived: archive, // Update the created_by field if needed
+                },
+            },
+            { new: true } // Return the updated document
+        );
+
+        res.status(200).json({ message: 'Archived successfully', result });
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+}
+
 module.exports = {
     GetAllAdmissionGuide,
     CreateAdmissionGuide,
-    EditAdmissionGuide
+    EditAdmissionGuide,
+    ArchiveAdmissionGuide
 };
