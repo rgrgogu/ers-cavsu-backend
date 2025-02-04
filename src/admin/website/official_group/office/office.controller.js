@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const Model = require("./contact.model");
+const Model = require("./office.model");
 
 const GetAllContact = async (req, res) => {
     try {

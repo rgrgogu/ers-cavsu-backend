@@ -8,7 +8,7 @@ const {
     ArchiveContact
 } = require("./contact.controller");
 
-const RequireAuth = require("../../../../global/middleware/RequireAuth");
+const RequireAuth = require("../../../../../global/middleware/RequireAuth");
 
 router.get("/get_all_contact", RequireAuth, GetAllContact);
 router.post("/create_contact", RequireAuth, CreateContact);
