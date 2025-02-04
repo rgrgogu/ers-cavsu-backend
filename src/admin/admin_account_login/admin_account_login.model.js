@@ -18,7 +18,7 @@ const obj = new Schema({
     password: { type: String, required: true },
     role: { type: String, required: true, index: true, default: 'Admin'},
     isArchived: { type: Boolean, required: true, index: true, default: false },
-    profile: { type: Schema.Types.ObjectId, ref: 'applicant_profile', default: null },
+    profile: { type: Schema.Types.ObjectId, ref: 'adm_profile', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
@@ -40,4 +40,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-module.exports = mongoose.model("admin_account_login", obj);
+module.exports = mongoose.model("adm_login", obj);

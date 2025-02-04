@@ -82,13 +82,14 @@ const applicant_details = new Schema({
 })
 
 const obj = new Schema({
-    application_details: {type: applicant_details, default: {...applicant_details}},
-    applicant_profile: {type: personal_info, default: {...personal_info}},
-    family_profile: {type: family_profile, default: {...family_profile}, required: true},
-    educational_profile: {type: educational_profile, default: {...educational_profile}, required: true},
-    upload_reqs: {type: upload_reqs, default: {...upload_reqs}},
-    appointment: {type: Date, required: true},
+    application_details: {type: applicant_details, default: null},
+    applicant_profile: {type: personal_info, default: null},
+    family_profile: {type: family_profile, default: null},
+    educational_profile: {type: educational_profile, default: null},
+    upload_reqs: {type: upload_reqs, default: null},
+    appointment: {type: Date, default: null},
     folder_id: {type: String, default: '', required: true},
+    user_id: { type: Schema.Types.ObjectId, ref: 'app_login', required: true },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
@@ -103,4 +104,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-module.exports = mongoose.model("applicant_profile", obj);
+module.exports = mongoose.model("app_profile", obj);

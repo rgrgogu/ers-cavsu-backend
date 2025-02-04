@@ -8,8 +8,8 @@ const obj = new Schema({
     contact: { type: String, default: '', required: true},
     email: { type: String, default: '', index: true, required: true},
     isArchived: {type: Boolean, default: false},
-    updated_by: {type: Schema.Types.ObjectId, ref: 'admin_account_login', default: null},
-    created_by: {type: Schema.Types.ObjectId, ref: 'admin_account_login', default: null}
+    updated_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
+    created_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null}
 }, {
     virtuals: {
         id: { get() { return this._id; } },
@@ -19,4 +19,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-module.exports = mongoose.model("cavsu_contact", obj);
+module.exports = mongoose.model("adm_w_contact", obj);

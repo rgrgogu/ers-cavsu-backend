@@ -49,4 +49,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-module.exports = mongoose.model("cavsu_info", obj);
+module.exports = mongoose.model("adm_w_info", obj);

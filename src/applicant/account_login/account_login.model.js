@@ -21,7 +21,6 @@ const obj = new Schema({
     role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
     status: { type: String, required: true, index: true, default: 'Created', enum: ['Created', 'For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed'] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
-    profile: { type: Schema.Types.ObjectId, ref: 'applicant_profile', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
@@ -43,10 +42,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-// Middleware to generate user_id before saving
-obj.pre('save', async function (next) {
-    
-    next();
-});
-
-module.exports = mongoose.model("applicant_account_login", obj);
+module.exports = mongoose.model("app_login", obj);

@@ -21,10 +21,6 @@ const obj = new Schema({
     religion: { type: String },
     nationality: { type: String },
     address: { type: address, default: { ...address }},
-    disabled: { type: Boolean, default: false},
-    disablity: { type: String, default: ''},
-    indigenous: { type: Boolean, default: false},
-    indigenous_group: { type: String, default: ''},
 }, {
     virtuals: {
         id: { get() { return this._id; } },
@@ -39,4 +35,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-module.exports = mongoose.model("admin_profile", obj);
+module.exports = mongoose.model("adm_profile", obj);
