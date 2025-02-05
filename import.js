@@ -9,6 +9,14 @@ const routes = [
     { api: "/api/admin/w_info", router: require('./src/admin/website/cavsu_info/cavsu_info.route.js') },
     { api: "/api/admin/w_ers", router: require('./src/admin/website/ers/ers.route.js') },
     { api: "/api/admin/w_events", router: require('./src/admin/website/events/events.route.js') },
+    { api: "/api/admin/w_faqs", router: require('./src/admin/website/faq_group/faq/faq.route.js') },
+    { api: "/api/admin/w_faqgroups", router: require('./src/admin/website/faq_group/faq_groups/faq_groups.route.js') },
+    { api: "/api/admin/w_offs", router: require('./src/admin/website/official_group/officials/officials.route.js') },
+    { api: "/api/admin/w_offgroups", router: require('./src/admin/website/official_group/office/office.route.js') },
+    { api: "/api/admin/w_hero", router: require('./src/admin/website/hero/hero.route.js') },    
+
+    // PUBLIC API
+    { api: "/api/public", router: require('./src/admin/website/public/public.router.js') },
 ]
 
 const Route = (app) => {

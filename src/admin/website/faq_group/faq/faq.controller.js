@@ -1,13 +1,23 @@
 const mongoose = require("mongoose");
 
-const Model = require("./cavsu_info.model");
+const Model = require("./faq.model");
 
 const GetFAQs = async (req, res) => {
   try {
-    const archive = req.query.archive;
+    const { id, archive } = req.query;
 
-    const faqs = await Model.find({ isArchived: archive })
-      .sort({ updatedAt: -1 });
+    const faqs = await Model.find({
+      $and: [
+        { isArchived: archive },
+        { group: id }
+      ]
+    }).populate({
+      path: 'created_by',
+      select: 'name',
+    }).populate({
+      path: 'updated_by',
+      select: 'name',
+    }).sort({ updatedAt: -1 })
 
     res.status(200).json(faqs);
   } catch (error) {
@@ -53,22 +63,22 @@ const EditFAQ = async (req, res) => {
 
 const ArchiveFAQ = async (req, res) => {
   try {
-      const id = req.params.id;
-      const archive = req.query.archive
-      
-      const result = await Model.findByIdAndUpdate(
-          {_id: id}, // The ID of the document you want to update
-          {
-              $set: {
-                  isArchived: archive, // Update the created_by field if needed
-              },
-          },
-          { new: true } // Return the updated document
-      );
+    const id = req.params.id;
+    const archive = req.query.archive
 
-      res.status(200).json({ message: 'Archived successfully', result });
+    const result = await Model.findByIdAndUpdate(
+      { _id: id }, // The ID of the document you want to update
+      {
+        $set: {
+          isArchived: archive, // Update the created_by field if needed
+        },
+      },
+      { new: true } // Return the updated document
+    );
+
+    res.status(200).json({ message: 'Archived successfully', result });
   } catch (error) {
-      res.status(400).json({ error: error.message })
+    res.status(400).json({ error: error.message })
   }
 }
 

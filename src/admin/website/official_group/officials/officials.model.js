@@ -9,7 +9,7 @@ const obj = new Schema({
     email: { type: String, default: '', index: true, required: true},
     unit: {type: String, default: '', required: true},
     isArchived: {type: Boolean, default: false},
-    office: {type: Schema.Types.ObjectId, ref: 'adm_w_office'},
+    office: {type: Schema.Types.ObjectId, ref: 'adm_w_office', required: true},
     updated_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
     created_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null}
 }, {

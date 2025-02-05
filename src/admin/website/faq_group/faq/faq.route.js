@@ -6,10 +6,9 @@ const {
     CreateFAQ,
     EditFAQ,
     ArchiveFAQ,
-} = require("./events.controller");
+} = require("./faq.controller");
 
-const upload = require("../../../../global/config/Multer");
-const RequireAuth = require("../../../../global/middleware/RequireAuth");
+const RequireAuth = require("../../../../../global/middleware/RequireAuth");
 
 router.get("/get_all_faqs", RequireAuth, GetFAQs);
 router.post("/create_faq", RequireAuth, CreateFAQ);

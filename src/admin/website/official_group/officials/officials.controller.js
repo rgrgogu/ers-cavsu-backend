@@ -2,68 +2,72 @@ const mongoose = require("mongoose");
 
 const Model = require("./officials.model");
 
-const GetAllContact = async (req, res) => {
+const GetOfficials = async (req, res) => {
     try {
-        const archive = req.query.archive;
+        const { id, archive } = req.query;
 
-        const result = await Model.find({isArchived: archive})
-            .populate({
-                path: 'created_by',
-                select: 'name',
-            })
-            .populate({
-                path: 'updated_by',
-                select: 'name',
-            })
-            .sort({ updatedAt: -1 })
+        const faqs = await Model.find({
+            $and: [
+                { isArchived: archive },
+                { office: id }
+            ]
+        }).populate({
+            path: 'created_by',
+            select: 'name',
+        }).populate({
+            path: 'updated_by',
+            select: 'name',
+        }).sort({ updatedAt: -1 });
 
-        res.status(200).json(result);
+        res.status(200).json(faqs);
     } catch (error) {
-        res.status(400).json({ error: error.message })
+        res.status(400).json({ error: error.message });
     }
 }
 
-const CreateContact = async (req, res) => {
+const CreateOfficials = async (req, res) => {
     try {
-        const id = req.query.id
+        const { id, group_id } = req.query;
         const data = req.body;
 
-        const result = await Model.create({ ...data, created_by: id });
+        const result = await Model.create({ ...data, created_by: id, office: group_id })
 
         res.status(201).json({ message: 'Data created', result });
     } catch (error) {
-        res.status(400).json({ error: error.message })
+        res.status(400).json({ error: error.message });
     }
 }
 
-const EditContact = async (req, res) => {
+const EditOfficials = async (req, res) => {
     try {
         const doc_id = req.params.id;
-        const user_id = req.query.user_id;
+        const id = req.query.id;
         const data = req.body;
 
         const result = await Model.findByIdAndUpdate(
-            {_id: doc_id}, // The ID of the document you want to update
+            { _id: doc_id },
             {
-                ...data,
-                updated_by: user_id, // Update the created_by field if needed
+                $set: {
+                    ...data,
+                    updated_by: id
+                }
             },
-            { new: true } // Return the updated document
-        );
+            { new: true }
+        )
 
         res.status(200).json({ message: 'Data edited successfully', result });
     } catch (error) {
-        res.status(400).json({ error: error.message })
+        res.status(400).json({ error: error.message });
     }
 }
 
-const ArchiveContact = async (req, res) => {
+const ArchiveOfficials = async (req, res) => {
     try {
         const id = req.params.id;
         const archive = req.query.archive
-        
+
         const result = await Model.findByIdAndUpdate(
-            {_id: id}, // The ID of the document you want to update
+            { _id: id }, // The ID of the document you want to update
             {
                 $set: {
                     isArchived: archive, // Update the created_by field if needed
@@ -79,8 +83,8 @@ const ArchiveContact = async (req, res) => {
 }
 
 module.exports = {
-    GetAllContact,
-    CreateContact,
-    EditContact,
-    ArchiveContact
+    GetOfficials,
+    CreateOfficials,
+    EditOfficials,
+    ArchiveOfficials,
 };
