@@ -2,10 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    GetAllERS,
-    CreateERS,
-    EditERS,
-    ArchiveERS
+    GetAll,
+    Create,
+    Edit,
+    Archive
 } = require("./ers.controller");
 
 const upload = require("../../../../global/config/Multer");
@@ -13,9 +13,9 @@ const RequireAuth = require("../../../../global/middleware/RequireAuth");
 
 const uploadFields = upload.array("files", 10);
 
-router.get("/get_all_ers", RequireAuth, GetAllERS);
-router.post("/create_ers", uploadFields, RequireAuth, CreateERS);
-router.put("/edit_ers/:id", uploadFields, RequireAuth, EditERS);
-router.put("/archive_ers/:id", RequireAuth, ArchiveERS);
+router.get("/get_all_ers", RequireAuth, GetAll);
+router.post("/create_ers", uploadFields, RequireAuth, Create);
+router.put("/edit_ers/:id", uploadFields, RequireAuth, Edit);
+router.put("/archive_ers/:id", RequireAuth, Archive);
 
 module.exports = router;

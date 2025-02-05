@@ -13,7 +13,6 @@ const RequireAuth = require("../../../../global/middleware/RequireAuth");
 
 const uploadFields = upload.array("files", 10);
 
-
 router.get("/get_all_admission", RequireAuth, GetAllAdmissionGuide);
 router.post("/create_admission", uploadFields, RequireAuth, CreateAdmissionGuide);
 router.put("/edit_admission/:id", uploadFields, RequireAuth, EditAdmissionGuide);

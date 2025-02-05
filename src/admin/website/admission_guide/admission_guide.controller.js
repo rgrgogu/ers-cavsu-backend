@@ -51,7 +51,8 @@ const CreateAdmissionGuide = async (req, res) => {
                 return res.status(400).json(err);
         }
 
-        const folder_id = await CreateFolder(data.group_name, process.env.ADMISSION_GUIDE_GDRIVE_FOLDER);
+        const doc_id = new mongoose.Types.ObjectId()
+        const folder_id = await CreateFolder(doc_id, process.env.ADMISSION_GUIDE_GDRIVE_FOLDER);
 
         for (const file of files) {
             const { id, name } = await UploadFiles(file, folder_id);
@@ -63,7 +64,7 @@ const CreateAdmissionGuide = async (req, res) => {
             })
         }
 
-        const result = await Model.create({ ...data, group_files, folder_id, created_by: id })
+        const result = await Model.create({ ...data, _id: doc_id, group_files, folder_id, created_by: id })
 
         res.status(201).json({ message: 'Data created', result });
     } catch (error) {
@@ -127,13 +128,17 @@ const EditAdmissionGuide = async (req, res) => {
 
             const del_arr = deletedList.map((item) => item.id)
 
-            const output = await Model.updateOne(
+            const output = await Model.findByIdAndUpdate(
                 { _id: id }, // Find the group by its ID
-                { $pull: { group_files: { id: { $in: del_arr } } } } // Pull the file(s) with matching ID
+                { $pull: { group_files: { id: { $in: del_arr } } } },
+                { new: true}
             )
-        }
 
-        res.status(200).json({ message: 'Data edited successfully', result });
+            res.status(200).json({ message: 'Data edited successfully', result: output });
+        }
+        else{
+            res.status(200).json({ message: 'Data edited successfully', result });
+        }
     } catch (error) {
         res.status(400).json({ error: error.message })
     }

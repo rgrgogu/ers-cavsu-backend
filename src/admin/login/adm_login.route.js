@@ -2,12 +2,16 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    CreateProfile
-} = require("./admin_profile.controller");
+    Login,
+    Refresh,
+    Register
+} = require("./adm_login.controller");
 
 const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
-router.post("/create_profile", RequireAuth, CreateProfile);
+router.post("/login", Login);
+router.post("/register", Register);
+router.post("/refresh/:id", RequireAuth, Refresh);
 
 module.exports = router;

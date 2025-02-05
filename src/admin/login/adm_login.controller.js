@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const User = require("./admin_account_login.model");
+const User = require("./adm_login.model");
 
 const BCrypt = require("../../../global/config/BCrypt");
 
@@ -34,7 +34,7 @@ const Login = async (req, res) => {
 const Refresh = async (req, res) => {
   if (req.cookies?.refreshToken) {
     // Destructuring refreshToken from cookie
-    const {id} = req.query;
+    const {id} = req.params;
     const refreshToken = req.cookies.refreshToken;
     const valid = VerifyRefreshToken(refreshToken)
 
@@ -52,7 +52,7 @@ const Refresh = async (req, res) => {
   }
 }
 
-const RegisterApplicant = async (req, res) => {
+const Register = async (req, res) => {
   try {
     const count = await User.countDocuments() + 1; // Get the next count
     const year = new Date().getFullYear();
@@ -73,5 +73,5 @@ const RegisterApplicant = async (req, res) => {
 module.exports = {
   Login,
   Refresh,
-  RegisterApplicant,
+  Register,
 };

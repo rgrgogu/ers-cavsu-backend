@@ -11,7 +11,7 @@ const GetFAQs = async (req, res) => {
   }
 }
 
-const CreateCavsu = async (req, res) => {
+const CreateFAQ = async (req, res) => {
   try {
     const cavsu = req.body;
     const data = await Info.create({...cavsu});
