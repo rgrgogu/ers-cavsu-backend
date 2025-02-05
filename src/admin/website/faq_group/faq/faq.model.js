@@ -6,7 +6,7 @@ const obj = new Schema({
     question: { type: String, required: true },
     answer: { type: String, required: true },
     isArchived: {type: Boolean, default: false, required: true},
-    group: {type: String, required: true},
+    group: {type: Schema.Types.ObjectId, ref: 'faq_groups', default: null},
     updated_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
     created_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
 }, {
