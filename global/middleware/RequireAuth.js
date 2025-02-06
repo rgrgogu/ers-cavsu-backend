@@ -1,7 +1,13 @@
 const jwt = require('jsonwebtoken')
-const User = require('../../src/applicant/account_login/account_login.model')
+const Applicant  = require('../../src/applicant/account_login/account_login.model')
+const Admin = require('../../src/admin/login/adm_login.model')
 
 const RequireAuth = async (req, res, next) => {
+    const models = {
+        admin: Admin,
+        applicant: Applicant
+    }
+
     // verify user is authenticated
     const { authorization } = req.headers
 
@@ -12,13 +18,17 @@ const RequireAuth = async (req, res, next) => {
     const token = authorization.split(' ')[1]
 
     try {
-        const { _id } = jwt.verify(token, process.env.SECRET)
+        const { _id, role } = jwt.verify(token, process.env.SECRET)
+        const extractedWord = req.baseUrl.split('/')[2];
 
-        req.user = await User.findOne({ _id }).select('_id')
-        next()
-
+        if(extractedWord === role){
+            req.user = await models[role].findOne({ _id }).select('_id')
+            next()
+        }
+        else{
+            res.status(401).json({ error: 'Request is not authorized' })
+        }
     } catch (error) {
-        console.log(error)
         res.status(401).json({ error: 'Request is not authorized' })
     }
 }

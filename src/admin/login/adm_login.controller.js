@@ -14,8 +14,8 @@ const Login = async (req, res) => {
     const valid = await CheckUser(user, password, "Admin");
 
     if (valid) {
-      const accessToken = CreateAccessToken(user._id)
-      const refreshToken = CreateRefreshToken(user._id)
+      const accessToken = CreateAccessToken(user._id, "admin")
+      const refreshToken = CreateRefreshToken(user._id, "admin")
 
       // Assigning refresh token in http-only cookie 
       res.cookie('refreshToken', refreshToken, {
@@ -40,7 +40,7 @@ const Refresh = async (req, res) => {
 
     if(valid){
       // Correct token we send a new access token
-      const accessToken = CreateAccessToken(id)
+      const accessToken = CreateAccessToken(id, "admin")
       return res.json({ accessToken });
     }
     else
