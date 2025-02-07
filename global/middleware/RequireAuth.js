@@ -27,7 +27,7 @@ const RequireAuth = async (req, res, next) => {
         }
         else{
             console.log("eme")
-            res.status(401).json({ error: 'Request is not applicable' })
+            res.status(400).json({ error: 'Request is not applicable' })
         }
     } catch (error) {
         console.log(error.message)
