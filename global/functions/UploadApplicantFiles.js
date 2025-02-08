@@ -10,8 +10,6 @@ const UploadApplicantFiles = async (files, id, doc_type) => {
         doc = { link: '' , id: '', name: '', type: ''},
         documents = [];
 
-    const folder_id = await CreateFolder(id, process.env.APPLICANT_GDRIVE_FOLDER);
-
     if(files["id_pic"].length != 0){
         const { id, name } = await UploadFiles(files["id_pic"][0], folder_id);
         

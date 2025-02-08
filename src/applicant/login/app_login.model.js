@@ -19,8 +19,9 @@ const obj = new Schema({
     username: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
-    status: { type: String, required: true, index: true, default: 'Created', enum: ['Created', 'For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed'] },
+    status: { type: String, required: true, index: true, default: 'Created', enum: ['Created', 'For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed', 'Rejected'] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
+    folder_id: {type: String, default: '', required: true},
 }, {
     virtuals: {
         id: { get() { return this._id; } },

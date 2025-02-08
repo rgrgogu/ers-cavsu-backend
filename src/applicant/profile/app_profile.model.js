@@ -53,14 +53,16 @@ const family_profile = new Schema({
 const educ_struct = new Schema({
     school_name: {type: String, default: ''},
     school_address: {type: String, default: ''},
-    type: {type: String, default: ''},
-    year_grad: {type: Number},
+    enrolled_program: {type: String, default: null},
+    type: {type: String, default: null},
+    year_grad: {type: Number, default: null},
 }, { _id: false })
 
 const educational_profile = new Schema({
     elementary: { type: educ_struct, default: { ...educ_struct }},
     jhs: { type: educ_struct, default: { ...educ_struct }},
     shs: { type: educ_struct, default: { ...educ_struct }},
+    college_diploma: {type: educ_struct, default: null}
 })
 
 const upload_struct = new Schema({
@@ -88,14 +90,18 @@ const obj = new Schema({
     educational_profile: {type: educational_profile, default: null},
     upload_reqs: {type: upload_reqs, default: null},
     appointment: {type: Date, default: null},
-    folder_id: {type: String, default: '', required: true},
     user_id: { type: Schema.Types.ObjectId, ref: 'app_login', required: true },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
         fullAddress: { 
             get() { 
-                return `${this.applicant_profile.address.house_num} ${this.applicant_profile.address.street}, Barangay ${this.applicant_profile.address.brgy}, ${this.applicant_profile.address.city}, ${this.applicant_profile.address.province}, ${this.applicant_profile.address.region}, ${this.applicant_profile.address.zip}` 
+                const address = this.applicant_profile
+
+                if(address !== null)
+                    return `${this.applicant_profile.address.house_num} ${this.applicant_profile.address.street}, Barangay ${this.applicant_profile.address.brgy}, ${this.applicant_profile.address.city}, ${this.applicant_profile.address.province}, ${this.applicant_profile.address.region}, ${this.applicant_profile.address.zip}` 
+                else
+                    return null;
             } 
         }
     },

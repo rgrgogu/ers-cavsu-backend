@@ -7,7 +7,7 @@ const GetCavsuInfo = async (req, res) => {
     const result = await Info.find();
     res.status(200).json( result[0] );
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 
@@ -17,7 +17,7 @@ const CreateCavsu = async (req, res) => {
     const data = await Info.create({...cavsu});
     res.status(201).json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 
@@ -37,7 +37,7 @@ const EditMandate = async (req, res) => {
 
     res.status(200).json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 
@@ -57,7 +57,7 @@ const EditVision = async (req, res) => {
     
     res.status(200).json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 
@@ -77,7 +77,7 @@ const EditMission = async (req, res) => {
     
     res.status(200).json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 
@@ -97,7 +97,7 @@ const EditCoreValues = async (req, res) => {
     
     res.status(200).json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 
@@ -117,7 +117,7 @@ const EditQualityPolicy = async (req, res) => {
     
     res.status(200).json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 
@@ -137,7 +137,7 @@ const EditHistory = async (req, res) => {
     
     res.status(200).json({ data });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ error: error.message });
   }
 }
 

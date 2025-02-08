@@ -4,14 +4,14 @@ const router = express.Router();
 const {
     Login,
     Refresh,
-    RegisterApplicant
-} = require("./account_login.controller");
+    Register
+} = require("./app_login.controller");
 
 const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 router.post("/login", Login);
-router.post("/refresh", RequireAuth, Refresh);
-router.post("/register_applicant", RegisterApplicant);
+router.post("/register", Register);
+router.post("/refresh/:id", RequireAuth, Refresh);
 
 module.exports = router;

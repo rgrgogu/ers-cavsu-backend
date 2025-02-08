@@ -10,7 +10,7 @@ const {
 
 const GetAll = async (req, res) => {
     try {
-        const result = await Model.find()
+        const result = await Model.findOne()
             .populate({
                 path: 'created_by',
                 select: 'name',

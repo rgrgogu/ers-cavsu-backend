@@ -3,6 +3,11 @@
 // const profile = require('./src/applicant/profile/profile.route');
 
 const routes = [
+    // APPLICANT
+    { api: "/api/applicant/auth", router: require('./src/applicant/login/app_login.route.js') },
+    { api: "/api/applicant/profile", router: require('./src/applicant/profile/app_profile.route.js') }, 
+
+    // ADMIN
     { api: "/api/admin/auth", router: require('./src/admin/login/adm_login.route.js') },
     { api: "/api/admin/profile", router: require('./src/admin/profile/adm_profile.route.js') },
     { api: "/api/admin/w_adguide", router: require('./src/admin/website/admission_guide/admission_guide.route.js') },
