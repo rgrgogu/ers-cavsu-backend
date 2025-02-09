@@ -11,11 +11,11 @@ const Login = async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await User.find({ username: username },);
-    const valid = await CheckUser(user, password, "Admin");
+    const valid = await CheckUser(user, password, "Admission");
 
     if (valid) {
-      const accessToken = CreateAccessToken(user._id, "admin")
-      const refreshToken = CreateRefreshToken(user._id, "admin")
+      const accessToken = CreateAccessToken(user._id, "admission")
+      const refreshToken = CreateRefreshToken(user._id, "admission")
 
       // Assigning refresh token in http-only cookie 
       res.cookie('refreshToken', refreshToken, {
@@ -40,7 +40,7 @@ const Refresh = async (req, res) => {
 
     if(valid){
       // Correct token we send a new access token
-      const accessToken = CreateAccessToken(id, "admin")
+      const accessToken = CreateAccessToken(id, "admission")
       return res.json({ accessToken });
     }
     else
@@ -59,7 +59,7 @@ const Register = async (req, res) => {
 
     // Format count with leading zeros to be 6 digits
     const paddedCount = count.toString().padStart(6, '0');
-    const user_id = `${year}ADMIN${paddedCount}`; // e.g., 2025A000001
+    const user_id = `${year}ADMISSION${paddedCount}`; // e.g., 2025A000001
 
     const acc = req.body;
     acc.password = await BCrypt.hash(acc.password)

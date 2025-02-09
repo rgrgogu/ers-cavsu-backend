@@ -17,7 +17,8 @@ const server = SocketIO(app)
 const allowedOrigins = [
     "http://localhost:5173",
     "https://cvsu-ers.netlify.app",
-    "https://ers-cavsu-frontend.vercel.app"
+    "https://ers-cavsu-frontend.vercel.app",
+    "https://drive.google.com"
 ];
 
 const corsOptions = {
@@ -36,6 +37,7 @@ const corsOptions = {
 
 // Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieparser());
 app.use(cors(corsOptions));
 app.use((req, res, next) => {

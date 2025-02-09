@@ -16,7 +16,7 @@ const obj = new Schema({
     birthdate: { type: Date, required: true },
     username: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, index: true, default: 'Admin'},
+    role: { type: String, required: true, index: true, default: 'Admission'},
     isArchived: { type: Boolean, required: true, index: true, default: false },
     profile: { type: Schema.Types.ObjectId, ref: 'adm_profile', default: null },
 }, {

@@ -1,11 +1,13 @@
 const jwt = require('jsonwebtoken')
 const Applicant  = require('../../src/applicant/login/app_login.model')
 const Admin = require('../../src/admin/login/adm_login.model')
+const Admission = require('../../src/admission/login/adn_login.model')
 
 const RequireAuth = async (req, res, next) => {
     const models = {
         admin: Admin,
-        applicant: Applicant
+        applicant: Applicant,
+        admission: Admission,
     }
 
     // verify user is authenticated

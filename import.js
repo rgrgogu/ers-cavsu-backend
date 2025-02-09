@@ -6,6 +6,7 @@ const routes = [
     // ADMISSION
     { api: "/api/admission/auth", router: require('./src/admission/login/adn_login.route.js') },
     { api: "/api/admission/profile", router: require('./src/admission/profile/adn_profile.route.js') }, 
+    { api: "/api/admission/a_holidays", router: require('./src/admission/appointments/holidays/holiday.route.js') }, 
 
     // APPLICANT
     { api: "/api/applicant/auth", router: require('./src/applicant/login/app_login.route.js') },
