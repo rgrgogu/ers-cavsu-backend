@@ -52,7 +52,7 @@ const Create = async (req, res) => {
         }
 
         const doc_id = new mongoose.Types.ObjectId()
-        const folder_id = await CreateFolder(doc_id, process.env.ADMISSION_GUIDE_GDRIVE_FOLDER);
+        const folder_id = await CreateFolder(doc_id, process.env.EVENTS_GDRIVE_FOLDER);
 
         for (const file of files) {
             const { id, name } = await UploadFiles(file, folder_id);

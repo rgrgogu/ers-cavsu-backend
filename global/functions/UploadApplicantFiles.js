@@ -5,37 +5,43 @@ const {
     DeleteFiles,
 } = require("../utils/Drive");
 
-const UploadApplicantFiles = async (files, id, doc_type) => {
-    let id_pic = { link: '' , id: '', name: ''},
-        doc = { link: '' , id: '', name: '', type: ''},
-        documents = [];
+const UploadApplicantFiles = async (files, folder_id, doc_type) => {
+    const DOCUMENT_MAX_SIZE = 1024 * 1024;
 
-    if(files["id_pic"].length != 0){
-        const { id, name } = await UploadFiles(files["id_pic"][0], folder_id);
-        
-        id_pic = {
-            link: `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,  // Dynamic link generation
-            id,
-            name
-        };
-    }
+    let documents = [];
+    let err = [];
 
-    if(files["documents"].length != 0){
-        for(let f = 0; f < files["documents"].length; f++){
-            const { id, name } = await UploadFiles(files["documents"][f], folder_id);
-            
-            doc = {
-                link: `https://drive.google.com/file/d/${id}`,  // Dynamic link generation
-                id,
-                name,
-                type: doc_type[f]
-            }
-
-            documents.push(doc)
+    for (const file of files) {
+        if (file.size > DOCUMENT_MAX_SIZE) {
+            err.push({ error: `File ${file.originalname} exceeds ${DOCUMENT_MAX_SIZE / 1024}KB limit.` })
         }
     }
 
-    return { folder_id, id_pic, documents }
+    if (err.length === 0)
+        for (let f = 0; f < files.length; f += 1) {
+            const file = files[f]
+            const { id, name } = await UploadFiles(file, folder_id);
+
+            if (file.mimetype.startsWith('image/')) {
+                documents.push({
+                    link: `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,
+                    id,
+                    name,
+                    type: doc_type[f]
+                })
+            } else if (file.mimetype.startsWith('application/')) {
+                documents.push({
+                    link: `https://drive.google.com/file/d/${id}`,
+                    id,
+                    name,
+                    type: doc_type[f]
+                })
+            } else {
+                err.push({ error: `Unknown file type for ${file.originalname}` })
+            }
+        }
+
+    return { err, documents };
 }
 
 module.exports = UploadApplicantFiles

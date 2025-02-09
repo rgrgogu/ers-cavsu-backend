@@ -43,7 +43,7 @@ const fam_struct = new Schema({
 }, { _id: false })
 
 const family_profile = new Schema({
-    num_siblings: {type: Number, default: 1},
+    num_siblings: {type: Number, default: 0},
     income: { type: String },
     father: { type: fam_struct, default: { ...fam_struct }},
     mother: { type: fam_struct, default: { ...fam_struct }},
@@ -72,10 +72,6 @@ const upload_struct = new Schema({
     type: {type: String, default: ''}
 })
 
-const upload_reqs = new Schema({
-   files: {type: [upload_struct], default: [], required: true}
-})
-
 const applicant_details = new Schema({
     applicant_type: {type: String},
     track: {type: String, default: null},
@@ -88,7 +84,7 @@ const obj = new Schema({
     applicant_profile: {type: personal_info, default: null},
     family_profile: {type: family_profile, default: null},
     educational_profile: {type: educational_profile, default: null},
-    upload_reqs: {type: upload_reqs, default: null},
+    upload_reqs: {type: [upload_struct], default: []},
     appointment: {type: Date, default: null},
     user_id: { type: Schema.Types.ObjectId, ref: 'app_login', required: true },
 }, {

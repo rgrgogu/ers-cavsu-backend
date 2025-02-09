@@ -4,6 +4,7 @@ const Profile = require("./app_profile.model")
 const User = require("../login/app_login.model")
 
 const UploadApplicantFiles = require("../../../global/functions/UploadApplicantFiles")
+const DeletedApplicantFiles = require("../../../global/functions/DeleteApplicantFiles")
 const { CreateFolder, UploadFiles, DeleteFiles } = require("../../../global/utils/Drive");
 
 const SubmitApplication = async (req, res) => {
@@ -93,7 +94,7 @@ const EditApplicantProfile = async (req, res) => {
 
     const { body, file } = req;
     const data = JSON.parse(body.obj)
-
+    const doc_type = JSON.parse(body.doc_type);
     const DOCUMENT_MAX_SIZE = 1024 * 1024;
     const objectId = new mongoose.Types.ObjectId(user_id);
 
@@ -160,9 +161,76 @@ const EditFamilyProfile = async (req, res) => {
   }
 }
 
+const EditEducationalProfile = async (req, res) => {
+  try {
+    const user_id = req.params.id;
+    const data = req.body;
+
+    const objectId = new mongoose.Types.ObjectId(user_id);
+
+    const result = await Profile.findOneAndUpdate(
+      { user_id: objectId },
+      { $set: { educational_profile: data } },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
+const EditUploadRequirements = async (req, res) => {
+  try {
+    let result = null;
+
+    const user_id = req.params.id;
+    const { body, files } = req;
+    const { folder_id } = req.query;
+    const deletedList = JSON.parse(body.deleted)
+    const doc_type = JSON.parse(body.doc_type);
+    const objectId = new mongoose.Types.ObjectId(user_id);
+
+    if (files.length != 0) {
+      const { err, documents } = await UploadApplicantFiles(files, folder_id, doc_type)
+
+      if(err.length === 0){
+        result = await Profile.findOneAndUpdate(
+          { user_id: objectId },
+          {
+            $push: { upload_reqs: documents }
+          },
+          { new: true }
+        );
+
+        if (!result) {
+          return res.status(404).json({ message: "Profile not found" });
+        }
+      }
+      else
+        return res.status(400).json(err);
+    }
+
+    if (deletedList && deletedList?.length !== 0) {
+      await DeletedApplicantFiles(res, deletedList, objectId, Profile);
+    }
+    else {
+      res.status(200).json({ message: 'Data edited successfully', result });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
+
 module.exports = {
   SubmitApplication,
   EditApplicationDetails,
   EditApplicantProfile,
   EditFamilyProfile,
+  EditEducationalProfile,
+  EditUploadRequirements
 };
