@@ -23,35 +23,14 @@ const CreateHolidayGroup = async (req, res) => {
     }
 }
 
-const CreateSingleHoliday = async (req, res) => {
-    try {
-        const { id, doc_id } = req.query;
-        const data = req.body;
-
-        const result = await Model.findByIdAndUpdate(
-            { _id: doc_id },
-            {
-                $push: { holiday: data },
-                $set: { updated_by: id }
-            },
-            { new: true } // Return updated document
-        )
-
-        res.status(201).json({ message: 'Data created', result });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-}
-
-
 const EditMultipleHolidays = async (req, res) => {
     try {
+        let output = null;
         const doc_id = req.params.id;
         const { id } = req.query;
         const holidays = JSON.parse(req.body?.holidays)
         const addedHolidays = JSON.parse(req.body?.addedHolidays)
-
-        //console.log(holidays, addedHolidays, id, doc_id)
+        const deletedList = JSON.parse(req.body?.deleted)
 
         const existingHolidays = [...new Map(holidays.map(item => [JSON.stringify(item), item])).values()]
         const newHolidays = [];
@@ -76,9 +55,19 @@ const EditMultipleHolidays = async (req, res) => {
             { new: true, upsert: true } // Return updated document
         )
 
-        res.status(201).json({
+        if (deletedList.length !== 0) {
+            const del_arr = deletedList.map((item) => item.name)
+
+            output = await Model.findByIdAndUpdate(
+                { _id: doc_id }, // Find the group by its ID
+                { $pull: { holidays: { name: { $in: del_arr } } } },
+                { new: true }
+            )
+        }
+
+        res.status(200).json({
             message: newHolidays.length > 0 ? "Holidays added successfully" : "No new holidays added",
-            result,
+            result: deletedList.length > 0 ? output : result,
             new: newHolidays.length > 0 ? newHolidays : "No created holidays",
             duplicates: duplicateHolidays.length > 0 ? duplicateHolidays : "No duplicates",
         });
@@ -89,6 +78,5 @@ const EditMultipleHolidays = async (req, res) => {
 
 module.exports = {
     CreateHolidayGroup,
-    CreateSingleHoliday,
     EditMultipleHolidays,
 };

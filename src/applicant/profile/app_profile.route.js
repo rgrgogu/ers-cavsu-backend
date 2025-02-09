@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const {
-    SubmitApplication,
+    GetProfile,
+    // SubmitApplication,
     EditApplicationDetails,
     EditApplicantProfile,
     EditFamilyProfile,
@@ -21,7 +22,8 @@ const uploadFields = upload.fields([
 const uploadProfile = upload.single('file')
 const uploadReqs = upload.array('files', 10)
 
-router.post("/submit_application", uploadFields, RequireAuth, SubmitApplication);
+router.get("/get_profile/:id", RequireAuth, GetProfile)
+// router.post("/submit_application", uploadFields, RequireAuth, SubmitApplication);
 router.put("/edit_app_details/:id", RequireAuth, EditApplicationDetails);
 router.put("/edit_app_profile/:id", uploadProfile, RequireAuth, EditApplicantProfile);
 router.put("/edit_app_family/:id", RequireAuth, EditFamilyProfile);

@@ -7,6 +7,18 @@ const UploadApplicantFiles = require("../../../global/functions/UploadApplicantF
 const DeletedApplicantFiles = require("../../../global/functions/DeleteApplicantFiles")
 const { CreateFolder, UploadFiles, DeleteFiles } = require("../../../global/utils/Drive");
 
+const GetProfile = async (req, res) => {
+  try{
+    const user_id = req.params.id;
+
+    const result = await Profile.findOne({user_id: user_id})
+
+    res.status(200).json(result)
+  }catch(err){
+    res.status(400).json({ error: err.message });
+  }
+}
+
 const SubmitApplication = async (req, res) => {
   try {
     const APPLICANT_ID = req.query.applicant_id;
@@ -227,7 +239,7 @@ const EditUploadRequirements = async (req, res) => {
 }
 
 module.exports = {
-  SubmitApplication,
+  GetProfile,
   EditApplicationDetails,
   EditApplicantProfile,
   EditFamilyProfile,
