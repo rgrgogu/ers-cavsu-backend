@@ -73,7 +73,7 @@ const upload_struct = new Schema({
 })
 
 const applicant_details = new Schema({
-    applicant_type: {type: String},
+    applicant_type: {type: String, default: ''},
     track: {type: String, default: null},
     strand: {type: String, default: null},
     program: {type: String, default: ''}
