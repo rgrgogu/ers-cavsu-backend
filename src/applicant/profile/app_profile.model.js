@@ -10,6 +10,7 @@ const address = new Schema({
     city: { type: String, default: '' },
     province: { type: String },
     region: { type: String },
+    country: { type: String },
     zip: { type: String }
 });
 
@@ -20,85 +21,85 @@ const file = new Schema({
 });
 
 const personal_info = new Schema({
-    id_pic: {type: file, default: { ...file }},
+    id_pic: { type: file, default: { ...file } },
     sex: { type: String, enum: ["Male", "Female"] },
     dob: { type: Date },
     civil_status: { type: String, default: 'Single', enum: ['Single', 'Married', 'Widowed', 'Legally Separated'] },
     contact: { type: String },
     religion: { type: String },
     nationality: { type: String },
-    address: { type: address, default: { ...address }},
-    disabled: { type: Boolean, default: false},
-    disablity: { type: String, default: ''},
-    indigenous: { type: Boolean, default: false},
-    indigenous_group: { type: String, default: ''},
+    address: { type: address, default: { ...address } },
+    disabled: { type: Boolean, default: false },
+    disablity: { type: String, default: '' },
+    indigenous: { type: Boolean, default: false },
+    indigenous_group: { type: String, default: '' },
 })
 
 const fam_struct = new Schema({
-    isApplicable: {type: Boolean, default: false},
-    full_name: {type: String, default: ''},
-    contact: {type: String, default: ''},
-    occupation: {type: String},
-    attended_college: {type: Boolean, default: false}
+    isApplicable: { type: Boolean, default: false },
+    full_name: { type: String, default: '' },
+    contact: { type: String, default: '' },
+    occupation: { type: String },
+    attended_college: { type: Boolean, default: false }
 }, { _id: false })
 
 const family_profile = new Schema({
-    num_siblings: {type: Number, default: 0},
+    num_siblings: { type: Number, default: 0 },
     income: { type: String },
-    father: { type: fam_struct, default: { ...fam_struct }},
-    mother: { type: fam_struct, default: { ...fam_struct }},
-    guardian: { type: fam_struct, default: { ...fam_struct }},
+    father: { type: fam_struct, default: { ...fam_struct } },
+    mother: { type: fam_struct, default: { ...fam_struct } },
+    guardian: { type: fam_struct, default: { ...fam_struct } },
 })
 
 const educ_struct = new Schema({
-    school_name: {type: String, default: ''},
-    school_address: {type: String, default: ''},
-    enrolled_program: {type: String, default: null},
-    type: {type: String, default: null},
-    year_grad: {type: Number, default: null},
+    school_name: { type: String, default: '' },
+    school_address: { type: String, default: '' },
+    enrolled_program: { type: String, default: null },
+    type: { type: String, default: null },
+    year_grad: { type: Number, default: null },
 }, { _id: false })
 
 const educational_profile = new Schema({
-    elementary: { type: educ_struct, default: { ...educ_struct }},
-    jhs: { type: educ_struct, default: { ...educ_struct }},
-    shs: { type: educ_struct, default: { ...educ_struct }},
-    college_diploma: {type: educ_struct, default: null}
+    elementary: { type: educ_struct, default: { ...educ_struct } },
+    jhs: { type: educ_struct, default: { ...educ_struct } },
+    shs: { type: educ_struct, default: { ...educ_struct } },
+    college_diploma: { type: educ_struct, default: null }
 })
 
 const upload_struct = new Schema({
     link: { type: String, default: '' },
     id: { type: String, default: '' },
     name: { type: String, default: '' },
-    type: {type: String, default: ''}
+    type: { type: String, default: '' }
 })
 
 const applicant_details = new Schema({
-    applicant_type: {type: String, default: ''},
-    track: {type: String, default: null},
-    strand: {type: String, default: null},
-    program: {type: String, default: ''}
+    applicant_type: { type: String, default: '' },
+    track: { type: String, default: null },
+    strand: { type: String, default: null },
+    program: { type: String, default: '' }
 })
 
 const obj = new Schema({
-    application_details: {type: applicant_details, default: null},
-    applicant_profile: {type: personal_info, default: null},
-    family_profile: {type: family_profile, default: null},
-    educational_profile: {type: educational_profile, default: null},
-    upload_reqs: {type: [upload_struct], default: []},
-    appointment: {type: Date, default: null},
+    application_details: { type: applicant_details, default: null },
+    applicant_profile: { type: personal_info, default: null },
+    family_profile: { type: family_profile, default: null },
+    educational_profile: { type: educational_profile, default: null },
+    upload_reqs: { type: [upload_struct], default: [] },
+    appointment: { type: Date, default: null },
     user_id: { type: Schema.Types.ObjectId, ref: 'app_login', required: true },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
-        fullAddress: { 
-            get() { 
+        fullAddress: {
+            get() {
                 const address = this.applicant_profile
 
-                if(address !== null)
-                    return `${this.applicant_profile.address.house_num} ${this.applicant_profile.address.street}, Barangay ${this.applicant_profile.address.brgy}, ${this.applicant_profile.address.city}, ${this.applicant_profile.address.province}, ${this.applicant_profile.address.region}, ${this.applicant_profile.address.zip}` 
+                if (address !== null)
+                    return `${this.applicant_profile.address.house_num} ${this.applicant_profile.address.street}, Barangay ${this.applicant_profile.address.brgy}, ${this.applicant_profile.address.city}, ${this.applicant_profile.address.province}, ${this.applicant_profile.address.region}, ${this.applicant_profile.address.country}, ${this.applicant_profile.address.zip}`
                 else
                     return null;
-            } 
+            }
         }
     },
     toJSON: { virtuals: true },

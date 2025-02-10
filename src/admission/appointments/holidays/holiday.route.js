@@ -4,10 +4,12 @@ const router = express.Router();
 const {
     CreateHolidayGroup,
     EditMultipleHolidays,
+    GetHolidayGroup
 } = require("./holiday.controller");
 
 const RequireAuth = require("../../../../global/middleware/RequireAuth");
 
+router.get("/get_all", RequireAuth, GetHolidayGroup);
 router.post("/create_grp", RequireAuth, CreateHolidayGroup);
 router.put("/edit_multiple/:id", RequireAuth, EditMultipleHolidays);
 // router.post("/register", Register);

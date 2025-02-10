@@ -10,6 +10,27 @@ const {
 
 const IsHolidayDuplicate = require("../../../../global/functions/IsHolidayDuplicate")
 
+const GetHolidayGroup = async (req, res) => {
+    try {
+        const archive = req.query.archive;
+
+        const result = await Model.find({isArchived: archive})
+            .populate({
+                path: 'created_by',
+                select: 'name',
+            })
+            .populate({
+                path: 'updated_by',
+                select: 'name',
+            })
+            .sort({ updatedAt: -1 })
+
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+}
+
 const CreateHolidayGroup = async (req, res) => {
     try {
         const { id } = req.query;
@@ -77,6 +98,7 @@ const EditMultipleHolidays = async (req, res) => {
 }
 
 module.exports = {
+    GetHolidayGroup,
     CreateHolidayGroup,
     EditMultipleHolidays,
 };
