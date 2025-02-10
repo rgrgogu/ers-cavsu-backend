@@ -106,7 +106,6 @@ const EditApplicantProfile = async (req, res) => {
 
     const { body, file } = req;
     const data = JSON.parse(body.obj)
-    const doc_type = JSON.parse(body.doc_type);
     const DOCUMENT_MAX_SIZE = 1024 * 1024;
     const objectId = new mongoose.Types.ObjectId(user_id);
 
