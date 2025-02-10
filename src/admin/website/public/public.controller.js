@@ -157,7 +157,6 @@ const GetOfficials = async (req, res) => {
             path: 'office',
             select: 'office_group',
         })
-        .sort({ updatedAt: -1 })
 
         const modifiedResult = result.map(doc => ({
             id: doc.id,

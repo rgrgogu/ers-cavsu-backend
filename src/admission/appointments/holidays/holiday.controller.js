@@ -49,10 +49,11 @@ const EditMultipleHolidays = async (req, res) => {
         let output = null;
         const doc_id = req.params.id;
         const { id } = req.query;
+
         const holidays = JSON.parse(req.body?.holidays)
         const addedHolidays = JSON.parse(req.body?.addedHolidays)
         const deletedList = JSON.parse(req.body?.deleted)
-
+        
         const existingHolidays = [...new Map(holidays.map(item => [JSON.stringify(item), item])).values()]
         const newHolidays = [];
         const duplicateHolidays = [];
