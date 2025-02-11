@@ -31,6 +31,26 @@ const GetHolidayGroup = async (req, res) => {
     }
 }
 
+const GetHoliday = async (req, res) => {
+    try {
+        const name = req.params.name
+
+        const result = await Model.findOne({year: name})
+            .populate({
+                path: 'created_by',
+                select: 'name',
+            })
+            .populate({
+                path: 'updated_by',
+                select: 'name',
+            })
+
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+}
+
 const CreateHolidayGroup = async (req, res) => {
     try {
         const { id } = req.query;
@@ -100,6 +120,7 @@ const EditMultipleHolidays = async (req, res) => {
 
 module.exports = {
     GetHolidayGroup,
+    GetHoliday,
     CreateHolidayGroup,
     EditMultipleHolidays,
 };
