@@ -10,6 +10,7 @@ const {
     EditEducationalProfile,
     EditUploadRequirements
 } = require("./app_profile.controller");
+const {GetHoliday} = require("../../admission/appointments/holidays/holiday.controller")
 
 const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
@@ -23,7 +24,7 @@ const uploadProfile = upload.single('file')
 const uploadReqs = upload.array('files', 10)
 
 router.get("/get_profile/:id", RequireAuth, GetProfile)
-// router.post("/submit_application", uploadFields, RequireAuth, SubmitApplication);
+router.get("/get_holiday/:name", RequireAuth, GetHoliday);
 router.put("/edit_app_details/:id", RequireAuth, EditApplicationDetails);
 router.put("/edit_app_profile/:id", uploadProfile, RequireAuth, EditApplicantProfile);
 router.put("/edit_app_family/:id", RequireAuth, EditFamilyProfile);
