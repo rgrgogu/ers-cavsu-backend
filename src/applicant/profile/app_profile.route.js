@@ -8,17 +8,18 @@ const {
     EditApplicantProfile,
     EditFamilyProfile,
     EditEducationalProfile,
-    EditUploadRequirements
+    EditUploadRequirements,
+    EditAppointment,
 } = require("./app_profile.controller");
 const {GetHoliday} = require("../../admission/appointments/holidays/holiday.controller")
 
 const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
-const uploadFields = upload.fields([
-    { name: "id_pic", maxCount: 1 },
-    { name: "documents", maxCount: 5 }
-]);
+// const uploadFields = upload.fields([
+//     { name: "id_pic", maxCount: 1 },
+//     { name: "documents", maxCount: 5 }
+// ]);
 
 const uploadProfile = upload.single('file')
 const uploadReqs = upload.array('files', 10)
@@ -30,5 +31,6 @@ router.put("/edit_app_profile/:id", uploadProfile, RequireAuth, EditApplicantPro
 router.put("/edit_app_family/:id", RequireAuth, EditFamilyProfile);
 router.put("/edit_app_education/:id", RequireAuth, EditEducationalProfile);
 router.put("/edit_app_upload/:id", uploadReqs, RequireAuth, EditUploadRequirements);
+router.put("/edit_appointment/:id", RequireAuth, EditAppointment);
 
 module.exports = router;

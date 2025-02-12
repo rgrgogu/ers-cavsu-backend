@@ -86,8 +86,8 @@ const obj = new Schema({
     family_profile: { type: family_profile, default: null },
     educational_profile: { type: educational_profile, default: null },
     upload_reqs: { type: [upload_struct], default: [] },
-    appointment: { type: Date, default: null },
-    user_id: { type: Schema.Types.ObjectId, ref: 'app_login', required: true },
+    appointment: { type: Schema.Types.ObjectId, ref: 'adn_appointments', default: null },
+    user_id: { type: Schema.Types.ObjectId, ref: 'adn_login', required: true },
 }, {
     virtuals: {
         id: { get() { return this._id; } },

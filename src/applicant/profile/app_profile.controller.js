@@ -2,19 +2,24 @@ const mongoose = require("mongoose");
 
 const Profile = require("./app_profile.model")
 const User = require("../login/app_login.model")
+const Appointment = require("../../admission/appointments/manage_appoints/appoint.model")
 
 const UploadApplicantFiles = require("../../../global/functions/UploadApplicantFiles")
+
 const DeletedApplicantFiles = require("../../../global/functions/DeleteApplicantFiles")
 const { CreateFolder, UploadFiles, DeleteFiles } = require("../../../global/utils/Drive");
 
 const GetProfile = async (req, res) => {
-  try{
+  try {
     const user_id = req.params.id;
 
-    const result = await Profile.findOne({user_id: user_id})
+    const result = await Profile.findOne({ user_id: user_id }).populate({
+      path: 'appointment',
+      select: 'appointment',
+    })
 
     res.status(200).json(result)
-  }catch(err){
+  } catch (err) {
     res.status(400).json({ error: err.message });
   }
 }
@@ -209,7 +214,7 @@ const EditUploadRequirements = async (req, res) => {
     if (files.length != 0) {
       const { err, documents } = await UploadApplicantFiles(files, folder_id, doc_type)
 
-      if(err.length === 0){
+      if (err.length === 0) {
         result = await Profile.findOneAndUpdate(
           { user_id: objectId },
           {
@@ -237,7 +242,43 @@ const EditUploadRequirements = async (req, res) => {
   }
 }
 
+const EditAppointment = async (req, res) => {
+  try {
+    const user_id = req.params.id;
+    const isUpdate = req.query.isUpdate;
+    const data = req.body;
 
+    const result = await Appointment.findOneAndUpdate(
+      { user: user_id },   // Search condition
+      { $set: { ...data, user: user_id } }, // Create only if it doesn't exist
+      { upsert: true, new: true } // Ensures document is created if missing
+    );
+
+    if (!result) {
+      return res.status(404).json({ message: "Cannot appointment error" });
+    }
+
+    if (isUpdate === "true") {
+      const output = await Profile.findOneAndUpdate(
+        { user_id: user_id },
+        { $set: { appointment: result._id } },
+        { new: true }
+      )
+
+      const updateRole = await User.findByIdAndUpdate(
+        { _id: user_id },
+        { $set: { status: "For Review" } },
+        { new: true }
+      )
+
+      res.status(200).json({ result, output: output.appointment, status: updateRole.status });
+    }
+    else
+      res.status(200).json(result);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+}
 
 module.exports = {
   GetProfile,
@@ -245,5 +286,6 @@ module.exports = {
   EditApplicantProfile,
   EditFamilyProfile,
   EditEducationalProfile,
-  EditUploadRequirements
+  EditUploadRequirements,
+  EditAppointment,
 };
