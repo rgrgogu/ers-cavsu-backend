@@ -3,6 +3,7 @@ const router = express.Router();
 
 const {
     GetProfile,
+    GetAppointmentSlots,
     // SubmitApplication,
     EditApplicationDetails,
     EditApplicantProfile,
@@ -26,6 +27,7 @@ const uploadReqs = upload.array('files', 10)
 
 router.get("/get_profile/:id", RequireAuth, GetProfile)
 router.get("/get_holiday/:name", RequireAuth, GetHoliday);
+router.get("/get_slots/:year/:month", RequireAuth, GetAppointmentSlots)
 router.put("/edit_app_details/:id", RequireAuth, EditApplicationDetails);
 router.put("/edit_app_profile/:id", uploadProfile, RequireAuth, EditApplicantProfile);
 router.put("/edit_app_family/:id", RequireAuth, EditFamilyProfile);

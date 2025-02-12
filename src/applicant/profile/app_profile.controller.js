@@ -24,6 +24,63 @@ const GetProfile = async (req, res) => {
   }
 }
 
+async function fetchAppointments(year, month) {
+  const startDate = new Date(Date.UTC(year, month - 1, 1)).toISOString()
+  const endDate = new Date(
+    Date.UTC(year, month, 0, 23, 59, 59, 999)
+  ).toISOString()
+
+  try {
+    const appointments = await Appointment.find({
+      "appointment.date": {
+        $gte: startDate,
+        $lte: endDate
+      }
+    }).lean()
+
+    console.log("Raw appointments data:", JSON.stringify(appointments, null, 2))
+    return appointments
+  } catch (error) {
+    console.error("Error fetching appointments:", error)
+    throw error
+  }
+}
+
+function processAppointments(appointments) {
+  const counts = {}
+
+  appointments.forEach(app => {
+    const dateStr = app.appointment.date.toISOString().split("T")[0] // Extract YYYY-MM-DD
+    if (!counts[dateStr]) {
+      counts[dateStr] = { AM: 0, PM: 0 }
+    }
+    counts[dateStr][app.appointment.time]++
+  })
+
+  return Object.entries(counts)
+    .map(([date, count]) => ({
+      date,
+      AM: count.AM,
+      PM: count.PM
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date))
+}
+
+const GetAppointmentSlots = async (req, res) => {
+  try {
+    const { year, month } = req.params
+    // const startDate = new Date(year, month - 1, 2)
+    // const endDate = new Date(year, month, 1)
+
+    const appointments = await fetchAppointments(year, month)
+    const processedData = processAppointments(appointments)
+
+    res.status(200).json(processedData)
+  } catch (error) {
+    console.error("Error fetching counts:", error);
+  }
+}
+
 const SubmitApplication = async (req, res) => {
   try {
     const APPLICANT_ID = req.query.applicant_id;
@@ -282,6 +339,7 @@ const EditAppointment = async (req, res) => {
 
 module.exports = {
   GetProfile,
+  GetAppointmentSlots,
   EditApplicationDetails,
   EditApplicantProfile,
   EditFamilyProfile,
