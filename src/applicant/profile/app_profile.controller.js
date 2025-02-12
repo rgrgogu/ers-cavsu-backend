@@ -38,7 +38,6 @@ async function fetchAppointments(year, month) {
       }
     }).lean()
 
-    console.log("Raw appointments data:", JSON.stringify(appointments, null, 2))
     return appointments
   } catch (error) {
     console.error("Error fetching appointments:", error)
