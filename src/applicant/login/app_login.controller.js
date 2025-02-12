@@ -60,7 +60,7 @@ const Register = async (req, res) => {
 
     // Format count with leading zeros to be 6 digits
     const paddedCount = count.toString().padStart(6, '0');
-    const user_id = `${year}APPLICANT${paddedCount}`; // e.g., 2025A000001
+    const user_id = `${year}${paddedCount}`; // e.g., 2025000001
 
     const acc = req.body;
     acc.password = await BCrypt.hash(acc.password)
