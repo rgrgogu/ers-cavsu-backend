@@ -13,7 +13,6 @@ const obj = new Schema({
     user_id: { type: String, index: true },
     email: { type: String, required: true, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)]},
     name: { type: name, required: true, default: { ...name } },
-    birthdate: { type: Date, required: true },
     campus: { type: String, required: true, index: true, default: "Bacoor" },
     department: { type: String, required: true, index: true, enum: ['College', 'Masteral', 'Doctoral'] },
     username: { type: String, required: true },
