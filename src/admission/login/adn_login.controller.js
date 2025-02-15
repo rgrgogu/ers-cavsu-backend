@@ -4,8 +4,9 @@ const User = require("./adn_login.model");
 
 const BCrypt = require("../../../global/config/BCrypt");
 
-const { CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
+const { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
 const CheckUser = require("../../../global/functions/CheckUser");
+const { Send } = require("../../../global/config/Nodemailer")
 
 const Login = async (req, res) => {
   try {
@@ -70,8 +71,70 @@ const Register = async (req, res) => {
   }
 }
 
+const RequestReset = async (req, res) => {
+  try {
+    const email = req.params.email;
+
+    if (!email) {
+      res.status(400).send({
+        message: "Invalid email address.",
+      });
+    }
+
+    const find = await User.findOne({ email: email })
+
+    if (find) {
+      const token = CreateEmailToken(email);
+      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/applicant/verify/${token}`
+      await Send(email, link);
+
+      res.status(200).json({ message: 'Sent password successfully' });
+    }
+    else {
+      res.status(400).json({ message: 'Email doesn\'t exist.' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message })
+  }
+}
+
+const Verify = async (req, res) => {
+  try {
+    const token = req.params.token;
+    VerifyTokenInReset(token)
+    res.status(200).send("Verfication successful");
+  } catch (error) {
+    res.status(401).send(error.message);
+  }
+}
+
+const ChangePass = async (req, res) => {
+  try {
+    const token = req.params.token;
+    const data = req.body;
+
+    const email = VerifyTokenInReset(token)
+
+    if (email && data.confirm === data.password) {
+      await User.findOneAndUpdate(
+        { email: email },
+        { password: await BCrypt.hash(data.password) },
+      )
+
+      res.status(200).json("Password successfully changed");
+    }
+    else
+      res.status(400).json("Password doesn't matched.");
+  } catch (error) {
+    res.status(400).send(error);
+  }
+}
+
 module.exports = {
   Login,
   Refresh,
   Register,
+  RequestReset,
+  Verify,
+  ChangePass,
 };
