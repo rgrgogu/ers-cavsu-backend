@@ -85,7 +85,7 @@ const RequestReset = async (req, res) => {
 
     if (find) {
       const token = CreateEmailToken(email);
-      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/applicant/verify/${token}`
+      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/admin/verify/${token}`
       await Send(email, link);
 
       res.status(200).json({ message: 'Sent password successfully' });
