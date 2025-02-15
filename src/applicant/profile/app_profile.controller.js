@@ -15,7 +15,7 @@ const GetProfile = async (req, res) => {
 
     const result = await Profile.findOne({ user_id: user_id }).populate({
       path: 'appointment',
-      select: 'appointment',
+      select: 'appointment updatedAt',
     })
 
     res.status(200).json(result)
