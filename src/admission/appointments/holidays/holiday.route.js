@@ -5,7 +5,10 @@ const {
     CreateHolidayGroup,
     GetHoliday,
     EditMultipleHolidays,
-    GetHolidayGroup
+    GetHolidayGroup,
+    EditHoliday,
+    CreateSingleHoliday,
+    ArchiveHolidayGroup
 } = require("./holiday.controller");
 
 const RequireAuth = require("../../../../global/middleware/RequireAuth");
@@ -13,8 +16,9 @@ const RequireAuth = require("../../../../global/middleware/RequireAuth");
 router.get("/get_all", RequireAuth, GetHolidayGroup);
 router.get("/get_holiday/:name", RequireAuth, GetHoliday);
 router.post("/create_grp", RequireAuth, CreateHolidayGroup);
+router.post("/add_holiday/:id", RequireAuth, CreateSingleHoliday);
 router.put("/edit_multiple/:id", RequireAuth, EditMultipleHolidays);
-// router.post("/register", Register);
-// router.post("/refresh/:id", RequireAuth, Refresh);
+router.put("/edit_holiday/:id", RequireAuth, EditHoliday);
+router.put("/archive/:id", RequireAuth, ArchiveHolidayGroup);
 
 module.exports = router;

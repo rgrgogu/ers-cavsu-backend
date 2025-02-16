@@ -6,7 +6,7 @@ const holiday_struct = new Schema({
     date: { type: Date },
     name: { type: String, default: '' },
     type: { type: String, enum: ['Regular', 'Special Non-Working', 'Special Working']}
-}, { _id: false });
+});
 
 const obj = new Schema({
     holidays: { type: [holiday_struct], default: [] },

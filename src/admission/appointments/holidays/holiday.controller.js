@@ -14,7 +14,7 @@ const GetHolidayGroup = async (req, res) => {
     try {
         const archive = req.query.archive;
 
-        const result = await Model.find({isArchived: archive})
+        const result = await Model.find({ isArchived: archive })
             .populate({
                 path: 'created_by',
                 select: 'name',
@@ -35,7 +35,7 @@ const GetHoliday = async (req, res) => {
     try {
         const name = req.params.name
 
-        const result = await Model.findOne({year: name})
+        const result = await Model.findOne({ year: name })
             .populate({
                 path: 'created_by',
                 select: 'name',
@@ -56,9 +56,55 @@ const CreateHolidayGroup = async (req, res) => {
         const { id } = req.query;
         const data = req.body;
 
-        const result = await Model.create({ ...data, created_by: id })
+        // Check if a document with the same 'year' already exists
+        const existingGroup = await Model.findOne({ year: data.year });
+
+        if (existingGroup) {
+            return res.status(400).json({ error: `A holiday group for the year ${data.year} already exists.` });
+        }
+
+        // Create new document if no duplicate is found
+        const result = await Model.create({ ...data, created_by: id });
 
         res.status(201).json({ message: 'Data created', result });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+const CreateSingleHoliday = async (req, res) => {
+    try {
+        const doc_id = req.params.id;
+        const newHoliday = req.body;
+
+        const result = await Model.findOneAndUpdate(
+            { $and: [{ _id: doc_id }, { "holidays.date": { $ne: newHoliday.date } }] }, // Ensure date is unique
+            { $push: { holidays: newHoliday } }, // Add new holiday if no match
+            { new: true, upsert: true } // Return updated doc, create if none exists
+        );
+
+        res.status(201).json({ message: 'Data created', result });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+}
+
+const EditHoliday = async (req, res) => {
+    try {
+        const holiday_id = req.params.id;
+        const data = req.body;
+
+        const result = await Model.findOneAndUpdate(
+            { "holidays._id": holiday_id },
+            {
+                "holidays.$.name": data.name,
+                "holidays.$.type": data.type,
+                "holidays.$.date": data.date,
+            },
+            { new: true } // Return the updated document
+        );
+
+        res.status(200).json(result)
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
@@ -70,11 +116,11 @@ const EditMultipleHolidays = async (req, res) => {
         const doc_id = req.params.id;
         const { id } = req.query;
 
-        const holidays = JSON.parse(req.body?.holidays)
+        const existingHolidays = JSON.parse(req.body?.holidays)
         const addedHolidays = JSON.parse(req.body?.addedHolidays)
         const deletedList = JSON.parse(req.body?.deleted)
-        
-        const existingHolidays = [...new Map(holidays.map(item => [JSON.stringify(item), item])).values()]
+
+        //const existingHolidays = [...new Map(holidays.map(item => [JSON.stringify(item), item])).values()]
         const newHolidays = [];
         const duplicateHolidays = [];
 
@@ -98,11 +144,11 @@ const EditMultipleHolidays = async (req, res) => {
         )
 
         if (deletedList.length !== 0) {
-            const del_arr = deletedList.map((item) => item.name)
+            const del_arr = deletedList.map((item) => item._id)
 
             output = await Model.findByIdAndUpdate(
                 { _id: doc_id }, // Find the group by its ID
-                { $pull: { holidays: { name: { $in: del_arr } } } },
+                { $pull: { holidays: { _id: { $in: del_arr } } } },
                 { new: true }
             )
         }
@@ -118,9 +164,33 @@ const EditMultipleHolidays = async (req, res) => {
     }
 }
 
+const ArchiveHolidayGroup = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const archive = req.query.archive
+
+        const result = await Model.findByIdAndUpdate(
+            { _id: id }, // The ID of the document you want to update
+            {
+                $set: {
+                    isArchived: archive, // Update the created_by field if needed
+                },
+            },
+            { new: true } // Return the updated document
+        );
+
+        res.status(200).json({ message: 'Archived successfully', result });
+    } catch (error) {
+        res.status(400).json({ error: error.message })
+    }
+}
+
 module.exports = {
     GetHolidayGroup,
     GetHoliday,
+    CreateSingleHoliday,
     CreateHolidayGroup,
     EditMultipleHolidays,
+    EditHoliday,
+    ArchiveHolidayGroup
 };
