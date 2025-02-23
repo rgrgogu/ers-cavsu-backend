@@ -7,38 +7,9 @@ const GetLogs = async (req, res) => {
     try {
         const user_id = req.params.id;
 
-        const result = await Model.findOne({ applicant: user_id }).populate({
-            path: "logs.processed_by", // Populate processed_by inside logs array
-            select: "name" // Only fetch the name field
-        })
-
-        res.status(200).json(result)
-    } catch (error) {
-        res.status(400).json(error)
-    }
-}
-
-const ChangeAppointmentLogsByApplicant = async (req, res) => {
-    try {
-        const user_id = req.params.id;
-        const data = req.body;
-
-        const result = await Model.findOneAndUpdate(
-            { applicant: user_id },
-            {
-                $push: {
-                    logs: {
-                        log: data.log,
-                        processed_by: data.processed_by,
-                        title: data.title,
-                        status: "Completed",
-                        from: "Applicant",
-                        processed_by_model: "app_login"
-                    }
-                }
-            },
-            { upsert: false }
-        )
+        const result = await Model.findOne({ applicant: user_id }).populate({ 
+            path: "logs.processed_by", select: "name", model: "adn_login" 
+        });
 
         res.status(200).json(result)
     } catch (error) {
@@ -119,5 +90,4 @@ const MassUpdateLogs = async (req, res) => {
 module.exports = {
     GetLogs,
     MassUpdateLogs,
-    ChangeAppointmentLogsByApplicant
 };
