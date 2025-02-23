@@ -1,7 +1,3 @@
-// APPLICANT
-// const account_login = require('./src/applicant/account_login/account_login.route');
-// const profile = require('./src/applicant/profile/profile.route');
-
 const routes = [
     // ADMISSION
     { api: "/api/admission/auth", router: require('./src/admission/login/adn_login.route.js') },
@@ -9,6 +5,7 @@ const routes = [
     { api: "/api/admission/a_holidays", router: require('./src/admission/holidays/holiday.route.js') }, 
     { api: "/api/admission/applications", router: require('./src/admission/applications/applications.route.js') }, 
     { api: "/api/admission/appointments", router: require('./src/admission/appointments/appoint.route.js') }, 
+    { api: "/api/admission/logs/appointments", router: require('./src/admission/appointments/logs/appointment.logs.route.js') }, 
     
     // APPLICANT
     { api: "/api/applicant/auth", router: require('./src/applicant/login/app_login.route.js') },
