@@ -1,10 +1,12 @@
 const mongoose = require('mongoose');
 const dotenv = require("dotenv");
 const cors = require("cors");
+const { Server } = require("socket.io");
 const cookieparser = require('cookie-parser');
+
 const express = require("express");
 const ConnectDB = require("./global/config/DB");
-//const SocketIO = require("./global/config/SocketIO")
+const { SocketIO } = require("./global/config/SocketIO")
 
 // IMPORT ROUTES
 const Route = require("./import")
@@ -12,7 +14,7 @@ const Route = require("./import")
 dotenv.config();
 ConnectDB();
 const app = express();
-//const server = SocketIO(app)
+const server = SocketIO(app)
 
 const allowedOrigins = [
     "http://localhost:5173",
@@ -67,8 +69,8 @@ app.get("/", (req, res) => {
 mongoose.connection.once("open", () => {
     console.log("Database connected.");
 
-    app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`))
-    // server.listen(process.env.PORT, () =>
-    //     console.log(`Server started on port ${process.env.PORT}`)
-    // );
+    //app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`))
+    server.listen(process.env.PORT, () =>
+        console.log(`Server started on port ${process.env.PORT}`)
+    );
 });

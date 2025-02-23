@@ -11,6 +11,7 @@ const routes = [
     { api: "/api/applicant/auth", router: require('./src/applicant/login/app_login.route.js') },
     { api: "/api/applicant/profile", router: require('./src/applicant/profile/app_profile.route.js') }, 
     { api: "/api/applicant/service", router: require('./src/applicant/services/service.route.js') }, 
+    { api: "/api/applicant/notif", router: require('./src/applicant/app_notification/notification.route.js') }, 
 
     // ADMIN
     { api: "/api/admin/auth", router: require('./src/admin/login/adm_login.route.js') },

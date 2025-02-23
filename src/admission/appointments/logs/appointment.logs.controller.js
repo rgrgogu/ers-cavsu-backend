@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 
 const User = require("../../../applicant/login/app_login.model")
 const Model = require("./appointment.logs.model");
+const { getIO, getOnlineUsers } = require("../../../../global/config/SocketIO")
+const NotificationController = require("../../../applicant/app_notification/notification.controller")
 
 const GetLogs = async (req, res) => {
     try {
@@ -77,6 +79,8 @@ const MassUpdateLogs = async (req, res) => {
 
                 await Model.insertMany(newDocs);
             }
+
+            const out = await NotificationController.sendBulkNotification(data, userIds)
         }
 
         res.status(200).json({ message: "Update successful", updatedUsers: userIds });
