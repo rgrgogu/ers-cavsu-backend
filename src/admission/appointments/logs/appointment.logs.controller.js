@@ -7,9 +7,7 @@ const GetLogs = async (req, res) => {
     try {
         const user_id = req.params.id;
 
-        const result = await Model.findOne({ applicant: user_id }).populate({ 
-            path: "logs.processed_by", select: "name", model: "adn_login" 
-        });
+        const result = await Model.findOne({ applicant: user_id }).populate("logs.processed_by", "name");
 
         res.status(200).json(result)
     } catch (error) {
