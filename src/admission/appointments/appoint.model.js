@@ -5,6 +5,7 @@ const Schema = mongoose.Schema;
 const appoint_struct = new Schema({
     date: { type: Date },
     time: { type: String, enum: ["AM", "PM"], index: true },
+    isEditable: { type: Boolean, default: false }
 }, { _id: false });
 
 const obj = new Schema({

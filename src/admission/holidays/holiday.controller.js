@@ -6,9 +6,9 @@ const {
     CreateFolder,
     UploadFiles,
     DeleteFiles,
-} = require("../../../../global/utils/Drive");
+} = require("../../../global/utils/Drive");
 
-const IsHolidayDuplicate = require("../../../../global/functions/IsHolidayDuplicate")
+const IsHolidayDuplicate = require("../../../global/functions/IsHolidayDuplicate")
 
 const GetHolidayGroup = async (req, res) => {
     try {

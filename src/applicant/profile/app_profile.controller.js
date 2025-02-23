@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const Profile = require("./app_profile.model")
 const User = require("../login/app_login.model")
-const Appointment = require("../../admission/appointments/manage_appoints/appoint.model")
+const Appointment = require("../../admission/appointments/appoint.model")
 
 const UploadApplicantFiles = require("../../../global/functions/UploadApplicantFiles")
 

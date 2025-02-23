@@ -11,7 +11,7 @@ const {
     ArchiveHolidayGroup
 } = require("./holiday.controller");
 
-const RequireAuth = require("../../../../global/middleware/RequireAuth");
+const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 router.get("/get_all", RequireAuth, GetHolidayGroup);
 router.get("/get_holiday/:name", RequireAuth, GetHoliday);

@@ -36,7 +36,7 @@ const Create = async (req, res) => {
         const DOCUMENT_MAX_SIZE = 1024 * 1024;
         const data = JSON.parse(body.obj)
 
-        if(file){
+        if (file) {
             if (file.size > DOCUMENT_MAX_SIZE) {
                 return res.status(400).json({ error: `File ${file.originalname} exceeds ${DOCUMENT_MAX_SIZE / 1024}KB limit.` });
             }
@@ -63,12 +63,12 @@ const Edit = async (req, res) => {
         let obj = {}
 
         const doc_id = req.params.id
-        const {user_id, deleted_id} = req.query;
+        const { user_id, deleted_id } = req.query;
         const { body, file } = req
         const DOCUMENT_MAX_SIZE = 1024 * 1024;
         const data = JSON.parse(body.obj)
 
-        if(file){
+        if (file) {
             if (file.size > DOCUMENT_MAX_SIZE) {
                 return res.status(400).json({ error: `File ${file.originalname} exceeds ${DOCUMENT_MAX_SIZE / 1024}KB limit.` });
             }
@@ -82,21 +82,22 @@ const Edit = async (req, res) => {
             }
         }
 
-        if(deleted_id)
+        if (deleted_id)
             await DeleteFiles(deleted_id);
-        
+
         const result = await Model.findByIdAndUpdate(
-            {_id: doc_id}, // The ID of the document you want to update
+            { _id: doc_id }, // The ID of the document you want to update
             {
                 $set: {
                     ...data,
                     updated_by: user_id, // Update the created_by field if needed
+                    ...(file && { image: obj })
                 },
-                // Conditionally update group_files only if files are provided
-                ...(file ? { image: obj } : {}),
             },
             { new: true } // Return the updated document
         );
+
+        console.log("gege")
 
         res.status(200).json({ message: 'Data edited successfully', result });
     } catch (error) {

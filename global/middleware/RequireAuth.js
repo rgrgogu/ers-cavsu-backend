@@ -1,14 +1,14 @@
 const jwt = require('jsonwebtoken')
-const Applicant  = require('../../src/applicant/login/app_login.model')
-const Admin = require('../../src/admin/login/adm_login.model')
-const Admission = require('../../src/admission/login/adn_login.model')
+// const Applicant  = require('../../src/applicant/login/app_login.model')
+// const Admin = require('../../src/admin/login/adm_login.model')
+// const Admission = require('../../src/admission/login/adn_login.model')
 
 const RequireAuth = async (req, res, next) => {
-    const models = {
-        admin: Admin,
-        applicant: Applicant,
-        admission: Admission,
-    }
+    // const models = {
+    //     admin: Admin,
+    //     applicant: Applicant,
+    //     admission: Admission,
+    // }
 
     // verify user is authenticated
     const { authorization } = req.headers
@@ -24,15 +24,14 @@ const RequireAuth = async (req, res, next) => {
         const extractedWord = req.baseUrl.split('/')[2];
 
         if(extractedWord === role){
-            req.user = await models[role].findOne({ _id }).select('_id')
+            // req.user = await models[role].findOne({ _id }).select('_id')
             next()
         }
         else{
-            console.log("eme")
             res.status(400).json({ error: 'Request is not applicable' })
         }
     } catch (error) {
-        console.log(error.message)
+        console.log(error)
         res.status(401).json({ error: 'Request is not authorized' })
     }
 }

@@ -12,7 +12,7 @@ const {
     EditUploadRequirements,
     EditAppointment,
 } = require("./app_profile.controller");
-const {GetHoliday} = require("../../admission/appointments/holidays/holiday.controller")
+const { GetHoliday } = require("../../admission/holidays/holiday.controller")
 
 const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
