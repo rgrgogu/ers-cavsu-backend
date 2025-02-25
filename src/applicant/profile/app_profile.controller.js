@@ -323,7 +323,7 @@ const EditAppointment = async (req, res) => {
 
       const updateRole = await User.findByIdAndUpdate(
         { _id: user_id },
-        { $set: { status: "For Review" } },
+        { $set: { status: "Applied" } },
         { new: true }
       )
 

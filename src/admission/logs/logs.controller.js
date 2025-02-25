@@ -1,16 +1,14 @@
 const mongoose = require("mongoose");
 
-const User = require("../../../applicant/login/app_login.model")
-const Model = require("./appointment.logs.model");
-const { getIO, getOnlineUsers } = require("../../../../global/config/SocketIO")
-const NotificationController = require("../../../applicant/app_notification/notification.controller")
+const User = require("../../applicant/login/app_login.model")
+const Model = require("./logs.model");
+const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO")
+const NotificationController = require("../../applicant/app_notification/notification.controller")
 
 const GetLogs = async (req, res) => {
     try {
         const user_id = req.params.id;
-
         const result = await Model.findOne({ applicant: user_id }).populate("logs.processed_by", "name");
-
         res.status(200).json(result)
     } catch (error) {
         res.status(400).json(error)

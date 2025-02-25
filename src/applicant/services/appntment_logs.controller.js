@@ -1,4 +1,4 @@
-const Model = require("../../admission/appointments/logs/appointment.logs.model");
+const Model = require("../../admission/logs/logs.model");
 
 const GetLogs = async (req, res) => {
     try {

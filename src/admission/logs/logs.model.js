@@ -24,4 +24,4 @@ const obj = new Schema({
     timestamps: true,
 });
 
-module.exports = mongoose.model("logs_appntment", obj);
+module.exports = mongoose.model("logs", obj);

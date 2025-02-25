@@ -13,14 +13,24 @@ const GetApplications = async (req, res) => {
     try {
         const { status, archived } = req.query
 
+        // const result = await User.aggregate([
+        //     { $match: { status: status, isArchived: archived === true ? true : false } },
+        //     { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+        //     { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
+        //     { $lookup: { from: "adn_appointments", localField: "profile.appointment", foreignField: "_id", as: "profile.appointment" } },
+        //     { $unwind: { path: "$profile.appointment", preserveNullAndEmptyArrays: true } },
+        //     { $addFields: { "profile.appointment": "$profile.appointment.appointment" } },
+        //     { $project: { name: 1, "profile.application_details": 1, "profile.appointment": 1, "updatedAt": 1 } }
+        // ]);
+
         const result = await User.aggregate([
             { $match: { status: status, isArchived: archived === true ? true : false } },
             { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
-            { $lookup: { from: "adn_appointments", localField: "profile.appointment", foreignField: "_id", as: "profile.appointment" } },
-            { $unwind: { path: "$profile.appointment", preserveNullAndEmptyArrays: true } },
-            { $addFields: { "profile.appointment": "$profile.appointment.appointment" } },
-            { $project: { name: 1, "profile.application_details": 1, "profile.appointment": 1, "updatedAt": 1 } }
+            // { $lookup: { from: "adn_appointments", localField: "profile.appointment", foreignField: "_id", as: "profile.appointment" } },
+            // { $unwind: { path: "$profile.appointment", preserveNullAndEmptyArrays: true } },
+            // { $addFields: { "profile.appointment": "$profile.appointment.appointment" } },
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1 } }
         ]);
 
         res.status(200).json(result)
@@ -29,6 +39,57 @@ const GetApplications = async (req, res) => {
     }
 }
 
+// Getting all applicants for Senior High School Graduate, 
+// Bachelor's Degree Graduate, Foreign Undergraduate Student
+// ALS
+const GetNewApplicants = async (req, res) => {
+    try {
+        const { status, archived } = req.query
+
+        const result = await User.aggregate([
+            { $match: { status: status, isArchived: archived === true ? true : false } },
+            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+            { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
+            {
+                $match: {
+                    "profile.application_details.applicant_type": {
+                        $in: [
+                            "Senior High School Graduate",
+                            "Bachelor's Degree Graduate",
+                            "Foreign Undergraduate Student Applicant",
+                            "ALS"
+                        ]
+                    }
+                }
+            },
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1 } }
+        ]);
+
+        res.status(200).json(result)
+    } catch (err) {
+        res.status(400).json(err)
+    }
+}
+
+const GetApplication = async (req, res) => {
+    try {
+        const user_id = req.params.id;
+
+        const user = await User.findOne({ _id: user_id });
+
+        const profile = await Profile.findOne({ user_id: user_id }).populate({
+            path: 'appointment',
+            select: 'appointment updatedAt',
+        })
+
+        res.status(200).json({ user, profile })
+    } catch (err) {
+        res.status(400).json(err)
+    }
+}
+
 module.exports = {
-    GetApplications
+    GetApplications,
+    GetNewApplicants,
+    GetApplication
 };
