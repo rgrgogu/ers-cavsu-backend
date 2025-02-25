@@ -59,7 +59,8 @@ const MassUpdateLogs = async (req, res) => {
                                     title: data.title,
                                     status: "Completed",
                                     from: "Admission",
-                                    processed_by_model: "adn_login"
+                                    processed_by_model: "adn_login",
+                                    timeline: data.timeline,
                                 }
                             }
                         },
@@ -77,7 +78,8 @@ const MassUpdateLogs = async (req, res) => {
                             title: data.title,
                             status: "Completed",
                             from: "Admission",
-                            processed_by_model: "adn_login"
+                            processed_by_model: "adn_login",
+                            timeline: data.timeline
                         }]
                     }));
 

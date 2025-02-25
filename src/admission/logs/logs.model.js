@@ -9,7 +9,8 @@ const logs_struct = new Schema({
     status: { type: String, enum: ["Pending", "In Progress", "Completed"], default: "Pending" },
     log: { type: String, default: "" },
     processed_by: { type: Schema.Types.ObjectId, required: false, refPath: "logs.processed_by_model" },
-    processed_by_model: { type: String, enum: ["adn_login", "app_login"], required: true }
+    processed_by_model: { type: String, enum: ["adn_login", "app_login"], required: true },
+    timeline: {type: Number, default: null}
 });
 
 const obj = new Schema({
