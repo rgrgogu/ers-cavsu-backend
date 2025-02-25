@@ -12,7 +12,7 @@ const {
 const GetAppointments = async (req, res) => {
     try {
         const result = await User.aggregate([
-            { $match: { status: "For Review", isArchived: false } },
+            { $match: { status: "Applied", isArchived: false } },
             { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
             { $lookup: { from: "adn_appointments", localField: "profile.appointment", foreignField: "_id", as: "profile.appointment" } },

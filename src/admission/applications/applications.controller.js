@@ -88,8 +88,23 @@ const GetApplication = async (req, res) => {
     }
 }
 
+const UpdateApplicationForAppointees = async (req, res) => {
+    try {
+        const data = req.body
+
+        const result = await User.updateMany(
+            { _id: { $in: data.ids } }, // Filter: Match documents with these IDs
+            { $set: { status: "For Review", batch_no: data.batch_no } } // Update fields
+        );
+
+        res.status(200).json("Updated all items successfully");
+    } catch (err) {
+        res.status(400).json(err)
+    }
+}
 module.exports = {
     GetApplications,
     GetNewApplicants,
-    GetApplication
+    GetApplication,
+    UpdateApplicationForAppointees
 };

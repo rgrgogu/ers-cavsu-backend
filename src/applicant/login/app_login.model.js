@@ -4,14 +4,14 @@ const Schema = mongoose.Schema;
 
 const name = new Schema({
     firstname: { type: String, default: '' },
-    middlename: { type: String, default: ''},
-    lastname: { type: String, default: '',  index: true },
+    middlename: { type: String, default: '' },
+    lastname: { type: String, default: '', index: true },
     extension: { type: String, default: '' },
 }, { _id: false });
 
 const obj = new Schema({
     user_id: { type: String, index: true },
-    email: { type: String, required: true, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)]},
+    email: { type: String, required: true, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)] },
     name: { type: name, required: true, default: { ...name } },
     campus: { type: String, required: true, index: true, default: "Bacoor" },
     department: { type: String, required: true, index: true, enum: ['College', 'Masteral', 'Doctoral'] },
@@ -20,7 +20,8 @@ const obj = new Schema({
     role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
     status: { type: String, required: true, index: true, default: 'Created', enum: ['Created', 'Applied', 'For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed', 'Rejected'] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
-    folder_id: {type: String, default: '', required: true},
+    folder_id: { type: String, default: '', required: true },
+    batch_no: { type: Number, default: null, min: 1, max: 5 }
 }, {
     virtuals: {
         id: { get() { return this._id; } },
