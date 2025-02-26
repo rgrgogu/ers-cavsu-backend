@@ -62,7 +62,7 @@ const GetNewApplicants = async (req, res) => {
                     }
                 }
             },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1 } }
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, batch_no: 1 } }
         ]);
 
         res.status(200).json(result)
@@ -92,7 +92,7 @@ const UpdateApplicationForAppointees = async (req, res) => {
     try {
         const data = req.body
 
-        const result = await User.updateMany(
+        await User.updateMany(
             { _id: { $in: data.ids } }, // Filter: Match documents with these IDs
             { $set: { status: "For Review", batch_no: data.batch_no } } // Update fields
         );
@@ -102,9 +102,27 @@ const UpdateApplicationForAppointees = async (req, res) => {
         res.status(400).json(err)
     }
 }
+
+const UpdateApplicationForReview = async (req, res) => {
+    try {
+        const data = req.body
+
+        await User.updateMany(
+            { _id: { $in: data.ids } }, // Filter: Match documents with these IDs
+            { $set: { status: data.status } } // Update fields
+        );
+
+        res.status(200).json("Updated all items successfully");
+    } catch (err) {
+        res.status(400).json(err)
+    }
+}
+
+
 module.exports = {
     GetApplications,
     GetNewApplicants,
     GetApplication,
-    UpdateApplicationForAppointees
+    UpdateApplicationForAppointees,
+    UpdateApplicationForReview,
 };

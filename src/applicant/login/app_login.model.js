@@ -18,7 +18,7 @@ const obj = new Schema({
     username: { type: String, required: true },
     password: { type: String, required: true },
     role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
-    status: { type: String, required: true, index: true, default: 'Created', enum: ['Created', 'Applied', 'For Review', 'Scheduled', 'Taked EE', 'Passed', 'Failed', 'Rejected'] },
+    status: { type: String, required: true, index: true, default: 'Created', enum: ['Created', 'Applied', 'For Review', 'Verified', 'Rejected', 'For Exam', 'Failed for Exam', "Waitlisted", "For Interview", "Reassigned", "For Confirmation", "Confirmed", "Submitted", "Enrolled"] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
     folder_id: { type: String, default: '', required: true },
     batch_no: { type: Number, default: null, min: 1, max: 5 }
