@@ -3,12 +3,6 @@ const mongoose = require("mongoose");
 const User = require("../../applicant/login/app_login.model");
 const Profile = require("../../applicant/profile/app_profile.model");
 
-const BCrypt = require("../../../global/config/BCrypt");
-
-const { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
-const CheckUser = require("../../../global/functions/CheckUser");
-const { Send } = require("../../../global/config/Nodemailer")
-
 const GetApplications = async (req, res) => {
     try {
         const { status, archived } = req.query
@@ -44,7 +38,12 @@ const GetApplications = async (req, res) => {
 // ALS
 const GetNewApplicants = async (req, res) => {
     try {
-        const { status, archived } = req.query
+        const { status, archived, option } = req.query
+        const options = {
+            a: ["Senior High School Graduate", "Bachelor's Degree Graduate", "Foreign Undergraduate Student Applicant", "ALS"],
+            b: ["Transferee from Other School"],
+            c: ["Transferee from CVSU System"]
+        }
 
         const result = await User.aggregate([
             { $match: { status: status, isArchived: archived === true ? true : false } },
@@ -53,12 +52,7 @@ const GetNewApplicants = async (req, res) => {
             {
                 $match: {
                     "profile.application_details.applicant_type": {
-                        $in: [
-                            "Senior High School Graduate",
-                            "Bachelor's Degree Graduate",
-                            "Foreign Undergraduate Student Applicant",
-                            "ALS"
-                        ]
+                        $in: options[option]
                     }
                 }
             },
@@ -70,6 +64,67 @@ const GetNewApplicants = async (req, res) => {
         res.status(400).json(err)
     }
 }
+
+const GetExaminees = async (req, res) => {
+    try {
+        const { batch_no, size } = req.query;
+        const chunkSize = parseInt(size) || 10;
+        const result = await User.aggregate([
+            { $match: { status: "For Exam", isArchived: false, batch_no: batch_no } },
+            { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname" } },
+            { $sort: { lastname: 1 } },
+            { $group: { _id: null, examinees: { $push: "$$ROOT" } } },
+            {
+                $project: {
+                    chunks: {
+                        $reduce: {
+                            input: "$examinees",
+                            initialValue: [[]],
+                            in: {
+                                $cond: {
+                                    if: {
+                                        $gte: [
+                                            {
+                                                $size: {
+                                                    $arrayElemAt: ["$$value", -1]
+                                                }
+                                            },
+                                            chunkSize
+                                        ]
+                                    },
+                                    then: {
+                                        $concatArrays: ["$$value", [["$$this"]]
+                                        ]
+                                    },
+                                    else: {
+                                        $let: {
+                                            vars: {
+                                                lastArray: {
+                                                    $arrayElemAt: ["$$value", -1]
+                                                },
+                                                prefix: {
+                                                    $slice: ["$$value", 0, { $subtract: [{ $size: "$$value" }, 1] }]
+                                                }
+                                            },
+                                            in: {
+                                                $concatArrays: ["$$prefix", [{ $concatArrays: ["$$lastArray", ["$$this"]] }]]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            { $project: { _id: 0, chunks: 1 } }
+        ]);
+        const examineesChunks = result.length > 0 ? result[0].chunks : [];
+        res.status(200).json(examineesChunks);
+    } catch (err) {
+        res.status(400).json(err);
+    }
+};
 
 const GetApplication = async (req, res) => {
     try {
@@ -88,41 +143,33 @@ const GetApplication = async (req, res) => {
     }
 }
 
-const UpdateApplicationForAppointees = async (req, res) => {
+const UpdateApplication = async (req, res) => {
     try {
-        const data = req.body
+        const data = req.body;
+
+        // Define the update object with required status
+        const updateFields = { status: data.status };
+
+        // Add batch_no to updateFields only if it exists in the request body
+        if (data.batch_no) {
+            updateFields.batch_no = data.batch_no;
+        }
 
         await User.updateMany(
             { _id: { $in: data.ids } }, // Filter: Match documents with these IDs
-            { $set: { status: "For Review", batch_no: data.batch_no } } // Update fields
+            { $set: updateFields }      // Update fields dynamically
         );
 
         res.status(200).json("Updated all items successfully");
     } catch (err) {
-        res.status(400).json(err)
+        res.status(400).json(err);
     }
-}
-
-const UpdateApplicationForReview = async (req, res) => {
-    try {
-        const data = req.body
-
-        await User.updateMany(
-            { _id: { $in: data.ids } }, // Filter: Match documents with these IDs
-            { $set: { status: data.status } } // Update fields
-        );
-
-        res.status(200).json("Updated all items successfully");
-    } catch (err) {
-        res.status(400).json(err)
-    }
-}
-
+};
 
 module.exports = {
     GetApplications,
     GetNewApplicants,
     GetApplication,
-    UpdateApplicationForAppointees,
-    UpdateApplicationForReview,
+    GetExaminees,
+    UpdateApplication,
 };

@@ -5,17 +5,17 @@ const {
     GetApplications,
     GetNewApplicants,
     GetApplication,
-    UpdateApplicationForAppointees,
-    UpdateApplicationForReview
+    GetExaminees,
+    UpdateApplication
 } = require("./applications.controller");
 
 const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
-router.get("/get_applications", RequireAuth, GetApplications)
-router.get("/get_applications_grpA", RequireAuth, GetNewApplicants)
+// router.get("/get_applications", RequireAuth, GetApplications)
+router.get("/get_applications", RequireAuth, GetNewApplicants)
 router.get("/get_application/:id", RequireAuth, GetApplication)
-router.put("/mass_update_appointments", RequireAuth, UpdateApplicationForAppointees)
-router.put("/mass_update_review", RequireAuth, UpdateApplicationForReview)
+router.get("/get_examinees", RequireAuth, GetExaminees)
+router.put("/mass_update", RequireAuth, UpdateApplication)
 
 module.exports = router;
