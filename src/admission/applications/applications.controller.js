@@ -100,6 +100,41 @@ const GetExaminees = async (req, res) => {
     }
 };
 
+const GetApplicantsByProgram = async (req, res) => {
+    try {
+        const { status, program, batch_no, option } = req.query;
+        const batchNo = parseInt(batch_no) || batch_no;
+
+        console.log(status, program, batchNo, option);
+
+        const options = {
+            a: ["Alternative Learning System (ALS) Passer", "Senior High School Graduate", "Currently Enrolled Grade 12 Student", "Foreign Undergraduate Student Applicant"],
+            b: ["Transferee from Other School"],
+            c: ["Transferee from CVSU System", "Diploma/Certificate/Associate/Vocational Graduate", "Bachelor's Degree Graduate"]
+        }
+
+        const result = await User.aggregate([
+            { $match: { status: status, isArchived: false, batch_no: batchNo } },
+            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+            { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
+            {
+                $match: {
+                    "profile.application_details.applicant_type": {
+                        $in: options[option]
+                    },
+                    "profile.application_details.program": program
+                }
+            },
+            { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname" } },
+            { $sort: { lastname: 1 } },
+        ]);
+
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(400).json({ error: err.message });
+    }
+};
+
 const GetApplication = async (req, res) => {
     try {
         const user_id = req.params.id;
@@ -144,6 +179,7 @@ module.exports = {
     GetApplications,
     GetApplicants,
     GetApplication,
+    GetApplicantsByProgram,
     GetExaminees,
     UpdateApplication,
 };
