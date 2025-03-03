@@ -105,8 +105,6 @@ const GetApplicantsByProgram = async (req, res) => {
         const { status, program, batch_no, option } = req.query;
         const batchNo = parseInt(batch_no) || batch_no;
 
-        console.log(status, program, batchNo, option);
-
         const options = {
             a: ["Alternative Learning System (ALS) Passer", "Senior High School Graduate", "Currently Enrolled Grade 12 Student", "Foreign Undergraduate Student Applicant"],
             b: ["Transferee from Other School"],
