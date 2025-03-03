@@ -24,7 +24,6 @@ const UpdateApplicantLog = async (req, res) => {
                         log: data.log,
                         processed_by: data.processed_by,
                         title: data.title,
-                        status: "Completed",
                         from: "Applicant",
                         processed_by_model: "app_login"
                     }

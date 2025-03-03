@@ -6,11 +6,10 @@ const logs_struct = new Schema({
     date: { type: Date, default: Date.now() },
     title: { type: String, default: "" },
     from: { type: String, default: "Admission", enum: ["Admission", "Applicant"] },
-    status: { type: String, enum: ["Pending", "In Progress", "Completed"], default: "Pending" },
     log: { type: String, default: "" },
     processed_by: { type: Schema.Types.ObjectId, required: false, refPath: "logs.processed_by_model" },
     processed_by_model: { type: String, enum: ["adn_login", "app_login"], required: true },
-    timeline: {type: Number, default: null}
+    timeline: {type: String, default: null, index: true, enum: ["DV", "EE", "AI", "EP"]}
 });
 
 const obj = new Schema({
