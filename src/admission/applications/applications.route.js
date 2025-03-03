@@ -3,7 +3,7 @@ const router = express.Router();
 
 const {
     GetApplications,
-    GetNewApplicants,
+    GetApplicants,
     GetApplication,
     GetExaminees,
     UpdateApplication
@@ -13,7 +13,7 @@ const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 // router.get("/get_applications", RequireAuth, GetApplications)
-router.get("/get_applications", RequireAuth, GetNewApplicants)
+router.get("/get_applications", RequireAuth, GetApplicants)
 router.get("/get_application/:id", RequireAuth, GetApplication)
 router.get("/get_examinees", RequireAuth, GetExaminees)
 router.put("/mass_update", RequireAuth, UpdateApplication)

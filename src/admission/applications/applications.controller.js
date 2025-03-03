@@ -33,12 +33,12 @@ const GetApplications = async (req, res) => {
     }
 }
 
-// Getting all applicants for Senior High School Graduate, 
-// Bachelor's Degree Graduate, Foreign Undergraduate Student
-// ALS
-const GetNewApplicants = async (req, res) => {
+
+const GetApplicants = async (req, res) => {
     try {
         const { status, archived, option } = req.query
+
+        console.log(status)
 
         const options = {
             a: ["Alternative Learning System (ALS) Passer", "Senior High School Graduate", "Currently Enrolled Grade 12 Student", "Foreign Undergraduate Student Applicant"],
@@ -70,60 +70,18 @@ const GetExaminees = async (req, res) => {
     try {
         const { batch_no, size } = req.query;
         const chunkSize = parseInt(size) || 10;
+        const batchNo = parseInt(batch_no) || batch_no;
         const result = await User.aggregate([
-            { $match: { status: "For Exam", isArchived: false, batch_no: batch_no } },
+            { $match: { status: "For Exam", isArchived: false, batch_no: batchNo } },
             { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname" } },
             { $sort: { lastname: 1 } },
             { $group: { _id: null, examinees: { $push: "$$ROOT" } } },
-            {
-                $project: {
-                    chunks: {
-                        $reduce: {
-                            input: "$examinees",
-                            initialValue: [[]],
-                            in: {
-                                $cond: {
-                                    if: {
-                                        $gte: [
-                                            {
-                                                $size: {
-                                                    $arrayElemAt: ["$$value", -1]
-                                                }
-                                            },
-                                            chunkSize
-                                        ]
-                                    },
-                                    then: {
-                                        $concatArrays: ["$$value", [["$$this"]]
-                                        ]
-                                    },
-                                    else: {
-                                        $let: {
-                                            vars: {
-                                                lastArray: {
-                                                    $arrayElemAt: ["$$value", -1]
-                                                },
-                                                prefix: {
-                                                    $slice: ["$$value", 0, { $subtract: [{ $size: "$$value" }, 1] }]
-                                                }
-                                            },
-                                            in: {
-                                                $concatArrays: ["$$prefix", [{ $concatArrays: ["$$lastArray", ["$$this"]] }]]
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            { $project: { _id: 0, chunks: 1 } }
+            { $project: { _id: 0, chunks: { $cond: { if: { $eq: [{ $size: "$examinees" }, 0] }, then: [], else: { $reduce: { input: "$examinees", initialValue: [[]], in: { $cond: { if: { $eq: [{ $size: { $last: "$$value" } }, chunkSize] }, then: { $concatArrays: ["$$value", [["$$this"]]] }, else: { $let: { vars: { prefix: { $cond: { if: { $lte: [{ $size: "$$value" }, 1] }, then: [], else: { $slice: ["$$value", 0, { $subtract: [{ $size: "$$value" }, 1] }] } } }, lastChunk: { $last: "$$value" } }, in: { $concatArrays: ["$$prefix", [{ $concatArrays: ["$$lastChunk", ["$$this"]] }]] } } } } } } } } } } },
         ]);
         const examineesChunks = result.length > 0 ? result[0].chunks : [];
         res.status(200).json(examineesChunks);
     } catch (err) {
-        res.status(400).json(err);
+        res.status(400).json({ error: err.message });
     }
 };
 
@@ -169,7 +127,7 @@ const UpdateApplication = async (req, res) => {
 
 module.exports = {
     GetApplications,
-    GetNewApplicants,
+    GetApplicants,
     GetApplication,
     GetExaminees,
     UpdateApplication,
