@@ -4,11 +4,11 @@ const router = express.Router();
 const {
     GetLogs,
     UpdateApplicantLog
-} = require("./appntment_logs.controller");
+} = require("./logs.controller");
 
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
-router.get("/appointment_logs/get_logs/:id", RequireAuth, GetLogs)
-router.put("/appointment_logs/update_log", RequireAuth, UpdateApplicantLog)
+router.get("/get_logs/:id", RequireAuth, GetLogs)
+router.put("/update_log", RequireAuth, UpdateApplicantLog)
 
 module.exports = router;

@@ -39,10 +39,11 @@ const GetApplications = async (req, res) => {
 const GetNewApplicants = async (req, res) => {
     try {
         const { status, archived, option } = req.query
+
         const options = {
-            a: ["Senior High School Graduate", "Bachelor's Degree Graduate", "Foreign Undergraduate Student Applicant", "ALS"],
+            a: ["Alternative Learning System (ALS) Passer", "Senior High School Graduate", "Currently Enrolled Grade 12 Student", "Foreign Undergraduate Student Applicant"],
             b: ["Transferee from Other School"],
-            c: ["Transferee from CVSU System"]
+            c: ["Transferee from CVSU System", "Diploma/Certificate/Associate/Vocational Graduate", "Bachelor's Degree Graduate"]
         }
 
         const result = await User.aggregate([
