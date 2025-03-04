@@ -17,6 +17,8 @@ const Login = async (req, res) => {
     const valid = await CheckUser(user, password, "Applicant");
 
     if (valid) {
+      if (user.isArchived) throw new Error('User deactivated. Please contact the admin.')
+        
       const accessToken = CreateAccessToken(user._id, "applicant")
       const refreshToken = CreateRefreshToken(user._id, "applicant")
 
