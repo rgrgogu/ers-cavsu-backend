@@ -55,7 +55,7 @@ const GetApplicants = async (req, res) => {
                     }
                 }
             },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, batch_no: 1, status: 1 } }
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, batch_no: 1, status: 1, "profile.exam_details": 1 } }
         ]);
 
         res.status(200).json(result)
@@ -66,8 +66,9 @@ const GetApplicants = async (req, res) => {
 
 const GetExaminees = async (req, res) => {
     try {
-        const { batch_no, size, option } = req.query;
-        const chunkSize = parseInt(size) || 10;
+        // const { batch_no, size, option } = req.query;
+        const { batch_no, date, time, option } = req.query;
+        // const chunkSize = parseInt(size) || 10;
         const batchNo = parseInt(batch_no) || batch_no;
 
         const options = {
@@ -75,6 +76,23 @@ const GetExaminees = async (req, res) => {
             b: ["Transferee from Other School"],
             c: ["Transferee from CVSU System", "Diploma/Certificate/Associate/Vocational Graduate", "Bachelor's Degree Graduate"]
         }
+
+        // const result = await User.aggregate([
+        //     { $match: { status: "For Exam", isArchived: false, batch_no: batchNo } },
+        //     { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+        //     { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
+        //     {
+        //         $match: {
+        //             "profile.application_details.applicant_type": {
+        //                 $in: options[option]
+        //             }
+        //         }
+        //     },
+        //     { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname" } },
+        //     { $sort: { lastname: 1 } },
+        //     { $group: { _id: null, examinees: { $push: "$$ROOT" } } },
+        //     { $project: { _id: 0, chunks: { $cond: { if: { $eq: [{ $size: "$examinees" }, 0] }, then: [], else: { $reduce: { input: "$examinees", initialValue: [[]], in: { $cond: { if: { $eq: [{ $size: { $last: "$$value" } }, chunkSize] }, then: { $concatArrays: ["$$value", [["$$this"]]] }, else: { $let: { vars: { prefix: { $cond: { if: { $lte: [{ $size: "$$value" }, 1] }, then: [], else: { $slice: ["$$value", 0, { $subtract: [{ $size: "$$value" }, 1] }] } } }, lastChunk: { $last: "$$value" } }, in: { $concatArrays: ["$$prefix", [{ $concatArrays: ["$$lastChunk", ["$$this"]] }]] } } } } } } } } } } },
+        // ]);
 
         const result = await User.aggregate([
             { $match: { status: "For Exam", isArchived: false, batch_no: batchNo } },
@@ -84,17 +102,16 @@ const GetExaminees = async (req, res) => {
                 $match: {
                     "profile.application_details.applicant_type": {
                         $in: options[option]
-                    }
+                    },
+                    "profile.exam_details.date": date,
+                    "profile.exam_details.time": time,
                 }
             },
-            { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname" } },
+            { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname", venue: "$profile.exam_details.venue" } },
             { $sort: { lastname: 1 } },
-            { $group: { _id: null, examinees: { $push: "$$ROOT" } } },
-            { $project: { _id: 0, chunks: { $cond: { if: { $eq: [{ $size: "$examinees" }, 0] }, then: [], else: { $reduce: { input: "$examinees", initialValue: [[]], in: { $cond: { if: { $eq: [{ $size: { $last: "$$value" } }, chunkSize] }, then: { $concatArrays: ["$$value", [["$$this"]]] }, else: { $let: { vars: { prefix: { $cond: { if: { $lte: [{ $size: "$$value" }, 1] }, then: [], else: { $slice: ["$$value", 0, { $subtract: [{ $size: "$$value" }, 1] }] } } }, lastChunk: { $last: "$$value" } }, in: { $concatArrays: ["$$prefix", [{ $concatArrays: ["$$lastChunk", ["$$this"]] }]] } } } } } } } } } } },
         ]);
 
-        const examineesChunks = result.length > 0 ? result[0].chunks : [];
-        res.status(200).json(examineesChunks);
+        res.status(200).json(result);
     } catch (err) {
         res.status(400).json({ error: err.message });
     }
@@ -173,6 +190,21 @@ const UpdateApplication = async (req, res) => {
     }
 };
 
+const UpdateExamDetails = async (req, res) => {
+    try {
+        const data = req.body;
+
+        await Profile.updateMany(
+            { user_id: { $in: data.ids } }, // Filter: Match documents with these IDs
+            { $set: { exam_details: { ...data } } }      // Update fields dynamically
+        );
+
+        res.status(200).json("Updated all items successfully");
+    } catch (err) {
+        res.status(400).json(err);
+    }
+};
+
 module.exports = {
     GetApplications,
     GetApplicants,
@@ -180,4 +212,5 @@ module.exports = {
     GetApplicantsByProgram,
     GetExaminees,
     UpdateApplication,
+    UpdateExamDetails
 };

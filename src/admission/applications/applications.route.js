@@ -7,7 +7,8 @@ const {
     GetApplication,
     GetExaminees,
     GetApplicantsByProgram,
-    UpdateApplication
+    UpdateApplication,
+    UpdateExamDetails
 } = require("./applications.controller");
 
 const upload = require("../../../global/config/Multer");
@@ -19,5 +20,6 @@ router.get("/get_application/:id", RequireAuth, GetApplication)
 router.get("/get_examinees", RequireAuth, GetExaminees)
 router.get("/get_applicants_prog", RequireAuth, GetApplicantsByProgram)
 router.put("/mass_update", RequireAuth, UpdateApplication)
+router.put("/mass_update_exam", RequireAuth, UpdateExamDetails)
 
 module.exports = router;

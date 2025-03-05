@@ -80,6 +80,13 @@ const applicant_details = new Schema({
     program: { type: String, default: '' }
 })
 
+const exam_details = new Schema({
+    date: { type: String, default: '' },
+    time: { type: String, default: null },
+    venue: { type: String, default: null },
+    processed_by: { type: Schema.Types.ObjectId, ref: 'adn_login', required: true }
+})
+
 const obj = new Schema({
     application_details: { type: applicant_details, default: null },
     applicant_profile: { type: personal_info, default: null },
@@ -87,6 +94,7 @@ const obj = new Schema({
     educational_profile: { type: educational_profile, default: null },
     upload_reqs: { type: [upload_struct], default: [] },
     appointment: { type: Schema.Types.ObjectId, ref: 'adn_appointments', default: null },
+    exam_details: {type: exam_details, default: null},
     user_id: { type: Schema.Types.ObjectId, ref: 'adn_login', required: true },
 }, {
     virtuals: {
