@@ -338,7 +338,7 @@ const EditAppointment = async (req, res) => {
 
 const UpdateApplication = async (req, res) => {
   try {
-    const user_id = req.params;
+    const user_id = req.params.id;
     const { status } = req.query;
 
     const updatedUser = await User.findByIdAndUpdate(
