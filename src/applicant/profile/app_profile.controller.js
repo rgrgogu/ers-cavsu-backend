@@ -339,17 +339,13 @@ const EditAppointment = async (req, res) => {
 const UpdateApplication = async (req, res) => {
   try {
     const user_id = req.params.id;
-    const { status } = req.query;
+    const data = req.body;
 
     const updatedUser = await User.findByIdAndUpdate(
-      user_id,                   // The ID to find
-      { $set: status },    // Update fields dynamically
+      { _id: user_id },                   // The ID to find
+      { $set: data.status },    // Update fields dynamically
       { new: true }              // Return the updated document
     );
-
-    if (!updatedUser) {
-      return res.status(404).json("User not found");
-    }
 
     res.status(200).json({
       message: "Updated item successfully",
