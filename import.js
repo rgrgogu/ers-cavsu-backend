@@ -1,4 +1,8 @@
 const routes = [
+    // REGISTRAR
+    { api: "/api/registrar/auth", router: require('./src/registrar/login/reg_login.route.js') },
+    { api: "/api/registrar/profile", router: require('./src/registrar/profile/reg_profile.route.js') },
+    
     // ADMISSION
     { api: "/api/admission/auth", router: require('./src/admission/login/adn_login.route.js') },
     { api: "/api/admission/profile", router: require('./src/admission/profile/adn_profile.route.js') }, 
@@ -12,6 +16,7 @@ const routes = [
     { api: "/api/applicant/profile", router: require('./src/applicant/profile/app_profile.route.js') }, 
     { api: "/api/applicant/logs", router: require('./src/applicant/logs/logs.route.js') }, 
     { api: "/api/applicant/notif", router: require('./src/applicant/app_notification/notification.route.js') }, 
+    { api: "/api/applicant/surveys", router: require('./src/applicant/survey/survey.route.js') }, 
 
     // ADMIN
     { api: "/api/admin/auth", router: require('./src/admin/login/adm_login.route.js') },

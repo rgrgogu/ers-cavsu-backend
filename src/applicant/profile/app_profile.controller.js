@@ -336,6 +336,30 @@ const EditAppointment = async (req, res) => {
   }
 }
 
+const UpdateApplication = async (req, res) => {
+  try {
+    const user_id = req.params;
+    const { status } = req.query;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      user_id,                   // The ID to find
+      { $set: status },    // Update fields dynamically
+      { new: true }              // Return the updated document
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json("User not found");
+    }
+
+    res.status(200).json({
+      message: "Updated item successfully",
+      data: updatedUser
+    });
+  } catch (err) {
+    res.status(400).json(err);
+  }
+};
+
 module.exports = {
   GetProfile,
   GetAppointmentSlots,
@@ -345,4 +369,5 @@ module.exports = {
   EditEducationalProfile,
   EditUploadRequirements,
   EditAppointment,
+  UpdateApplication,
 };

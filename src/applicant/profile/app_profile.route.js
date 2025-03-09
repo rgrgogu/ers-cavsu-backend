@@ -11,6 +11,7 @@ const {
     EditEducationalProfile,
     EditUploadRequirements,
     EditAppointment,
+    UpdateApplication
 } = require("./app_profile.controller");
 const { GetHoliday } = require("../../admission/holidays/holiday.controller")
 
@@ -34,5 +35,6 @@ router.put("/edit_app_family/:id", RequireAuth, EditFamilyProfile);
 router.put("/edit_app_education/:id", RequireAuth, EditEducationalProfile);
 router.put("/edit_app_upload/:id", uploadReqs, RequireAuth, EditUploadRequirements);
 router.put("/edit_appointment/:id", RequireAuth, EditAppointment);
+router.put("/update_status/:id", RequireAuth, UpdateApplication);
 
 module.exports = router;
