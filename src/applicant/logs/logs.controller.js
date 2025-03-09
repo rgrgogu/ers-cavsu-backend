@@ -30,7 +30,7 @@ const UpdateApplicantLog = async (req, res) => {
                     }
                 }
             },
-            { upsert: false }
+            { upsert: false, new: true }
         )
 
         res.status(200).json(result)
