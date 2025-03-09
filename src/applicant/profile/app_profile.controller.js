@@ -343,7 +343,7 @@ const UpdateApplication = async (req, res) => {
 
     const updatedUser = await User.findByIdAndUpdate(
       { _id: user_id },                   // The ID to find
-      { $set: data.status },    // Update fields dynamically
+      { $set: { status: data.status } },    // Update fields dynamically
       { new: true }              // Return the updated document
     );
 
