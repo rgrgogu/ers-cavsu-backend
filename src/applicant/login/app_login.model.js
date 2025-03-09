@@ -34,7 +34,8 @@ const obj = new Schema({
             "For Confirmation", 
             "Confirmed", 
             "Submitted", 
-            "Enrolled"
+            "Enrolled",
+            "Forfeited"
         ] },
     isArchived: { type: Boolean, required: true, index: true, default: false },
     folder_id: { type: String, default: '', required: true },
