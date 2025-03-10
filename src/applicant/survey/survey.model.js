@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const obj = new mongoose.Schema({
-    type: { type: String, default: '' },
+    type: { type: String, default: '', enum: ['Registrar', 'Admission', 'Admin'] },
     courtesy: { type: Number, default: null, min: 1, max: 5 },
     service: { type: Number, default: null, min: 1, max: 5 },
     quality: { type: Number, default: null, min: 1, max: 5 },

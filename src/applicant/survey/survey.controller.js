@@ -20,6 +20,28 @@ const createSurvey = async (req, res) => {
     }
 };
 
+// Get a specific survey by ID
+const findSurvey = async (req, res) => {
+    try {
+        const user_id = req.params.id; // Assuming the ID is passed as a URL parameter
+        const { type } = req.query;
+
+        const survey = await Survey.findOne({ $and: [{ user: user_id }, { type: type }] })
+
+        res.status(200).json({
+            success: true,
+            message: 'Survey retrieved successfully',
+            data: survey
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: 'Error creating survey feedback',
+            error: error.message
+        });
+    }
+}
+
 // Get all survey feedback
 const getAllSurveys = async (req, res) => {
     try {
@@ -44,5 +66,6 @@ const getAllSurveys = async (req, res) => {
 
 module.exports = {
     createSurvey,
+    findSurvey,
     getAllSurveys
 };

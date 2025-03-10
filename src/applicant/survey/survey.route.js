@@ -2,12 +2,14 @@ const express = require('express');
 const router = express.Router();
 const {
     createSurvey,
+    findSurvey,
     getAllSurveys
 } = require('./survey.controller');
 
+const RequireAuth = require("../../../global/middleware/RequireAuth");
+
 // Routes
-router.route('/')
-    .post(createSurvey)    // Create new survey feedback
-    .get(getAllSurveys);   // Get all survey feedback
+router.get("/:id", RequireAuth, findSurvey)
+router.post("/", RequireAuth, createSurvey)
 
 module.exports = router;
