@@ -12,11 +12,11 @@ const Login = async (req, res) => {
   try {
     const { username, password } = req.body;
     const user = await User.find({ username: username },);
-    const valid = await CheckUser(user, password, "Admin");
+    const valid = await CheckUser(user, password, "Registrar");
 
     if (valid) {
-      const accessToken = CreateAccessToken(user._id, "admin")
-      const refreshToken = CreateRefreshToken(user._id, "admin")
+      const accessToken = CreateAccessToken(user._id, "registrar")
+      const refreshToken = CreateRefreshToken(user._id, "registrar")
 
       // Assigning refresh token in http-only cookie 
       res.cookie('refreshToken', refreshToken, {
@@ -41,7 +41,7 @@ const Refresh = async (req, res) => {
 
     if(valid){
       // Correct token we send a new access token
-      const accessToken = CreateAccessToken(id, "admin")
+      const accessToken = CreateAccessToken(id, "registrar")
       return res.json({ accessToken });
     }
     else
@@ -60,7 +60,7 @@ const Register = async (req, res) => {
 
     // Format count with leading zeros to be 6 digits
     const paddedCount = count.toString().padStart(6, '0');
-    const user_id = `${year}ADMIN${paddedCount}`; // e.g., 2025A000001
+    const user_id = `${year}REGISTRAR${paddedCount}`; // e.g., 2025A000001
 
     const acc = req.body;
     acc.password = await BCrypt.hash(acc.password)
@@ -85,7 +85,7 @@ const RequestReset = async (req, res) => {
 
     if (find) {
       const token = CreateEmailToken(email);
-      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/admin/verify/${token}`
+      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/registrar/verify/${token}`
       await Send(email, link);
 
       res.status(200).json({ message: 'Sent password successfully' });
