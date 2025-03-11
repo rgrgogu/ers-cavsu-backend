@@ -31,7 +31,7 @@ const programController = {
     // Update program
     updateProgram: async (req, res) => {
         try {
-            const { name, code, updated_by } = req.body;
+            const { name, code, applicant_types, updated_by } = req.body;
             const program = await Program.findById(req.params.id);
 
             if (!program || program.isArchived) {
@@ -40,6 +40,7 @@ const programController = {
 
             program.name = name || program.name;
             program.code = code || program.code;
+            program.applicant_types = applicant_types || program.applicant_types
             program.updated_by = updated_by || program.updated_by
 
             const updatedProgram = await program.save();
