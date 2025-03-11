@@ -4,10 +4,9 @@ const programController = {
     // Create a new program
     createProgram: async (req, res) => {
         try {
-            const { name, code } = req.body;
-            const createdBy = req.user._id; // Assuming user is authenticated
+            const data = req.body;
 
-            const newProgram = new Program({ name, code, createdBy });
+            const newProgram = new Program({ ...data });
             const savedProgram = await newProgram.save();
 
             res.status(201).json(savedProgram);
@@ -19,23 +18,11 @@ const programController = {
     // Read all active programs
     getAllPrograms: async (req, res) => {
         try {
-            const programs = await Program.find({ isArchived: false })
-                .populate('createdBy', 'name');
-            res.json(programs);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    },
+            const { archived } = req.query
+            const programs = await Program.find({ isArchived: archived || false })
+                .populate('updated_by', 'name');
 
-    // Read single program
-    getProgram: async (req, res) => {
-        try {
-            const program = await Program.findById(req.params.id)
-                .populate('createdBy', 'name');
-            if (!program || program.isArchived) {
-                return res.status(404).json({ message: 'Program not found' });
-            }
-            res.json(program);
+            res.status(200).json(programs);
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -44,7 +31,7 @@ const programController = {
     // Update program
     updateProgram: async (req, res) => {
         try {
-            const { name, code } = req.body;
+            const { name, code, updated_by } = req.body;
             const program = await Program.findById(req.params.id);
 
             if (!program || program.isArchived) {
@@ -53,9 +40,10 @@ const programController = {
 
             program.name = name || program.name;
             program.code = code || program.code;
+            program.updated_by = updated_by || program.updated_by
 
             const updatedProgram = await program.save();
-            res.json(updatedProgram);
+            res.status(200).json(updatedProgram);
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
@@ -64,30 +52,19 @@ const programController = {
     // Archive program (instead of delete)
     archiveProgram: async (req, res) => {
         try {
+            const { archived, updated_by } = req.body;
+
             const program = await Program.findById(req.params.id);
 
-            if (!program || program.isArchived) {
-                return res.status(404).json({ message: 'Program not found' });
-            }
+            program.isArchived = archived;
+            program.updated_by = updated_by;
 
-            program.isArchived = true;
             const archivedProgram = await program.save();
-            res.json({ message: 'Program archived successfully', program: archivedProgram });
+            res.status(200).json({ message: 'Program archived successfully', program: archivedProgram });
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
     },
-
-    // Get archived programs
-    getArchivedPrograms: async (req, res) => {
-        try {
-            const programs = await Program.find({ isArchived: true })
-                .populate('createdBy', 'username');
-            res.json(programs);
-        } catch (error) {
-            res.status(400).json({ message: error.message });
-        }
-    }
 };
 
 module.exports = programController;

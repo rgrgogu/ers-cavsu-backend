@@ -7,10 +7,8 @@ const programController = require('./controller');
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 // CRUA Routes
-router.post('/', RequireAuth, programController.createProgram);        // Create
 router.get('/', RequireAuth, programController.getAllPrograms);             // Read all active
-router.get('/archived', RequireAuth, programController.getArchivedPrograms); // Read all archived
-router.get('/:id', RequireAuth, programController.getProgram);             // Read single
+router.post('/', RequireAuth, programController.createProgram);        // Create
 router.put('/:id', RequireAuth, programController.updateProgram);     // Update
 router.put('/archive/:id', RequireAuth, programController.archiveProgram); // Archive
 
