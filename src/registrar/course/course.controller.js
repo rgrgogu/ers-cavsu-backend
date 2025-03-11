@@ -1,122 +1,120 @@
 const Course = require('./course.model');
 
-exports.createCourse = async (req, res) => {
-  try {
-    const { code,
-            name,
-            lectureUnits,
-            labUnits,
-            prerequisite,
-            semester, } = req.body;
+const courseController = {
+  // Create a new course
+  createCourse: async (req, res) => {
+    try {
+      const { courseCode, courseTitle, lectureCredits, labCredits, courseType, program } = req.body;
+      const createdBy = req.user._id; // Assuming user is authenticated
 
-    const existingCourse = await Course.findOne({ code });
-
-    if (existingCourse) {
-      return res.status(400).json({ message: 'Course with this code already exists', });
-    }
-
-    if (prerequisite !== 'None') {
-      const prereqCourse = await Course.findOne({ code: prerequisite });
-      if (!prereqCourse) {
-        return res.status(400).json({ message: `Prerequisite course ${prerequisite} does not exist`, });
+      // Validation: Ensure program is provided for Specialized, Elective, and Practicum/OJT
+      if (['Specialized', 'Elective', 'Practicum/OJT'].includes(courseType) && !program) {
+        return res.status(400).json({ message: 'Program is required for this course type' });
       }
-    }
-
-    const course = new Course({
-      code,
-      name,
-      lectureUnits,
-      labUnits,
-      prerequisite,
-      semester,
-    });
-
-    await course.save();
-    res.status(201).json({ message: 'Course created successfully', course, });
-  } catch (error) {
-    res.status(400).json({ message: 'Error creating course', error: error.message, });
-  }
-};
-
-exports.archiveCourse = async (req, res) => {
-  try {
-    const { code, } = req.params;
-    const course = await Course.findOne({ code });
-
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found', });
-    }
-
-    course.isArchived = true;
-    await course.save();
-    res.status(200).json({ message: 'Course archived successfully', course, });
-  } catch (error) {
-    res.status(400).json({ message: 'Error archiving course', error: error.message, });
-  }
-};
-
-exports.editCourse = async (req, res) => {
-  try {
-    const { code, } = req.params;
-    const { name,
-            lectureUnits,
-            labUnits,
-            prerequisite,
-            semester, } = req.body;
-
-    const course = await Course.findOne({ code });
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found', });
-    }
-
-    if (prerequisite && prerequisite !== 'None') {
-      const prereqCourse = await Course.findOne({ code: prerequisite });
-      if (!prereqCourse) {
-        return res.status(400).json({ message: `Prerequisite course ${prerequisite} does not exist`, });
+      // Validation: Ensure program is not provided for GE, NSTP, PE
+      if (['General Education', 'NSTP', 'Physical Education'].includes(courseType) && program) {
+        return res.status(400).json({ message: 'Program should not be specified for this course type' });
       }
+
+      const newCourse = new Course({
+        courseCode,
+        courseTitle,
+        lectureCredits,
+        labCredits,
+        courseType,
+        program,
+        createdBy
+      });
+
+      const savedCourse = await newCourse.save();
+      res.status(201).json(savedCourse);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
+  },
 
-    course.name = name || course.name;
-    course.lectureUnits = lectureUnits || course.lectureUnits;
-    course.labUnits = labUnits || course.labUnits;
-    course.prerequisite = prerequisite || course.prerequisite;
-    course.semester = semester || course.semester;
+  // Read all active courses
+  getAllCourses: async (req, res) => {
+    try {
+      const courses = await Course.find({ isArchived: false })
+        .populate('createdBy', 'username');
+      res.json(courses);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
 
-    await course.save();
-    res.status(200).json({ message: 'Course updated successfully', course, });
-  } catch (error) {
-    res.status(400).json({ message: 'Error updating course', error: error.message, });
+  // Read single course
+  getCourse: async (req, res) => {
+    try {
+      const course = await Course.findById(req.params.id)
+        .populate('createdBy', 'username');
+      if (!course || course.isArchived) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+      res.json(course);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // Update course
+  updateCourse: async (req, res) => {
+    try {
+      const { courseCode, courseTitle, lectureCredits, labCredits, courseType, program } = req.body;
+      const course = await Course.findById(req.params.id);
+
+      if (!course || course.isArchived) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+
+      // Validation for updates
+      if (['Specialized', 'Elective', 'Practicum/OJT'].includes(courseType) && !program) {
+        return res.status(400).json({ message: 'Program is required for this course type' });
+      }
+      if (['General Education', 'NSTP', 'Physical Education'].includes(courseType) && program) {
+        return res.status(400).json({ message: 'Program should not be specified for this course type' });
+      }
+
+      course.courseCode = courseCode || course.courseCode;
+      course.courseTitle = courseTitle || course.courseTitle;
+      course.lectureCredits = lectureCredits || course.lectureCredits;
+      course.labCredits = labCredits || course.labCredits;
+      course.courseType = courseType || course.courseType;
+      course.program = program || course.program;
+
+      const updatedCourse = await course.save();
+      res.json(updatedCourse);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  // Archive course
+  archiveCourse: async (req, res) => {
+    try {
+      const course = await Course.findById(req.params.id);
+      if (!course || course.isArchived) {
+        return res.status(404).json({ message: 'Course not found' });
+      }
+      course.isArchived = true;
+      const archivedCourse = await course.save();
+      res.json({ message: 'Course archived successfully', course: archivedCourse });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
+  // Get archived courses
+  getArchivedCourses: async (req, res) => {
+    try {
+      const courses = await Course.find({ isArchived: true })
+        .populate('createdBy', 'username');
+      res.json(courses);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
 };
 
-exports.getCourse = async (req, res) => {
-  try {
-    const { code, } = req.params;
-    const course = await Course.findOne({ code });
-
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found', });
-    }
-
-    let prerequisiteDetails = null;
-    if (course.prerequisite !== 'None') {
-      prerequisiteDetails = await Course.findOne({ code: course.prerequisite });
-    }
-
-    res.status(200).json({
-      course,
-      prerequisite: course.prerequisite === 'None' ? 'None' : prerequisiteDetails,
-    });
-  } catch (error) {
-    res.status(400).json({ message: 'Error retrieving course', error: error.message, });
-  }
-};
-
-exports.getAllCourses = async (req, res) => {
-  try {
-    const courses = await Course.find({ isArchived: false });
-    res.status(200).json(courses);
-  } catch (error) {
-    res.status(400).json({ message: 'Error retrieving courses', error: error.message, });
-  }
-};
+module.exports = courseController;
