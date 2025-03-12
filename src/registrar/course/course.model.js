@@ -7,7 +7,7 @@ const courseSchema = new mongoose.Schema({
     labCredits: { type: Number, required: true, min: 0 },
     courseType: { type: String, enum: ['General Education', 'Specialized', 'Elective', 'NSTP', 'Physical Education', 'Practicum/OJT'], required: true },
     program: { type: String, required: function () { return ['Specialized', 'Elective', 'Practicum/OJT'].includes(this.courseType); }, default: null },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
     isArchived: { type: Boolean, default: false },
 }, {
     virtuals: {
