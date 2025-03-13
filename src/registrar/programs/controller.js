@@ -53,15 +53,40 @@ const programController = {
     // Archive program (instead of delete)
     archiveProgram: async (req, res) => {
         try {
-            const { archived, updated_by } = req.body;
+            const { ids, archived, updated_by } = req.body;
 
-            const program = await Program.findById(req.params.id);
+            // Validate input
+            if (!Array.isArray(ids) || ids.length === 0) {
+                return res.status(400).json({ message: 'Please provide an array of course group IDs' });
+            }
+            if (typeof archived !== 'boolean') {
+                return res.status(400).json({ message: 'Archived status must be a boolean' });
+            }
+            if (!updated_by) {
+                return res.status(400).json({ message: 'Updated_by field is required' });
+            }
 
-            program.isArchived = archived;
-            program.updated_by = updated_by;
+            // Update multiple course groups
+            const result = await Program.updateMany(
+                { _id: { $in: ids } },
+                {
+                    $set: {
+                        isArchived: archived,
+                        updated_by: updated_by,
+                    }
+                },
+                { new: true }
+            );
 
-            const archivedProgram = await program.save();
-            res.status(200).json({ message: 'Program archived successfully', program: archivedProgram });
+            // Check if any documents were modified
+            if (result.matchedCount === 0) {
+                return res.status(404).json({ message: 'No course groups found with provided IDs' });
+            }
+
+            res.json({
+                message: `${result.modifiedCount} course group(s) archived successfully`,
+                modifiedCount: result.modifiedCount,
+            });
         } catch (error) {
             res.status(400).json({ message: error.message });
         }
