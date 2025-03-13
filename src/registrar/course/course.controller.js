@@ -1,23 +1,19 @@
 const Course = require('./course.model');
+const CourseGroup = require("../course_group/model")
 
 const courseController = {
   // Create a new course
   createCourse: async (req, res) => {
     try {
-     const data = req.body;
-
-      // Validation: Ensure program is provided for Specialized, Elective, and Practicum/OJT
-      if (['Specialized', 'Elective', 'Practicum/OJT'].includes(data.courseType) && !data.program) {
-        return res.status(400).json({ message: 'Program is required for this course type' });
-      }
-      
-      // Validation: Ensure program is not provided for GE, NSTP, PE
-      if (['General Education', 'NSTP', 'Physical Education'].includes(data.courseType) && data.program) {
-        return res.status(400).json({ message: 'Program should not be specified for this course type' });
-      }
-
-      const newCourse = new Course({...data});
+      const data = req.body;
+      const newCourse = new Course({ ...data });
       const savedCourse = await newCourse.save();
+
+      await CourseGroup.findByIdAndUpdate(
+        { _id: data.group_id },
+        { $push: { courses: savedCourse._id } },
+        { new: true }
+      );
 
       res.status(201).json(savedCourse);
     } catch (error) {
@@ -25,12 +21,76 @@ const courseController = {
     }
   },
 
+  createCoursesMass: async (req, res) => {
+    const results = { successful: [], failed: [] };
+    const { group_id, courses } = req.body;
+
+    try {
+      const insertResult = await Course.insertMany(courses, { ordered: false });
+      results.successful = insertResult.map(doc => ({
+        index: courses.findIndex(course => course.courseCode === doc.courseCode), // Match by courseCode
+        courseCode: doc.courseCode,
+        courseTitle: doc.courseTitle,
+        lectureCredits: doc.lectureCredits,
+        labCredits: doc.labCredits,
+        lectureContact: doc.lectureContact,
+        labContact: doc.labContact,
+        updatedAt: doc.updatedAt,
+        updated_by: doc.updated_by,
+      }));
+
+      await CourseGroup.findByIdAndUpdate(
+        { _id: group_id },
+        { $push: { courses: insertResult.map(item => item._id) } },
+        { new: true }
+      );
+    } catch (error) {
+      if (error.writeErrors) {
+        // Handle individual write errors (e.g., duplicates)
+        const writeErrors = error.writeErrors;
+        results.failed = writeErrors.map(err => ({
+          index: err.index, // Include the index of the failed course
+          ...courses[err.index],
+          error: 'Duplicate entry (E11000)',
+        }));
+
+        // Find successful insertions by filtering out failed indices
+        const successfulIndices = courses.map((_, index) => index).filter(i => !writeErrors.some(err => err.index === i));
+        results.successful = successfulIndices.map(i => ({
+          index: i,
+          ...courses[i],
+        }));
+
+        await CourseGroup.findByIdAndUpdate(
+          { _id: group_id },
+          { $push: { courses: successfulIndices.map(item => item._id) } },
+          { new: true }
+        );
+      } else {
+        // Handle other unexpected errors
+        results.failed = courses.map((course, index) => ({ ...course, index, error: error.message }));
+        return res.status(500).json(results);
+      }
+    }
+
+    res.status(200).json(results);
+  },
+
   // Read all active courses
   getAllCourses: async (req, res) => {
     try {
-      const { archived } = req.query
-      const courses = await Course.find({ isArchived: archived || false })
-        .populate('updated_by', 'name');
+      const { archived, group_id } = req.query
+      
+      const courseGroups = await CourseGroup.find({
+        $and: [{ _id: group_id }]
+      })
+        .populate('courses')
+        .select('courses -_id');
+
+      // Flatten the courses array
+      const courses = courseGroups
+        .flatMap(group => group.courses)
+        .filter(course => course.isArchived === (archived === "false" ? false : true));
 
       res.status(200).json(courses);
     } catch (error) {
@@ -41,25 +101,19 @@ const courseController = {
   // Update course
   updateCourse: async (req, res) => {
     try {
-      const { courseCode, courseTitle, lectureCredits, labCredits, courseType, program } = req.body;
+      const { courseCode, courseTitle, lectureCredits, labCredits, lectureContact, labContact, courseType, program } = req.body;
       const course = await Course.findById(req.params.id);
 
       if (!course || course.isArchived) {
         return res.status(404).json({ message: 'Course not found' });
       }
 
-      // Validation for updates
-      if (['Specialized', 'Elective', 'Practicum/OJT'].includes(courseType) && !program) {
-        return res.status(400).json({ message: 'Program is required for this course type' });
-      }
-      if (['General Education', 'NSTP', 'Physical Education'].includes(courseType) && program) {
-        return res.status(400).json({ message: 'Program should not be specified for this course type' });
-      }
-
       course.courseCode = courseCode || course.courseCode;
       course.courseTitle = courseTitle || course.courseTitle;
       course.lectureCredits = lectureCredits || course.lectureCredits;
       course.labCredits = labCredits || course.labCredits;
+      course.lectureContact = lectureContact || course.lectureContact;
+      course.labContact = labContact || course.labContact;
       course.courseType = courseType || course.courseType;
       course.program = program || course.program;
 
@@ -73,15 +127,37 @@ const courseController = {
   // Archive course
   archiveCourse: async (req, res) => {
     try {
-      const { archived, updated_by } = req.body;
+      const { ids, archived, updated_by } = req.body;
 
-      const course = await Course.findById(req.params.id);
+      // Validate input
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: 'Please provide an array of course group IDs' });
+      }
+      if (typeof archived !== 'boolean') {
+        return res.status(400).json({ message: 'Archived status must be a boolean' });
+      }
+      if (!updated_by) {
+        return res.status(400).json({ message: 'Updated_by field is required' });
+      }
 
-      course.isArchived = archived;
-      course.updated_by = updated_by
+      // Update multiple course groups
+      const result = await Course.updateMany(
+        { _id: { $in: ids } },
+        {
+          $set: {
+            isArchived: archived,
+            updated_by: updated_by,
+          }
+        },
+        { new: true }
+      );
 
-      const archivedCourse = await course.save();
-      res.status(200).json({ message: 'Course archived successfully', course: archivedCourse });
+      // Check if any documents were modified
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ message: 'No course groups found with provided IDs' });
+      }
+
+      res.status(200).json({ message: `${result.modifiedCount} course group(s) archived successfully` });
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
