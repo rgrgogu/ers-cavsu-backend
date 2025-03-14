@@ -13,7 +13,8 @@ const routes = [
     { api: "/api/admission/applications", router: require('./src/admission/applications/applications.route.js') }, 
     { api: "/api/admission/appointments", router: require('./src/admission/appointments/appoint.route.js') }, 
     { api: "/api/admission/logs", router: require('./src/admission/logs/logs.route.js') }, 
-    
+    { api: "/api/admission/programs", router: require('./src/admission/programs/route.js') }, 
+
     // APPLICANT
     { api: "/api/applicant/auth", router: require('./src/applicant/login/app_login.route.js') },
     { api: "/api/applicant/profile", router: require('./src/applicant/profile/app_profile.route.js') }, 
