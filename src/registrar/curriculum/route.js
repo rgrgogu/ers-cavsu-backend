@@ -1,13 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const curriculumController = require('./curriculumController');
+const curriculumController = require('./controller');
 
-// Assuming authentication middleware
-const auth = require('../middleware/auth');
+const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 // Routes
-router.post('/', auth, curriculumController.createCurriculum);                // Create
-router.get('/program/:programId', curriculumController.getCurriculumByProgramClustered); // Get clustered
-router.get('/count/:programId', curriculumController.getCurriculumCountByProgram); // Count by program
+router.get('/get_courses', RequireAuth, curriculumController.getGroupsWithCourses); // Count by program
 
 module.exports = router;

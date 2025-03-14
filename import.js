@@ -5,6 +5,7 @@ const routes = [
     { api: "/api/registrar/programs", router: require('./src/registrar/programs/route.js') },
     { api: "/api/registrar/courses", router: require('./src/registrar/course/course.route.js') },
     { api: "/api/registrar/course_grps", router: require('./src/registrar/course_group/route.js') },
+    { api: "/api/registrar/curriculums", router: require('./src/registrar/curriculum/route.js') },
 
     // ADMISSION
     { api: "/api/admission/auth", router: require('./src/admission/login/adn_login.route.js') },
