@@ -3,12 +3,21 @@ const CourseGroup = require('./model'); // Assuming the schema file is in models
 // Create a new course group
 exports.createCourseGroup = async (req, res) => {
     try {
-        const data = req.body;
+        const { groupName, description, program, updated_by } = req.body;
 
-        const courseGroup = new CourseGroup({ ...data });
+        const courseGroup = new CourseGroup({
+            groupName,
+            description,
+            program: Array.isArray(program) ? program : [], // Use empty array if program is null or undefined
+            updated_by,
+            isArchived: false,
+        });
         const savedGroup = await courseGroup.save();
 
-        res.status(201).json(savedGroup);
+        // Populate the programs field after saving
+        const populatedGroup = await CourseGroup.findById(savedGroup._id).populate('program', 'name code'); // Assuming 'programs' is the field name in your schema
+
+        res.status(201).json(populatedGroup);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -20,7 +29,9 @@ exports.getAllCourseGroups = async (req, res) => {
         const { archived } = req.query;
 
         const courseGroups = await CourseGroup.find({ isArchived: archived })
-            .populate('updated_by', 'name'); // Populate user info if needed
+            .populate('updated_by', 'name') // Populate user info if needed
+            .populate('program', 'name code');
+
         res.json(courseGroups);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -51,7 +62,7 @@ exports.updateCourseGroup = async (req, res) => {
             req.params.id,
             { groupName, description, program, updated_by },
             { new: true, runValidators: true }
-        );
+        ).populate('program', 'name code'); // Populate the program field
 
         if (!courseGroup || courseGroup.isArchived) {
             return res.status(404).json({ message: 'Course group not found' });

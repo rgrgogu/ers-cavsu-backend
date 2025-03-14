@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const courseGroupSchema = new mongoose.Schema({
     groupName: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
-    program: { type: [], trim: true, default: null },
+    program: [{ type: mongoose.Schema.Types.ObjectId, ref: 'programs' }],
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'courses' }],
     updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
     isArchived: { type: Boolean, default: false }

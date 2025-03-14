@@ -6,8 +6,8 @@ const curriculumController = {
       const { program } = req.query;
 
       const conditions = { isArchived: false };
-      if (program) conditions.$or = [{ program: null }, { program: { $in: [program] } }];
-      else conditions.program = null;
+      if (program) conditions.$or = [{ program: [] }, { program: { $in: [program] } }];
+      else conditions.program = [];
 
       const groups = await CourseGroup.find(conditions)
         .populate({
