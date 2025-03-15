@@ -16,6 +16,6 @@ const uploadFields = upload.array("files", 10);
 router.get("/get_all_admission", RequireAuth, GetAllAdmissionGuide);
 router.post("/create_admission", uploadFields, RequireAuth, CreateAdmissionGuide);
 router.put("/edit_admission/:id", uploadFields, RequireAuth, EditAdmissionGuide);
-router.put("/archive_admission/:id", RequireAuth, ArchiveAdmissionGuide);
+router.put("/archive_admission", RequireAuth, ArchiveAdmissionGuide);
 
 module.exports = router;

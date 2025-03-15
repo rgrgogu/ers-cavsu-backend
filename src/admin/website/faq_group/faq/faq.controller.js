@@ -61,24 +61,26 @@ const EditFAQ = async (req, res) => {
   }
 }
 
+
 const ArchiveFAQ = async (req, res) => {
   try {
-    const id = req.params.id;
-    const archive = req.query.archive
 
-    const result = await Model.findByIdAndUpdate(
-      { _id: id }, // The ID of the document you want to update
-      {
-        $set: {
-          isArchived: archive, // Update the created_by field if needed
-        },
-      },
-      { new: true } // Return the updated document
-    );
+      const { ids, archived, updated_by } = req.body;
 
-    res.status(200).json({ message: 'Archived successfully', result });
+      const result = await Model.updateMany(
+          { _id: { $in: ids } },
+          {
+              $set: {
+                  isArchived: archived,
+                  updated_by: updated_by,
+              }
+          },
+          { new: true }
+      );
+
+      res.status(200).json({ message: 'Archived successfully', result });
   } catch (error) {
-    res.status(400).json({ error: error.message })
+      res.status(400).json({ error: error.message })
   }
 }
 

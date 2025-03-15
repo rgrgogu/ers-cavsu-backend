@@ -12,7 +12,7 @@ const GetAllAdmissionGuide = async (req, res) => {
     try {
         const archive = req.query.archive;
 
-        const result = await Model.find({isArchived: archive})
+        const result = await Model.find({ isArchived: archive })
             .populate({
                 path: 'created_by',
                 select: 'name',
@@ -75,7 +75,7 @@ const CreateAdmissionGuide = async (req, res) => {
 const EditAdmissionGuide = async (req, res) => {
     try {
         const id = req.params.id
-        const {folder_id, user_id} = req.query;
+        const { folder_id, user_id } = req.query;
         const { body, files } = req
         const DOCUMENT_MAX_SIZE = 1024 * 1024;
         const data = JSON.parse(body.obj)
@@ -98,7 +98,7 @@ const EditAdmissionGuide = async (req, res) => {
 
             for (const file of files) {
                 const { id, name } = await UploadFiles(file, folder_id);
-    
+
                 group_files.push({
                     link: `https://drive.google.com/thumbnail?id=${id}&sz=w1000`,
                     id,
@@ -106,22 +106,22 @@ const EditAdmissionGuide = async (req, res) => {
                 })
             }
         }
-        
+
         const result = await Model.findByIdAndUpdate(
-            {_id: id}, // The ID of the document you want to update
+            { _id: id }, // The ID of the document you want to update
             {
                 $set: {
                     ...data,
                     updated_by: user_id, // Update the created_by field if needed
                 },
                 // Conditionally update group_files only if files are provided
-                ...(files && files.length > 0 ? { $push: { group_files: group_files }  } : {}),
+                ...(files && files.length > 0 ? { $push: { group_files: group_files } } : {}),
             },
             { new: true } // Return the updated document
         );
 
-        if(deletedList.length !== 0) {
-            for (const file of deletedList){
+        if (deletedList.length !== 0) {
+            for (const file of deletedList) {
                 console.log(file._id)
                 await DeleteFiles(file.id);
             }
@@ -131,12 +131,12 @@ const EditAdmissionGuide = async (req, res) => {
             const output = await Model.findByIdAndUpdate(
                 { _id: id }, // Find the group by its ID
                 { $pull: { group_files: { id: { $in: del_arr } } } },
-                { new: true}
+                { new: true }
             )
 
             res.status(200).json({ message: 'Data edited successfully', result: output });
         }
-        else{
+        else {
             res.status(200).json({ message: 'Data edited successfully', result });
         }
     } catch (error) {
@@ -146,17 +146,18 @@ const EditAdmissionGuide = async (req, res) => {
 
 const ArchiveAdmissionGuide = async (req, res) => {
     try {
-        const id = req.params.id;
-        const archive = req.query.archive
-        
-        const result = await Model.findByIdAndUpdate(
-            {_id: id}, // The ID of the document you want to update
+
+        const { ids, archived, updated_by } = req.body;
+
+        const result = await Model.updateMany(
+            { _id: { $in: ids } },
             {
                 $set: {
-                    isArchived: archive, // Update the created_by field if needed
-                },
+                    isArchived: archived,
+                    updated_by: updated_by,
+                }
             },
-            { new: true } // Return the updated document
+            { new: true }
         );
 
         res.status(200).json({ message: 'Archived successfully', result });

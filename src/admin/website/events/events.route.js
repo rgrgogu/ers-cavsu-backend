@@ -16,6 +16,6 @@ const uploadFields = upload.array("files", 10);
 router.get("/get_all_event", RequireAuth, GetAll);
 router.post("/create_event", uploadFields, RequireAuth, Create);
 router.put("/edit_event/:id", uploadFields, RequireAuth, Edit);
-router.put("/archive_event/:id", RequireAuth, Archive);
+router.put("/archive_event", RequireAuth, Archive);
 
 module.exports = router;
