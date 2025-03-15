@@ -13,6 +13,6 @@ const RequireAuth = require("../../../../../global/middleware/RequireAuth");
 router.get("/get_all_offices", RequireAuth, GetOffices);
 router.post("/create_office", RequireAuth, CreateOffice);
 router.put("/edit_office/:id", RequireAuth, EditOffice);
-router.put("/archive_office/:id", RequireAuth, ArchiveOffice);
+router.put("/archive_office", RequireAuth, ArchiveOffice);
 
 module.exports = router;

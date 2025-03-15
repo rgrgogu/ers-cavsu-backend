@@ -13,6 +13,6 @@ const RequireAuth = require("../../../../../global/middleware/RequireAuth");
 router.get("/get_all_faqgroups", RequireAuth, GetFAQGroups);
 router.post("/create_faqgroup", RequireAuth, CreateFAQGroup);
 router.put("/edit_faqgroup/:id", RequireAuth, EditFAQGroup);
-router.put("/archive_faqgroup/:id", RequireAuth, ArchiveFAQGroup);
+router.put("/archive_faqgroup", RequireAuth, ArchiveFAQGroup);
 
 module.exports = router;
