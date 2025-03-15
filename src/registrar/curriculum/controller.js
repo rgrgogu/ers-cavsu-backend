@@ -1,5 +1,7 @@
 const CourseGroup = require("../course_group/model");
 const Curriculum = require("./model")
+const Courses = require("../course/course.model")
+const mongoose = require("mongoose")
 
 const curriculumController = {
   getGroupsWithCourses: async (req, res) => {
@@ -49,9 +51,9 @@ const curriculumController = {
 
   getCurricula: async (req, res) => {
     try {
-      const { program, isArchived = false } = req.query;
+      const { program, archived = false } = req.query;
 
-      const query = { isArchived: isArchived === 'true' };
+      const query = { isArchived: archived === 'true' };
       if (program) {
         query.program = mongoose.Types.ObjectId(program);
       }
@@ -59,6 +61,7 @@ const curriculumController = {
       const curricula = await Curriculum.find(query)
         .populate('program', 'name code')
         .populate('updated_by', 'name')
+        .select("code name program total_units updated_by isArchived updatedAt")
         .sort('createdAt');
 
       res.status(200).json(curricula);
@@ -67,6 +70,107 @@ const curriculumController = {
         success: false,
         message: 'Error fetching curricula',
         error: error.message
+      });
+    }
+  },
+
+  // getCurriculum: async (req, res) => {
+  //   try {
+  //     const id = req.params.id
+
+  //     const result = await Curriculum.findById(id)
+  //       .populate({
+  //         path: 'years.semesters.1st.course_id years.semesters.2nd.course_id years.semesters.3rd.course_id years.semesters.Midyear.course_id',
+  //         select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
+  //       })
+  //       .populate({
+  //         path: 'years.semesters.1st.pre_req years.semesters.2nd.pre_req years.semesters.3rd.pre_req years.semesters.Midyear.pre_req',
+  //         select: 'courseCode',
+  //       })
+  //       .populate('program', 'name')
+  //       .lean();
+
+  //     res.status(200).json(result)
+  //   } catch (error) {
+  //     res.status(400).json({
+  //       success: false,
+  //       message: 'Error fetching curricula',
+  //       error: error.message
+  //     });
+  //   }
+  // },
+  getCurriculum: async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      // Step 1: Fetch the curriculum with course_id and program populated
+      const result = await Curriculum.findById(id)
+        .populate({
+          path: 'years.semesters.1st.course_id years.semesters.2nd.course_id years.semesters.3rd.course_id years.semesters.Midyear.course_id',
+          select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
+        })
+        .populate({
+          path: 'program',
+          select: 'name',
+        })
+        .lean();
+
+      if (!result) {
+        return res.status(404).json({
+          success: false,
+          message: 'Curriculum not found',
+        });
+      }
+
+      // Step 2: Collect all pre_req ObjectIds across all semesters
+      const allPreReqIds = new Set();
+      for (const year of result.years) {
+        for (const semester of Object.values(year.semesters)) {
+          for (const course of semester) {
+            if (course.pre_req && course.pre_req.length > 0) {
+              course.pre_req.forEach(prereq => {
+                if (mongoose.Types.ObjectId.isValid(prereq)) {
+                  allPreReqIds.add(prereq.toString());
+                }
+              });
+            }
+          }
+        }
+      }
+
+      // Step 3: Fetch all valid pre_req courses in a single query
+      let preReqMap = new Map();
+      if (allPreReqIds.size > 0) {
+        const populatedPreReqs = await Courses.find(
+          { _id: { $in: Array.from(allPreReqIds) } },
+          'courseCode'
+        ).lean();
+        populatedPreReqs.forEach(preReq => {
+          preReqMap.set(preReq._id.toString(), { _id: preReq._id, courseCode: preReq.courseCode });
+        });
+      }
+
+      // Step 4: Map pre_req values, replacing ObjectIds with populated data
+      for (const year of result.years) {
+        for (const semester of Object.values(year.semesters)) {
+          for (const course of semester) {
+            if (course.pre_req && course.pre_req.length > 0) {
+              course.pre_req = course.pre_req.map(prereq =>
+                mongoose.Types.ObjectId.isValid(prereq) && preReqMap.has(prereq.toString())
+                  ? preReqMap.get(prereq.toString())
+                  : prereq
+              );
+            }
+          }
+        }
+      }
+
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: 'Error fetching curriculum',
+        error: error.message,
       });
     }
   },
