@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const courseSchema = new mongoose.Schema({
     courseCode: { type: String, required: true, unique: true, uppercase: true, trim: true },
     courseTitle: { type: String, required: true, trim: true },
-    lectureCredits: { type: Number, required: true, min: 0 },
-    labCredits: { type: Number, required: true, min: 0 },
+    lectureCredits: { type: Number, required: true, min: -1 },
+    labCredits: { type: Number, required: true, min: -1 },
     lectureContact: { type: Number, required: true, min: 0 },
     labContact: { type: Number, required: true, min: 0 },
     updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },

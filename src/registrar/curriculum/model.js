@@ -1,33 +1,41 @@
 const mongoose = require('mongoose');
 
-const checklistSchema = new mongoose.Schema({
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'courses', required: true, index: true },
-  semester: {
-    type: String,
-    required: true,
-    enum: [
-      '1-1', '1-2', '1-3', '1-M', // First Year: Sem 1, Sem 2, Sem 3, Mid-Year
-      '2-1', '2-2', '2-3', '2-M', // Second Year
-      '3-1', '3-2', '3-3', '3-M', // Third Year
-      '4-1', '4-2', '4-3', '4-M'  // Fourth Year
-    ],
-    validate: {
-      validator: function(v) {
-        return /^\d-[1-3M]$/.test(v);
+const courses = new mongoose.Schema({
+  course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'courses' },
+  pre_req: [{
+    type: mongoose.Schema.Types.Mixed, ref: "courses", validate: {
+      validator: function (value) {
+        // Ensure the value is either a valid ObjectId or a string
+        return (
+          mongoose.Types.ObjectId.isValid(value) ||
+          typeof value === 'string'
+        );
       },
-      message: props => `${props.value} is not a valid semester format!`
+      message: 'pre_req must be either a valid ObjectId or a string',
     }
-  },
-  prerequisites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'courses', default: [] }]
-});
+  }]
+}, { _id: false });
+
+const semesters = new mongoose.Schema({
+  "1st": [courses],
+  "2nd": [courses],
+  "3rd": [courses],
+  "Midyear": [courses]
+}, { _id: false });
+
+const years = new mongoose.Schema({
+  year: { type: String, default: '' },
+  semesters: { type: semesters, default: () => ({ "1st": [], "2nd": [], "3rd": [], "Midyear": [] }) },
+}, { _id: false });
 
 const curriculumSchema = new mongoose.Schema({
-  identifier: { type: String, default: '', required: true, trim: true, match: [/^[A-Za-z0-9-]+$/, 'Identifier can only contain letters, numbers, and hyphens'] },
+  code: { type: String, default: '', required: true, trim: true, match: [/^[A-Za-z0-9-]+$/, 'Identifier can only contain letters, numbers, and hyphens'], unique: true, index: true},
+  name: { type: String, default: '', required: true },
   program: { type: mongoose.Schema.Types.ObjectId, ref: 'programs', required: true, index: true },
-  checklist: [checklistSchema], // Embedded array of checklist items
+  hasFifthYear: { type: Boolean, default: false },
+  years: [years],
   updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
   isArchived: { type: Boolean, default: false },
-  totalCredits: { type: Number, default: 0 }
 }, {
   virtuals: {
     id: { get() { return this._id; } },
