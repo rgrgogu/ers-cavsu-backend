@@ -49,24 +49,36 @@ const courseController = {
       if (error.writeErrors) {
         // Handle individual write errors (e.g., duplicates)
         const writeErrors = error.writeErrors;
+
+        // Map failed courses with their error details
         results.failed = writeErrors.map(err => ({
-          index: err.index, // Include the index of the failed course
+          index: err.index,
           ...courses[err.index],
           error: 'Duplicate entry (E11000)',
         }));
 
-        // Find successful insertions by filtering out failed indices
-        const successfulIndices = courses.map((_, index) => index).filter(i => !writeErrors.some(err => err.index === i));
-        results.successful = successfulIndices.map(i => ({
-          index: i,
-          ...courses[i],
-        }));
+        // Get successful courses from the error's insertedDocs
+        const successfulCourses = error.result?.insertedDocs || error.insertedDocs || [];
 
-        await CourseGroup.findByIdAndUpdate(
-          { _id: group_id },
-          { $push: { courses: successfulIndices.map(item => item._id) } },
-          { new: true }
-        );
+        if (successfulCourses.length > 0) {
+          // Map successful results with their generated _id
+          results.successful = successfulCourses.map((doc) => {
+            const originalIndex = courses.findIndex(course => course.courseCode === doc.courseCode);
+            return {
+              index: originalIndex,
+              ...doc
+            };
+          });
+
+          // Update CourseGroup with the _id array of successful courses
+          await CourseGroup.findByIdAndUpdate(
+            { _id: group_id },
+            { $push: { courses: { $each: successfulCourses.map(item => item._id) } } },
+            { new: true }
+          );
+        } else {
+          console.log('No successful courses inserted during the operation');
+        }
       } else {
         // Handle other unexpected errors
         results.failed = courses.map((course, index) => ({ ...course, index, error: error.message }));
@@ -81,7 +93,7 @@ const courseController = {
   getAllCourses: async (req, res) => {
     try {
       const { archived, group_id } = req.query
-      
+
       const courseGroups = await CourseGroup.find({
         $and: [{ _id: group_id }]
       })

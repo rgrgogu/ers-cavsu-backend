@@ -74,11 +74,9 @@ const curriculumController = {
   createCurriculum: async (req, res) => {
     try {
       const data = req.body;
-      console.log(data)
-      
-      // const curriculum = await Curriculum.create(data);
+      const curriculum = await Curriculum.create(data);
 
-      // res.status(201).json(curriculum);
+      res.status(201).json(curriculum);
     } catch (error) {
       res.status(400).json({
         success: false,
