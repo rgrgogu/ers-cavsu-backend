@@ -35,6 +35,7 @@ const courseController = {
         labCredits: doc.labCredits,
         lectureContact: doc.lectureContact,
         labContact: doc.labContact,
+        isMajor: doc.isMajor,
         updatedAt: doc.updatedAt,
         updated_by: doc.updated_by,
       }));
@@ -101,7 +102,7 @@ const courseController = {
   // Update course
   updateCourse: async (req, res) => {
     try {
-      const { courseCode, courseTitle, lectureCredits, labCredits, lectureContact, labContact, courseType, program } = req.body;
+      const { courseCode, courseTitle, lectureCredits, labCredits, lectureContact, labContact, isMajor, courseType, program } = req.body;
       const course = await Course.findById(req.params.id);
 
       if (!course || course.isArchived) {
@@ -114,6 +115,7 @@ const courseController = {
       course.labCredits = labCredits || course.labCredits;
       course.lectureContact = lectureContact || course.lectureContact;
       course.labContact = labContact || course.labContact;
+      course.isMajor = isMajor;
       course.courseType = courseType || course.courseType;
       course.program = program || course.program;
 
