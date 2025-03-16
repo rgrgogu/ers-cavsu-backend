@@ -17,7 +17,7 @@ const obj = new Schema({
     department: { type: String, required: true, index: true, enum: ['College', 'Masteral', 'Doctoral'] },
     username: { type: String, required: true },
     password: { type: String, required: true },
-    role: { type: String, required: true, index: true, enum: ['Applicant', 'Student', 'Faculty', 'Admin', 'Registrar'] },
+    role: { type: String, required: true, index: true, enum: ['Applicant', 'Student'] },
     status: { type: String, required: true, index: true, default: 'Created', 
         enum: [
             'Created', 
@@ -33,7 +33,9 @@ const obj = new Schema({
             "Missed For Interview", 
             "For Confirmation", 
             "Confirmed", 
+            "For Registrar",
             "Submitted", 
+            "For Admin",
             "Enrolled",
             "Forfeited"
         ] },
