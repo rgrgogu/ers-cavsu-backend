@@ -2,18 +2,8 @@ const mongoose = require('mongoose');
 
 const courses = new mongoose.Schema({
   course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'courses' },
-  pre_req: [{
-    type: mongoose.Schema.Types.Mixed, ref: "courses", validate: {
-      validator: function (value) {
-        // Ensure the value is either a valid ObjectId or a string
-        return (
-          mongoose.Types.ObjectId.isValid(value) ||
-          typeof value === 'string'
-        );
-      },
-      message: 'pre_req must be either a valid ObjectId or a string',
-    }
-  }]
+  pre_req_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'courses' }],
+  pre_req_strings: [{ type: String }],
 }, { _id: false });
 
 const semesters = new mongoose.Schema({
@@ -46,4 +36,4 @@ const curriculumSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-module.exports = mongoose.model('curriculum', curriculumSchema);
+module.exports = mongoose.model('curricula', curriculumSchema);

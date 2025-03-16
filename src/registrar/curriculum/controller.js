@@ -101,13 +101,16 @@ const curriculumController = {
   // },
   getCurriculum: async (req, res) => {
     try {
-      const id = req.params.id;
+      const id = req.params.id
 
-      // Step 1: Fetch the curriculum with course_id and program populated
       const result = await Curriculum.findById(id)
         .populate({
           path: 'years.semesters.1st.course_id years.semesters.2nd.course_id years.semesters.3rd.course_id years.semesters.Midyear.course_id',
           select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
+        })
+        .populate({
+          path: 'years.semesters.1st.pre_req_ids years.semesters.2nd.pre_req_ids years.semesters.3rd.pre_req_ids years.semesters.Midyear.pre_req_ids',
+          select: 'courseCode',
         })
         .populate({
           path: 'program',
@@ -120,49 +123,6 @@ const curriculumController = {
           success: false,
           message: 'Curriculum not found',
         });
-      }
-
-      // Step 2: Collect all pre_req ObjectIds across all semesters
-      const allPreReqIds = new Set();
-      for (const year of result.years) {
-        for (const semester of Object.values(year.semesters)) {
-          for (const course of semester) {
-            if (course.pre_req && course.pre_req.length > 0) {
-              course.pre_req.forEach(prereq => {
-                if (mongoose.Types.ObjectId.isValid(prereq)) {
-                  allPreReqIds.add(prereq.toString());
-                }
-              });
-            }
-          }
-        }
-      }
-
-      // Step 3: Fetch all valid pre_req courses in a single query
-      let preReqMap = new Map();
-      if (allPreReqIds.size > 0) {
-        const populatedPreReqs = await Courses.find(
-          { _id: { $in: Array.from(allPreReqIds) } },
-          'courseCode'
-        ).lean();
-        populatedPreReqs.forEach(preReq => {
-          preReqMap.set(preReq._id.toString(), { _id: preReq._id, courseCode: preReq.courseCode });
-        });
-      }
-
-      // Step 4: Map pre_req values, replacing ObjectIds with populated data
-      for (const year of result.years) {
-        for (const semester of Object.values(year.semesters)) {
-          for (const course of semester) {
-            if (course.pre_req && course.pre_req.length > 0) {
-              course.pre_req = course.pre_req.map(prereq =>
-                mongoose.Types.ObjectId.isValid(prereq) && preReqMap.has(prereq.toString())
-                  ? preReqMap.get(prereq.toString())
-                  : prereq
-              );
-            }
-          }
-        }
       }
 
       res.status(200).json(result);
@@ -192,70 +152,68 @@ const curriculumController = {
 
   updateCurriculum: async (req, res) => {
     try {
-      const { id } = req.params;
-      const updateData = {
-        ...req.body,
-        updated_by: req.user._id,
-        updatedAt: Date.now()
-      };
+      const { id } = req.params; // Assuming the ID is passed as a URL parameter (e.g., /curriculums/:id)
+      const data = req.body;
 
-      const curriculum = await Curriculum.findByIdAndUpdate(
+      // Find and update the curriculum by ID, return the updated document
+      const updatedCurriculum = await Curriculum.findByIdAndUpdate(
         id,
-        { $set: updateData },
-        { new: true, runValidators: true }
-      )
-        .populate('program', 'name code')
-        .populate('updated_by', 'username email');
+        data,
+        { new: true, runValidators: true } // new: true returns the updated document, runValidators ensures schema validation
+      );
 
-      if (!curriculum) {
+      if (!updatedCurriculum) {
         return res.status(404).json({
           success: false,
-          message: 'Curriculum not found'
+          message: 'Curriculum not found',
         });
       }
 
-      res.status(200).json({
-        success: true,
-        data: curriculum,
-        message: 'Curriculum updated successfully'
-      });
+      res.status(200).json(updatedCurriculum);
     } catch (error) {
       res.status(400).json({
         success: false,
         message: 'Error updating curriculum',
-        error: error.message
+        error: error.message,
       });
     }
   },
 
   archiveCurriculum: async (req, res) => {
     try {
-      const { id } = req.params;
-      const { isArchived } = req.body;
+      const { ids, archived, updated_by } = req.body;
 
-      const curriculum = await Curriculum.findByIdAndUpdate(
-        id,
-        {
-          isArchived: isArchived === true,
-          updated_by: req.user._id,
-          updatedAt: Date.now()
-        },
-        { new: true }
-      )
-        .populate('program', 'name code')
-        .populate('updated_by', 'username email');
-
-      if (!curriculum) {
-        return res.status(404).json({
-          success: false,
-          message: 'Curriculum not found'
-        });
+      // Validate input
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: 'Please provide an array of course group IDs' });
+      }
+      if (typeof archived !== 'boolean') {
+        return res.status(400).json({ message: 'Archived status must be a boolean' });
+      }
+      if (!updated_by) {
+        return res.status(400).json({ message: 'Updated_by field is required' });
       }
 
-      res.status(200).json({
-        success: true,
-        data: curriculum,
-        message: `Curriculum ${isArchived ? 'archived' : 'unarchived'} successfully`
+      // Update multiple course groups
+      const result = await Curriculum.updateMany(
+        { _id: { $in: ids } },
+        {
+          $set: {
+            isArchived: archived,
+            updated_by: updated_by,
+          }
+        },
+        { new: true }
+      );
+
+      // Check if any documents were modified
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ message: 'No course groups found with provided IDs' });
+      }
+
+      res.json({
+        message: `${result.modifiedCount} course group(s) archived successfully`,
+        modifiedCount: result.modifiedCount,
       });
     } catch (error) {
       res.status(400).json({
