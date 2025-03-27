@@ -10,14 +10,15 @@ const routes = [
     // REGISTRAR
     { api: "/api/registrar/auth", router: require('./src/registrar/login/reg_login.route.js') },
     { api: "/api/registrar/profile", router: require('./src/registrar/profile/reg_profile.route.js') },
+
+    { api: "/api/registrar/sections", router: require('./src/registrar/section/route.js') },
+    { api: "/api/registrar/school_years", router: require('./src/registrar/school_year/route.js') },
+    { api: "/api/registrar/applications", router: require('./src/registrar/applications/route.js') },
+    { api: "/api/registrar/logs", router: require('./src/registrar/logs/route.js') },
     { api: "/api/registrar/programs", router: require('./src/registrar/programs/route.js') },
     { api: "/api/registrar/courses", router: require('./src/registrar/course/course.route.js') },
     { api: "/api/registrar/course_grps", router: require('./src/registrar/course_group/route.js') },
     { api: "/api/registrar/curriculums", router: require('./src/registrar/curriculum/route.js') },
-    // { api: "/api/registrar/sections", router: require('./src/registrar/section/route.js') },
-    // { api: "/api/registrar/school_years", router: require('./src/registrar/school_year/route.js') },
-    // { api: "/api/registrar/applications", router: require('./src/registrar/applications/route.js') },
-    // { api: "/api/registrar/logs", router: require('./src/registrar/logs/route.js') },
 
     // ADMISSION
     { api: "/api/admission/auth", router: require('./src/admission/login/adn_login.route.js') },
@@ -48,7 +49,11 @@ const routes = [
     { api: "/api/admin/w_offs", router: require('./src/admin/website/official_group/officials/officials.route.js') },
     { api: "/api/admin/w_offgroups", router: require('./src/admin/website/official_group/office/office.route.js') },
     { api: "/api/admin/w_hero", router: require('./src/admin/website/hero/hero.route.js') },
-    // { api: "/api/admin/school_years", router: require('./src/admin/school_year/route.js') },
+    { api: "/api/admin/school_years", router: require('./src/admin/school_year/route.js') },
+    { api: "/api/admin/programs", router: require('./src/admin/programs/route.js') },
+    { api: "/api/admin/courses", router: require('./src/admin/course/course.route.js') },
+    { api: "/api/admin/course_grps", router: require('./src/admin/course_group/route.js') },
+    { api: "/api/admin/curriculums", router: require('./src/admin/curriculum/route.js') },
 
     // PUBLIC API
     { api: "/api/public", router: require('./src/admin/website/public/public.router.js') },

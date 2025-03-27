@@ -1,5 +1,5 @@
-const Course = require('../../admin/course/course.model');
-const CourseGroup = require("../../admin/course_group/model")
+const Course = require('./course.model');
+const CourseGroup = require("../course_group/model")
 
 const courseController = {
   // Create a new course

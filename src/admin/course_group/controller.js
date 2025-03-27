@@ -1,4 +1,4 @@
-const CourseGroup = require('../../admin/course_group/model'); // Assuming the schema file is in models folder
+const CourseGroup = require('./model'); // Assuming the schema file is in models folder
 
 // Create a new course group
 exports.createCourseGroup = async (req, res) => {

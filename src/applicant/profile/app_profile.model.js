@@ -95,7 +95,7 @@ const obj = new Schema({
     upload_reqs: { type: [upload_struct], default: [] },
     appointment: { type: Schema.Types.ObjectId, ref: 'adn_appointments', default: null },
     exam_details: {type: exam_details, default: null},
-    user_id: { type: Schema.Types.ObjectId, ref: 'adn_login', required: true },
+    user_id: { type: Schema.Types.ObjectId, ref: 'app_login', required: true },
 }, {
     virtuals: {
         id: { get() { return this._id; } },

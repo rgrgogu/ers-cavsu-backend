@@ -1,4 +1,4 @@
-const Program = require('../../registrar/programs/model'); // Adjust the path as needed
+const Program = require('../../admin/programs/model'); // Adjust the path as needed
 
 const getProgramsByApplicantType = async (req, res) => {
   try {

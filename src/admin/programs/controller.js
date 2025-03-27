@@ -1,4 +1,4 @@
-const Program = require('../../admin/programs/model');
+const Program = require('./model');
 
 const programController = {
     // Create a new program

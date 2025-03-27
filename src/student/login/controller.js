@@ -18,7 +18,7 @@ const Login = async (req, res) => {
 
     if (valid) {
       if (user.isArchived) throw new Error('User deactivated. Please contact the admin.')
-        
+
       const accessToken = CreateAccessToken(user._id, "student")
       const refreshToken = CreateRefreshToken(user._id, "student")
 
@@ -64,14 +64,16 @@ const Register = async (req, res) => {
 
     // Format count with leading zeros to be 6 digits
     const paddedCount = count.toString().padStart(6, '0');
-    const user_id = `${year}${paddedCount}`; // e.g., 2025000001
+    const student_id = `CVSUB-${year}${paddedCount}`; // e.g., 2025000001
 
     const acc = req.body;
-    acc.password = await BCrypt.hash(acc.password)
-    const folder_id = await CreateFolder(user_id, process.env.APPLICANT_GDRIVE_FOLDER);
-    const data = await User.create({ ...acc, user_id: user_id, folder_id: folder_id })
+    acc.username = "Student12345"
+    acc.password = "Student12345"
 
-    await Profile.create({ user_id: data.id })
+    acc.password = await BCrypt.hash(acc.password)
+    const data = await User.create({ ...acc, student_id: student_id })
+
+    // await Profile.create({ user_id: data.id })
 
     res.status(201).json({ message: 'User created', data });
   } catch (error) {

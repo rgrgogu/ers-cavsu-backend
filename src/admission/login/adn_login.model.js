@@ -18,7 +18,7 @@ const obj = new Schema({
     password: { type: String, required: true },
     role: { type: String, required: true, index: true, default: 'Admission'},
     isArchived: { type: Boolean, required: true, index: true, default: false },
-    profile: { type: Schema.Types.ObjectId, ref: 'adm_profile', default: null },
+    profile: { type: Schema.Types.ObjectId, ref: 'adn_profile', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
