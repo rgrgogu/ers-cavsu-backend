@@ -5,8 +5,8 @@ const Schema = mongoose.Schema;
 const obj = new Schema({
     name: { type: String, default: '', required: true },
     designation: { type: String, default: '', required: true},
-    contact: { type: String, default: '', required: true},
-    email: { type: String, default: '', index: true, required: true},
+    contact: { type: String, default: ''},
+    email: { type: String, default: '', index: true},
     unit: {type: String, default: '', required: true},
     isArchived: {type: Boolean, default: false},
     office: {type: Schema.Types.ObjectId, ref: 'adm_w_office', required: true},
