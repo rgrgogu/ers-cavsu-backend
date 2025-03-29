@@ -14,12 +14,13 @@ exports.createSection = async (req, res) => {
 // Get all sections
 exports.getAllSections = async (req, res) => {
     try {
-        const { archived } = req.query.archive;
+        const { archived } = req.query;
 
         const sections = await Section.find({ isArchived: archived })
-            .populate('program')
-            .populate('school_year')
-            .populate('updated_by');
+            .populate('program', 'name code')
+            .populate('school_year', 'year')
+            .populate('updated_by', 'name');
+
         res.json(sections);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -45,14 +46,21 @@ exports.getSectionById = async (req, res) => {
 // Update a section
 exports.updateSection = async (req, res) => {
     try {
+        const { section_code, program, semester, capacity, updated_by } = req.body;
+
         const section = await Section.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            { section_code, program, semester, capacity, updated_by },
             { new: true, runValidators: true }
-        );
+        )
+            .populate('program', 'name code') // Populate program with specific fields
+            .populate('school_year', 'year') // Populate school_year with specific field
+            .populate('updated_by', 'name'); // Populate updated_by with specific fields
+
         if (!section) {
             return res.status(404).json({ message: 'Section not found' });
         }
+
         res.json(section);
     } catch (error) {
         res.status(400).json({ message: error.message });
@@ -91,7 +99,7 @@ exports.archiveSection = async (req, res) => {
 
 exports.archiveManySections = async (req, res) => {
     try {
-        const { ids } = req.body; // Expecting an array of section IDs
+        const { ids, archived, updated_by } = req.body; // Expecting an array of section IDs
 
         if (!Array.isArray(ids) || ids.length === 0) {
             return res.status(400).json({ message: 'Please provide an array of section IDs' });
@@ -99,7 +107,7 @@ exports.archiveManySections = async (req, res) => {
 
         const result = await Section.updateMany(
             { _id: { $in: ids } },
-            { isArchived: true },
+            { isArchived: archived, updated_by: updated_by },
             { runValidators: true }
         );
 

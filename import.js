@@ -10,9 +10,8 @@ const routes = [
     // REGISTRAR
     { api: "/api/registrar/auth", router: require('./src/registrar/login/reg_login.route.js') },
     { api: "/api/registrar/profile", router: require('./src/registrar/profile/reg_profile.route.js') },
-
     { api: "/api/registrar/sections", router: require('./src/registrar/section/route.js') },
-    { api: "/api/registrar/school_years", router: require('./src/registrar/school_year/route.js') },
+    { api: "/api/registrar/school_year", router: require('./src/registrar/school_year/route.js') },
     { api: "/api/registrar/applications", router: require('./src/registrar/applications/route.js') },
     { api: "/api/registrar/logs", router: require('./src/registrar/logs/route.js') },
     { api: "/api/registrar/programs", router: require('./src/registrar/programs/route.js') },
