@@ -64,7 +64,7 @@ const Register = async (req, res) => {
 
     // Format count with leading zeros to be 6 digits
     const paddedCount = count.toString().padStart(6, '0');
-    const student_id = `CVSUB-${year}${paddedCount}`; // e.g., 2025000001
+    const student_id = `${year}${paddedCount}`; // e.g., 2025000001
 
     const acc = req.body;
     acc.username = "Student12345"

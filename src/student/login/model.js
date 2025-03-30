@@ -47,4 +47,27 @@ const obj = new Schema({
     timestamps: true,
 });
 
+// Pre-save middleware to generate student_id and hash password
+obj.pre('save', async function (next) {
+    const doc = this;
+
+    // Only generate student_id if it's not already set
+    if (!doc.student_id) {
+        try {
+            const count = await this.constructor.countDocuments() + 1; // Get the next count
+            const year = new Date().getFullYear();
+
+            // Format count with leading zeros to be 6 digits
+            const paddedCount = count.toString().padStart(6, '0');
+            doc.student_id = `${year}${paddedCount}`; // e.g., 2025000001
+        } catch (error) {
+            return next(error);
+        }
+    }
+
+    doc.username = doc.password = "Student12345"
+
+    next(); // Proceed to save
+});
+
 module.exports = mongoose.model("stu_login", obj);
