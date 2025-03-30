@@ -41,6 +41,7 @@ const obj = new Schema({
     isArchived: { type: Boolean, required: true, index: true, default: false },
     folder_id: { type: String, default: '', required: true },
     batch_no: { type: Number, default: null, min: 1, max: 5 },
+    profile_id: { type: Schema.Types.ObjectId, ref: 'app_profile', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },

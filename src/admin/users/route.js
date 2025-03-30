@@ -2,22 +2,24 @@ const express = require("express");
 const router = express.Router();
 const UserController = require("./controller");
 
-router.get("/admins", UserController.listAdmins);
-router.post("/admins", UserController.createAdmin);
+const RequireAuth = require("../../../global/middleware/RequireAuth")
 
-router.get("/admissions", UserController.listAdmissions);
-router.post("/admissions", UserController.createAdmission);
+router.get("/admins", RequireAuth, UserController.listAdmins);
+router.post("/admins", RequireAuth, UserController.createAdmin);
 
-router.get("/applicants", UserController.listApplicants);
-router.post("/applicants", UserController.createApplicant);
+router.get("/admissions", RequireAuth, UserController.listAdmissions);
+router.post("/admissions", RequireAuth, UserController.createAdmission);
 
-router.get("/faculty", UserController.listFaculty);
-router.post("/faculty", UserController.createFaculty);
+router.get("/applicants", RequireAuth, UserController.listApplicants);
+router.post("/applicants", RequireAuth, UserController.massCreateStudents);
 
-router.get("/registrars", UserController.listRegistrars);
-router.post("/registrars", UserController.createRegistrar);
+router.get("/faculty", RequireAuth, UserController.listFaculty);
+router.post("/faculty", RequireAuth, UserController.createFaculty);
 
-router.get("/students", UserController.listStudents);
-router.post("/students", UserController.createStudent);
+router.get("/registrars", RequireAuth, UserController.listRegistrars);
+router.post("/registrars", RequireAuth, UserController.createRegistrar);
+
+router.get("/students", RequireAuth, UserController.listStudents);
+router.post("/students", RequireAuth, UserController.createStudent);
 
 module.exports = router;

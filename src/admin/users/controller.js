@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const AdmLogin = require("../login/adm_login.model");
 const AdnLogin = require("../../admission/login/adn_login.model");
 const AppLogin = require("../../applicant/login/app_login.model");
+const AppProfile = require("../../applicant/profile/app_profile.model")
 const FacLogin = require("../../faculty/login/model");
 const RegLogin = require("../../registrar/login/reg_login.model");
 const StuLogin = require("../../student/login/model");
@@ -22,7 +23,7 @@ const UserController = {
         .sort({ createdAt: -1 });
       res.json(admins);
     } catch (error) {
-      res.status(500).json({ message: "Error fetching admins", error: error.message });
+      res.status(400).json({ message: "Error fetching admins", error: error.message });
     }
   },
 
@@ -58,7 +59,7 @@ const UserController = {
       const savedAdmin = await newAdmin.save();
       res.status(201).json(savedAdmin);
     } catch (error) {
-      res.status(500).json({ message: "Error creating admin", error: error.message });
+      res.status(400).json({ message: "Error creating admin", error: error.message });
     }
   },
 
@@ -70,7 +71,7 @@ const UserController = {
         .sort({ createdAt: -1 });
       res.json(admissions);
     } catch (error) {
-      res.status(500).json({ message: "Error fetching admissions", error: error.message });
+      res.status(400).json({ message: "Error fetching admissions", error: error.message });
     }
   },
 
@@ -104,55 +105,132 @@ const UserController = {
       const savedAdmission = await newAdmission.save();
       res.status(201).json(savedAdmission);
     } catch (error) {
-      res.status(500).json({ message: "Error creating admission user", error: error.message });
+      res.status(400).json({ message: "Error creating admission user", error: error.message });
     }
   },
 
   // List all Applicants/Students
   listApplicants: async (req, res) => {
     try {
-      const applicants = await AppLogin.find({ isArchived: false })
-        .select("-password")
-        .sort({ createdAt: -1 });
+      const applicants = await AppLogin.aggregate([
+        { $match: { isArchived: false } },
+        { $lookup: { from: "app_profiles", localField: "profile_id", foreignField: "_id", as: "profileDetails", pipeline: [{ $project: { _id: 0, program: "$application_details.program", firstname: "$application_details.firstname", middlename: "$application_details.middlename", lastname: "$application_details.lastname" } }] } },
+        { $unwind: { path: "$profileDetails", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            name: "$name",
+            profile_id: "$profile_id",
+            program: "$profileDetails.program",
+            user_id: "$user_id",
+            email: "$email",
+            status: "$status",
+            folder_id: "$folder_id",
+            createdAt: "$createdAt",
+            updatedAt: "$updatedAt",
+            fullName: {
+              $concat: [
+                { $ifNull: ["$name.firstname", ""] }, " ",
+                { $ifNull: ["$name.middlename", ""] }, " ",
+                { $ifNull: ["$name.lastname", ""] }, " ",
+                { $ifNull: ["$name.extension", ""] }
+              ]
+            }
+          }
+        },
+        { $sort: { createdAt: -1 } }
+      ]);
+
       res.json(applicants);
     } catch (error) {
-      res.status(500).json({ message: "Error fetching applicants", error: error.message });
+      res.status(400).json({ message: "Error fetching applicants", error: error.message });
     }
   },
 
   // Create new Applicant/Student
-  createApplicant: async (req, res) => {
+  massCreateStudents: async (req, res) => {
     try {
-      const { email, name, campus, department, username, password, role, status } = req.body;
+      const studentsData = req.body; // Expecting an array of student objects
 
-      if (!email || !name || !campus || !department || !username || !password || !role || !status) {
-        return res.status(400).json({ message: "All fields are required" });
+      // Validate that studentsData is an array
+      if (!Array.isArray(studentsData)) {
+        return res.status(400).json({ message: 'Input must be an array of student objects' });
       }
 
-      if (!validateEmail(email)) {
-        return res.status(400).json({ message: "Invalid email format" });
+      // Check if the array is empty
+      if (studentsData.length === 0) {
+        return res.status(400).json({ message: 'No applicants provided' });
       }
 
-      const newApplicant = new AppLogin({
-        email,
-        name: {
-          firstname: name.firstname || '',
-          middlename: name.middlename || '',
-          lastname: name.lastname || '',
-          extension: name.extension || ''
-        },
-        campus,
-        department,
-        username,
-        password,
-        role,
-        status
+      // Get the current count to start sequencing (this ensures uniqueness across all documents)
+      const currentCount = (await StuLogin.countDocuments()) + 1;
+
+      // Prepare bulk operations
+      const bulkOps = [];
+      const idsBulkOps = []
+
+      studentsData.forEach((student, index) => {
+        const year = new Date().getFullYear();
+        const count = currentCount + index; // Simple increment for each student in the batch
+
+        // Generate student_id (e.g., 2025000001, 2025000002, etc.)
+        const paddedCount = count.toString().padStart(6, '0');
+        const student_id = `${year}${paddedCount}`;
+
+        // Set username to be the same as student_id
+        const username = student_id;
+
+        // Set default password
+        const password = "Student12345";
+
+        // Destructure ids and other data
+        const { _id, ...rest } = student;
+
+        // Create a new student document for bulk insert
+        const newStudent = { ...rest, student_id, username, password };
+
+        // Add to bulk operations
+        bulkOps.push({ insertOne: { document: newStudent } });
+        idsBulkOps.push({
+          updateOne: {
+            filter: { _id: _id }, // Update by document ID
+            update: { $set: { status: "Application Completed" } },
+          }
+        })
       });
 
-      const savedApplicant = await newApplicant.save();
-      res.status(201).json(savedApplicant);
+      // Execute bulk write
+      const result = await StuLogin.bulkWrite(bulkOps);
+
+      // Update status from Submitted to Application Completed
+      const appResult = await AppLogin.bulkWrite(idsBulkOps);
+
+      res.status(201).json({
+        message: 'Students created successfully',
+        data: studentsData.map(item => item._id),
+        count: studentsData.length,
+        bulkWriteResult: result, // Include result for debugging
+      });
+
     } catch (error) {
-      res.status(500).json({ message: "Error creating applicant", error: error.message });
+      console.error('Error in massCreateStudents:', error);
+
+      if (error.name === 'ValidationError') {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+
+      if (error.name === 'BulkWriteError') {
+        error.writeErrors.forEach(writeError => {
+          console.error('Document index:', writeError.index);
+          console.error('Error message:', writeError.errmsg);
+        });
+        return res.status(400).json({ message: 'Bulk write error', details: error.writeErrors });
+      }
+
+      if (error.name === 'MongoError' && error.code === 11000) {
+        return res.status(400).json({ message: 'Duplicate key error: A student with this student_id already exists' });
+      }
+
+      res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   },
 
@@ -164,7 +242,7 @@ const UserController = {
         .sort({ createdAt: -1 });
       res.json(faculty);
     } catch (error) {
-      res.status(500).json({ message: "Error fetching faculty", error: error.message });
+      res.status(400).json({ message: "Error fetching faculty", error: error.message });
     }
   },
 
@@ -198,7 +276,7 @@ const UserController = {
       const savedFaculty = await newFaculty.save();
       res.status(201).json(savedFaculty);
     } catch (error) {
-      res.status(500).json({ message: "Error creating faculty", error: error.message });
+      res.status(400).json({ message: "Error creating faculty", error: error.message });
     }
   },
 
@@ -210,7 +288,7 @@ const UserController = {
         .sort({ createdAt: -1 });
       res.json(registrars);
     } catch (error) {
-      res.status(500).json({ message: "Error fetching registrars", error: error.message });
+      res.status(400).json({ message: "Error fetching registrars", error: error.message });
     }
   },
 
@@ -244,7 +322,7 @@ const UserController = {
       const savedRegistrar = await newRegistrar.save();
       res.status(201).json(savedRegistrar);
     } catch (error) {
-      res.status(500).json({ message: "Error creating registrar", error: error.message });
+      res.status(400).json({ message: "Error creating registrar", error: error.message });
     }
   },
 
@@ -258,7 +336,7 @@ const UserController = {
         .populate('updated_by');
       res.json(students);
     } catch (error) {
-      res.status(500).json({ message: "Error fetching students", error: error.message });
+      res.status(400).json({ message: "Error fetching students", error: error.message });
     }
   },
 
@@ -300,7 +378,7 @@ const UserController = {
       const savedStudent = await newStudent.save();
       res.status(201).json(savedStudent);
     } catch (error) {
-      res.status(500).json({ message: "Error creating student", error: error.message });
+      res.status(400).json({ message: "Error creating student", error: error.message });
     }
   }
 };

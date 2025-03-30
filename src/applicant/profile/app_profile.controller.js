@@ -143,6 +143,8 @@ const EditApplicationDetails = async (req, res) => {
 
     const objectId = new mongoose.Types.ObjectId(user_id);
 
+    await User.findByIdAndUpdate(user_id, {profile_id: objectId}, {})
+
     const result = await Profile.findOneAndUpdate(
       { user_id: objectId },
       { $set: { application_details: data } },
