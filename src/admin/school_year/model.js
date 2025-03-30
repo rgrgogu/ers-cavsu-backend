@@ -22,7 +22,7 @@ const obj = new mongoose.Schema({
         midyear: { type: Boolean, default: false }, // Midyear grade uploading
     },
     status: { type: Boolean, default: false },
-    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'adm_login', required: true },
     isArchived: { type: Boolean, default: false },
 }, {
     timestamps: true,

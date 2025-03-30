@@ -6,7 +6,7 @@ const obj = new Schema({
     name: { type: String, required: true, trim: true },
     code: { type: String, required: true, unique: true, uppercase: true },
     applicant_types: [{ type: String, trim: true }],
-    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'adm_login', required: true },
     isArchived: { type: Boolean, default: false },
 }, {
     virtuals: {

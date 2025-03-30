@@ -5,7 +5,13 @@ exports.createSection = async (req, res) => {
     try {
         const section = new Section(req.body);
         const savedSection = await section.save();
-        res.status(201).json(savedSection);
+
+        const result = await Section.findById({ _id: savedSection._id })
+            .populate('program', 'name code')
+            .populate('school_year', 'year')
+            .populate('updated_by', 'name');
+
+        res.status(201).json(result);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -26,6 +32,36 @@ exports.getAllSections = async (req, res) => {
         res.status(400).json({ message: error.message });
     }
 };
+
+exports.getSectionsByWildCard = async (req, res) => {
+    try {
+        const { school_year, level } = req.query;
+
+        if (!level || !school_year) {
+            return res.status(400).json({ message: "Missing required query parameters" });
+        }
+
+        // Dynamically create regex based on `level` value
+        const levelRegex = new RegExp(level, "i");
+
+        // Fetch sections matching isArchived and section_code conditions
+        const sections = await Section.find({
+            isArchived: false,
+            section_code: levelRegex // Use dynamic regex
+        })
+            .populate('program', 'name code')
+            .populate('school_year', 'year') // Populating the year attribute
+            .populate('updated_by', 'name');
+
+        // Filter sections based on school_year
+        const filteredSections = sections.filter(section => section.school_year.year === school_year);
+
+        res.json(filteredSections);
+    } catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
 
 // Get a single section by ID
 exports.getSectionById = async (req, res) => {

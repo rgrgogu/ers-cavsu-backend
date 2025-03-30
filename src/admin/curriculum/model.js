@@ -25,7 +25,7 @@ const curriculumSchema = new mongoose.Schema({
   hasFifthYear: { type: Boolean, default: false },
   years: [years],
   total_units: { type: Number, default: 0, min: 0 },
-  updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
+  updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'adm_login', required: true },
   isArchived: { type: Boolean, default: false },
 }, {
   virtuals: {

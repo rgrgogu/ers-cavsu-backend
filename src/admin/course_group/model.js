@@ -5,7 +5,7 @@ const courseGroupSchema = new mongoose.Schema({
     description: { type: String, trim: true },
     program: [{ type: mongoose.Schema.Types.ObjectId, ref: 'programs' }],
     courses: [{ type: mongoose.Schema.Types.ObjectId, ref: 'courses' }],
-    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'adm_login', required: true },
     isArchived: { type: Boolean, default: false }
 }, {
     virtuals: {
