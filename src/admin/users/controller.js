@@ -6,6 +6,7 @@ const AppProfile = require("../../applicant/profile/app_profile.model")
 const FacLogin = require("../../faculty/login/model");
 const RegLogin = require("../../registrar/login/reg_login.model");
 const StuLogin = require("../../student/login/model");
+const BCrypt = require("../../../global/config/BCrypt")
 
 // Helper function to validate email
 const validateEmail = (email) => {
@@ -161,54 +162,62 @@ const UserController = {
         return res.status(400).json({ message: 'No applicants provided' });
       }
 
-      // Get the current count to start sequencing (this ensures uniqueness across all documents)
+      // Get the current count to start sequencing
       const currentCount = (await StuLogin.countDocuments()) + 1;
 
       // Prepare bulk operations
       const bulkOps = [];
-      const idsBulkOps = []
+      const idsBulkOps = [];
 
-      studentsData.forEach((student, index) => {
+      // Process students and collect password hashing promises
+      const studentPromises = studentsData.map(async (student, index) => {
         const year = new Date().getFullYear();
-        const count = currentCount + index; // Simple increment for each student in the batch
-
-        // Generate student_id (e.g., 2025000001, 2025000002, etc.)
+        const count = currentCount + index;
         const paddedCount = count.toString().padStart(6, '0');
         const student_id = `${year}${paddedCount}`;
-
-        // Set username to be the same as student_id
         const username = student_id;
 
-        // Set default password
-        const password = "Student12345";
+        // Hash password
+        const password = await BCrypt.hash("Student12345", 10); // Added salt rounds (10 is a common default)
 
-        // Destructure ids and other data
         const { _id, ...rest } = student;
 
-        // Create a new student document for bulk insert
-        const newStudent = { ...rest, student_id, username, password };
+        return {
+          newStudent: { ...rest, student_id, username, password },
+          updateOp: _id ? {
+            updateOne: {
+              filter: { _id: _id },
+              update: { $set: { status: "Application Completed" } },
+            }
+          } : null
+        };
+      });
 
-        // Add to bulk operations
+      // Wait for all passwords to be hashed
+      const processedStudents = await Promise.all(studentPromises);
+
+      // Populate bulk operations
+      processedStudents.forEach(({ newStudent, updateOp }) => {
         bulkOps.push({ insertOne: { document: newStudent } });
-        idsBulkOps.push({
-          updateOne: {
-            filter: { _id: _id }, // Update by document ID
-            update: { $set: { status: "Application Completed" } },
-          }
-        })
+        if (updateOp) {
+          idsBulkOps.push(updateOp);
+        }
       });
 
       // Execute bulk write
       const result = await StuLogin.bulkWrite(bulkOps);
 
       // Update status from Submitted to Application Completed
-      const appResult = await AppLogin.bulkWrite(idsBulkOps);
+      let appResult = null;
+      if (idsBulkOps.length > 0) {
+        appResult = await AppLogin.bulkWrite(idsBulkOps);
+      }
 
       res.status(201).json({
         message: 'Students created successfully',
         data: studentsData.map(item => item._id),
         count: studentsData.length,
-        bulkWriteResult: result, // Include result for debugging
+        bulkWriteResult: result,
       });
 
     } catch (error) {

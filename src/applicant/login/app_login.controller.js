@@ -10,17 +10,19 @@ const CheckUser = require("../../../global/functions/CheckUser");
 const { CreateFolder } = require("../../../global/utils/Drive");
 const { Send } = require("../../../global/config/Nodemailer")
 
+const STATIC_ROLE = "applicant"
+
 const Login = async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await User.find({ username: username },);
-    const valid = await CheckUser(user, password, "Applicant");
+    const user = await User.findOne({ username: username },);
+    const checkResult = await CheckUser(user, password, "Applicant");
 
-    if (valid) {
+    if (checkResult.isValid) {
       if (user.isArchived) throw new Error('User deactivated. Please contact the admin.')
         
-      const accessToken = CreateAccessToken(user._id, "applicant")
-      const refreshToken = CreateRefreshToken(user._id, "applicant")
+      const accessToken = CreateAccessToken(user._id, STATIC_ROLE)
+      const refreshToken = CreateRefreshToken(user._id, STATIC_ROLE)
 
       // Assigning refresh token in http-only cookie 
       res.cookie('refreshToken', refreshToken, {
@@ -29,7 +31,7 @@ const Login = async (req, res) => {
         maxAge: 24 * 60 * 60 * 1000
       });
 
-      res.status(200).json({ user: user[0], accessToken })
+      res.status(200).json({ user: user, accessToken })
     }
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -45,7 +47,7 @@ const Refresh = async (req, res) => {
 
     if (valid) {
       // Correct token we send a new access token
-      const accessToken = CreateAccessToken(id, "applicant")
+      const accessToken = CreateAccessToken(id, STATIC_ROLE)
       return res.json({ accessToken });
     }
     else

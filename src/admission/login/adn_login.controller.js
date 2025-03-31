@@ -8,48 +8,67 @@ const { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshTo
 const CheckUser = require("../../../global/functions/CheckUser");
 const { Send } = require("../../../global/config/Nodemailer")
 
+const STATIC_ROLE = "admission"
+
 const Login = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const user = await User.find({ username: username },);
-    const valid = await CheckUser(user, password, "Admission");
+      const { username, password } = req.body;
+      const user = await User.findOne({ username: username });
 
-    if (valid) {
-      const accessToken = CreateAccessToken(user._id, "admission")
-      const refreshToken = CreateRefreshToken(user._id, "admission")
+      const checkResult = await CheckUser(user, password, "Admission");
 
-      // Assigning refresh token in http-only cookie 
-      res.cookie('refreshToken', refreshToken, {
-          httpOnly: true,
-          sameSite: 'None', secure: true,
-          maxAge: 24 * 60 * 60 * 1000
-      });
+      if (checkResult.isValid) {
+          if (user.isArchived) throw new Error('User deactivated. Please contact the admin.');
 
-      res.status(200).json({ user: user[0], accessToken })
-    }
+          const accessToken = CreateAccessToken(user._id, STATIC_ROLE);
+          const refreshToken = CreateRefreshToken(user._id, STATIC_ROLE);
+
+          // Assigning refresh token in http-only cookie 
+          res.cookie('refreshToken', refreshToken, {
+              httpOnly: true,
+              sameSite: 'None',
+              secure: true,
+              maxAge: 24 * 60 * 60 * 1000
+          });
+
+          if (checkResult.mustResetPassword) {
+              // Return a specific status and message for password reset
+              return res.status(200).json({
+                  mustResetPassword: true,
+                  message: "Login successful, but please reset your default password before proceeding.",
+                  user: user, // Optionally include user data if needed for reset flow
+                  accessToken
+              });
+          }
+
+          res.status(200).json({ 
+              user: user, 
+              accessToken 
+          });
+      }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error.message });
   }
 }
 
 const Refresh = async (req, res) => {
   if (req.cookies?.refreshToken) {
     // Destructuring refreshToken from cookie
-    const {id} = req.params;
+    const { id } = req.params;
     const refreshToken = req.cookies.refreshToken;
     const valid = VerifyRefreshToken(refreshToken)
 
-    if(valid){
+    if (valid) {
       // Correct token we send a new access token
-      const accessToken = CreateAccessToken(id, "admission")
+      const accessToken = CreateAccessToken(id, STATIC_ROLE)
       return res.json({ accessToken });
     }
     else
       // Wrong Refesh Token
       return res.status(406).json({ message: 'Unauthorized' });
   } else {
-      console.log(req.cookies)
-      return res.status(406).json({ message: 'Unauthorized' });
+    console.log(req.cookies)
+    return res.status(406).json({ message: 'Unauthorized' });
   }
 }
 
@@ -60,11 +79,17 @@ const Register = async (req, res) => {
 
     // Format count with leading zeros to be 6 digits
     const paddedCount = count.toString().padStart(6, '0');
-    const user_id = `${year}ADMISSION${paddedCount}`; // e.g., 2025A000001
+    const student_id = `${year}${paddedCount}`; // e.g., 2025000001
 
     const acc = req.body;
+    acc.username = "Student12345"
+    acc.password = "Student12345"
+
     acc.password = await BCrypt.hash(acc.password)
-    const data = await User.create({...acc, user_id: user_id})
+    const data = await User.create({ ...acc, student_id: student_id })
+
+    // await Profile.create({ user_id: data.id })
+
     res.status(201).json({ message: 'User created', data });
   } catch (error) {
     res.status(400).json({ error: error.message })
@@ -85,7 +110,7 @@ const RequestReset = async (req, res) => {
 
     if (find) {
       const token = CreateEmailToken(email);
-      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/admission/verify/${token}`
+      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/${STATIC_ROLE}/verify/${token}`
       await Send(email, link);
 
       res.status(200).json({ message: 'Sent password successfully' });

@@ -7,32 +7,48 @@ const Profile = require("../../applicant/profile/app_profile.model")
 const BCrypt = require("../../../global/config/BCrypt");
 const { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
 const CheckUser = require("../../../global/functions/CheckUser");
-const { CreateFolder } = require("../../../global/utils/Drive");
 const { Send } = require("../../../global/config/Nodemailer")
+
+const STATIC_ROLE = "student"
 
 const Login = async (req, res) => {
   try {
-    const { username, password } = req.body;
-    const user = await User.find({ username: username },);
-    const valid = await CheckUser(user, password, "Student");
+      const { username, password } = req.body;
+      const user = await User.findOne({ username: username });
 
-    if (valid) {
-      if (user.isArchived) throw new Error('User deactivated. Please contact the admin.')
+      const checkResult = await CheckUser(user, password, "Student");
 
-      const accessToken = CreateAccessToken(user._id, "student")
-      const refreshToken = CreateRefreshToken(user._id, "student")
+      if (checkResult.isValid) {
+          if (user.isArchived) throw new Error('User deactivated. Please contact the admin.');
 
-      // Assigning refresh token in http-only cookie 
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        sameSite: 'None', secure: true,
-        maxAge: 24 * 60 * 60 * 1000
-      });
+          const accessToken = CreateAccessToken(user._id, STATIC_ROLE);
+          const refreshToken = CreateRefreshToken(user._id, STATIC_ROLE);
 
-      res.status(200).json({ user: user[0], accessToken })
-    }
+          // Assigning refresh token in http-only cookie 
+          res.cookie('refreshToken', refreshToken, {
+              httpOnly: true,
+              sameSite: 'None',
+              secure: true,
+              maxAge: 24 * 60 * 60 * 1000
+          });
+
+          if (checkResult.mustResetPassword) {
+              // Return a specific status and message for password reset
+              return res.status(200).json({
+                  mustResetPassword: true,
+                  message: "Login successful, but please reset your default password before proceeding.",
+                  user: user, // Optionally include user data if needed for reset flow
+                  accessToken
+              });
+          }
+
+          res.status(200).json({ 
+              user: user, 
+              accessToken 
+          });
+      }
   } catch (error) {
-    res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error.message });
   }
 }
 
@@ -45,7 +61,7 @@ const Refresh = async (req, res) => {
 
     if (valid) {
       // Correct token we send a new access token
-      const accessToken = CreateAccessToken(id, "student")
+      const accessToken = CreateAccessToken(id, STATIC_ROLE)
       return res.json({ accessToken });
     }
     else
@@ -95,7 +111,7 @@ const RequestReset = async (req, res) => {
 
     if (find) {
       const token = CreateEmailToken(email);
-      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/student/verify/${token}`
+      const link = `${process.env.DEV_LINK || process.env.PROD_LINK}/${STATIC_ROLE}/verify/${token}`
       await Send(email, link);
 
       res.status(200).json({ message: 'Sent password successfully' });
