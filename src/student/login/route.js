@@ -7,7 +7,8 @@ const {
     Register,
     RequestReset,
     Verify,
-    ChangePass
+    ChangePass,
+    ChangePassInitial
 } = require("./controller");
 
 const upload = require("../../../global/config/Multer");
@@ -19,5 +20,6 @@ router.post("/register", Register);
 router.post("/refresh/:id", RequireAuth, Refresh);
 router.post("/reset/:email", RequestReset);
 router.put("/change_pass/:token", ChangePass);
+router.put("/change_pass_initial/:id", ChangePassInitial);
 
 module.exports = router;

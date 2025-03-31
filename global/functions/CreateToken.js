@@ -24,7 +24,6 @@ const VerifyRefreshToken = (refreshToken) => {
 
 const VerifyTokenInReset = (token) => {
     if (!token) {
-        console.log("dito")
         throw new Error("Invalid user token");
     }
 
@@ -32,12 +31,10 @@ const VerifyTokenInReset = (token) => {
     try {
         decodedToken = jwt.verify(token, process.env.SECRET);
     } catch {
-        console.log("dito1")
         throw new Error("Invalid authentication credentials");
     }
 
     if (!decodedToken.hasOwnProperty("email")){
-        console.log("dito 2")
         throw new Error("Invalid authentication credentials");
     }
         

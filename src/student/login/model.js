@@ -12,7 +12,7 @@ const name = new Schema({
 const obj = new Schema({
     student_id: { type: String, index: true, required: true, unique: true },
     personal_email: { type: String, required: true, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)] },
-    cvsu_email: { type: String, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)] },
+    school_email: { type: String, index: true, validate: [(val) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(val)] },
     name: { type: name, required: true, default: { ...name } },
     username: { type: String, required: true },
     password: { type: String, required: true },

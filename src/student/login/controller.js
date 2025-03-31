@@ -139,10 +139,30 @@ const ChangePass = async (req, res) => {
     const data = req.body;
 
     const email = VerifyTokenInReset(token)
-
+    
     if (email && data.confirm === data.password) {
       await User.findOneAndUpdate(
         { email: email },
+        { password: await BCrypt.hash(data.password) },
+      )
+
+      res.status(200).json("Password successfully changed");
+    }
+    else
+      res.status(400).json("Password doesn't matched.");
+  } catch (error) {
+    res.status(400).send(error);
+  }
+}
+
+const ChangePassInitial = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const data = req.body;
+
+    if (data.confirm === data.password) {
+      await User.findByIdAndUpdate(
+        id,
         { password: await BCrypt.hash(data.password) },
       )
 
@@ -162,4 +182,5 @@ module.exports = {
   RequestReset,
   Verify,
   ChangePass,
+  ChangePassInitial,
 };
