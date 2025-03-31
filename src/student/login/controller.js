@@ -80,13 +80,12 @@ const Register = async (req, res) => {
 
     // Format count with leading zeros to be 6 digits
     const paddedCount = count.toString().padStart(6, '0');
-    const student_id = `${year}${paddedCount}`; // e.g., 2025000001
+    const user_id = `${year}${paddedCount}`; // e.g., 2025000001
 
     const acc = req.body;
-    acc.username = "Student12345"
-    acc.password = "Student12345"
+    acc.username = user_id
 
-    acc.password = await BCrypt.hash(acc.password)
+    acc.password = await BCrypt.hash(process.env.DEFAULT_PASS)
     const data = await User.create({ ...acc, student_id: student_id })
 
     // await Profile.create({ user_id: data.id })

@@ -178,7 +178,7 @@ const UserController = {
         const username = student_id;
 
         // Hash password
-        const password = await BCrypt.hash("Student12345", 10); // Added salt rounds (10 is a common default)
+        const password = await BCrypt.hash(process.env.DEFAULT_PASS, 10); // Added salt rounds (10 is a common default)
 
         const { _id, ...rest } = student;
 
