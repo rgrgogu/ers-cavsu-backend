@@ -113,30 +113,33 @@ const curriculumController = {
   getCurriculaByProgramAndSemester: async (req, res) => {
     try {
       // Get query parameters
-      const { programName, semester } = req.query;
+      const { program, semester, year } = req.query;
   
       // Validate required parameters
-      if (!programName || !semester) {
+      if (!program || !semester || !year) {
         return res.status(400).json({
           success: false,
-          message: 'Program name and semester are required parameters',
+          message: 'Program name, semester, and year are required parameters',
         });
       }
   
-      // Validate semester value
-      const validSemesters = ['1st', '2nd', '3rd', 'Midyear'];
-      if (!validSemesters.includes(semester)) {
+      // Define valid semesters and years
+      const validSemesters = ['first', 'second', 'third', 'midyear'];
+      const validYears = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+  
+      // Validate semester and year
+      if (!validSemesters.includes(semester) || !validYears.includes(year)) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid semester value. Must be one of: 1st, 2nd, 3rd, Midyear',
+          message: `Invalid semester or year. Semester must be one of: ${validSemesters.join(', ')}. Year must be one of: ${validYears.join(', ')}`,
         });
       }
   
-      // Find all curricula matching the program and populate relevant fields
-      const curricula = await Curriculum.find()
+      // Find curricula and populate relevant fields
+      const curricula = await Curriculum.find({ isArchived: false })
         .populate({
           path: 'program',
-          match: { name: programName }, // Match specific program name
+          match: { name: program },
           select: 'name',
         })
         .populate({
@@ -149,27 +152,36 @@ const curriculumController = {
         })
         .lean();
   
-      // Filter out curricula where program didn't match or semester data is empty
-      const filteredCurricula = curricula.filter(curriculum => 
-        curriculum.program && // Ensure program exists
-        curriculum.years.some(year => 
-          year.semesters && 
-          year.semesters[semester] && 
-          year.semesters[semester].course_id.length > 0
+      // Filter and transform curricula to only include the specified year and semester
+      const filteredCurricula = curricula
+        .filter(curriculum => 
+          curriculum.program && // Ensure program exists
+          curriculum.years.some(y => 
+            y.year === year && 
+            y.semesters?.[semester]?.length > 0 && 
+            y.semesters[semester].some(course => course.course_id)
+          )
         )
-      );
+        .map(curriculum => ({
+          ...curriculum,
+          years: curriculum.years
+            .filter(y => y.year === year)
+            .map(y => ({
+              year: y.year,
+              semesters: { [semester]: y.semesters[semester] },
+            })),
+        }));
   
-      if (filteredCurricula.length === 0) {
+      if (!filteredCurricula.length) {
         return res.status(404).json({
           success: false,
-          message: `No curricula found for program '${programName}' in ${semester} semester`,
+          message: `No curricula found for program '${program}' in ${semester} semester of ${year}`,
         });
       }
   
       res.status(200).json({
         success: true,
         data: filteredCurricula,
-        count: filteredCurricula.length,
       });
     } catch (error) {
       res.status(400).json({

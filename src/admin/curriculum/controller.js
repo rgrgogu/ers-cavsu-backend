@@ -18,7 +18,7 @@ const curriculumController = {
           match: { isArchived: false },
           select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact'
         })
-        .select('groupName courses') // Select fields from the Group model
+        .select('groupName courses')
         .lean();
 
       if (!groups || groups.length === 0) {
@@ -28,7 +28,6 @@ const curriculumController = {
         });
       }
 
-      // Optional: Filter out groups with no courses
       const filteredGroups = groups.filter(group => group.courses.length > 0);
 
       if (filteredGroups.length === 0) {
@@ -80,11 +79,11 @@ const curriculumController = {
 
       const result = await Curriculum.findById(id)
         .populate({
-          path: 'years.semesters.1st.course_id years.semesters.2nd.course_id years.semesters.3rd.course_id years.semesters.Midyear.course_id',
+          path: 'years.semesters.first.course_id years.semesters.second.course_id years.semesters.third.course_id years.semesters.midyear.course_id',
           select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
         })
         .populate({
-          path: 'years.semesters.1st.pre_req_ids years.semesters.2nd.pre_req_ids years.semesters.3rd.pre_req_ids years.semesters.Midyear.pre_req_ids',
+          path: 'years.semesters.first.pre_req_ids years.semesters.second.pre_req_ids years.semesters.third.pre_req_ids years.semesters.midyear.pre_req_ids',
           select: 'courseCode',
         })
         .populate({
@@ -112,10 +111,8 @@ const curriculumController = {
 
   getCurriculaByProgramAndSemester: async (req, res) => {
     try {
-      // Get query parameters
       const { programName, semester } = req.query;
   
-      // Validate required parameters
       if (!programName || !semester) {
         return res.status(400).json({
           success: false,
@@ -123,20 +120,18 @@ const curriculumController = {
         });
       }
   
-      // Validate semester value
-      const validSemesters = ['1st', '2nd', '3rd', 'Midyear'];
+      const validSemesters = ['first', 'second', 'third', 'midyear'];
       if (!validSemesters.includes(semester)) {
         return res.status(400).json({
           success: false,
-          message: 'Invalid semester value. Must be one of: 1st, 2nd, 3rd, Midyear',
+          message: 'Invalid semester value. Must be one of: first, second, third, midyear',
         });
       }
   
-      // Find all curricula matching the program and populate relevant fields
       const curricula = await Curriculum.find()
         .populate({
           path: 'program',
-          match: { name: programName }, // Match specific program name
+          match: { name: programName },
           select: 'name',
         })
         .populate({
@@ -149,9 +144,8 @@ const curriculumController = {
         })
         .lean();
   
-      // Filter out curricula where program didn't match or semester data is empty
       const filteredCurricula = curricula.filter(curriculum => 
-        curriculum.program && // Ensure program exists
+        curriculum.program &&
         curriculum.years.some(year => 
           year.semesters && 
           year.semesters[semester] && 
@@ -197,14 +191,13 @@ const curriculumController = {
 
   updateCurriculum: async (req, res) => {
     try {
-      const { id } = req.params; // Assuming the ID is passed as a URL parameter (e.g., /curriculums/:id)
+      const { id } = req.params;
       const data = req.body;
 
-      // Find and update the curriculum by ID, return the updated document
       const updatedCurriculum = await Curriculum.findByIdAndUpdate(
         id,
         data,
-        { new: true, runValidators: true } // new: true returns the updated document, runValidators ensures schema validation
+        { new: true, runValidators: true }
       );
 
       if (!updatedCurriculum) {
@@ -228,7 +221,6 @@ const curriculumController = {
     try {
       const { ids, archived, updated_by } = req.body;
 
-      // Validate input
       if (!Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ message: 'Please provide an array of course group IDs' });
       }
@@ -239,7 +231,6 @@ const curriculumController = {
         return res.status(400).json({ message: 'Updated_by field is required' });
       }
 
-      // Update multiple course groups
       const result = await Curriculum.updateMany(
         { _id: { $in: ids } },
         {
@@ -251,7 +242,6 @@ const curriculumController = {
         { new: true }
       );
 
-      // Check if any documents were modified
       if (result.matchedCount === 0) {
         return res.status(404).json({ message: 'No course groups found with provided IDs' });
       }

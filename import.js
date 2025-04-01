@@ -18,7 +18,8 @@ const routes = [
     { api: "/api/registrar/courses", router: require('./src/registrar/course/course.route.js') },
     { api: "/api/registrar/course_grps", router: require('./src/registrar/course_group/route.js') },
     { api: "/api/registrar/curriculums", router: require('./src/registrar/curriculum/route.js') },
-
+    { api: "/api/registrar/students", router: require('./src/registrar/students/route.js') },
+    
     // ADMISSION
     { api: "/api/admission/auth", router: require('./src/admission/login/adn_login.route.js') },
     { api: "/api/admission/profile", router: require('./src/admission/profile/adn_profile.route.js') },

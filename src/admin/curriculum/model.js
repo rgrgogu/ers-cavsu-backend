@@ -7,15 +7,15 @@ const courses = new mongoose.Schema({
 }, { _id: false });
 
 const semesters = new mongoose.Schema({
-  "1st": [courses],
-  "2nd": [courses],
-  "3rd": [courses],
-  "Midyear": [courses]
+  first: [courses],
+  second: [courses],
+  third: [courses],
+  midyear: [courses]
 }, { _id: false });
 
 const years = new mongoose.Schema({
   year: { type: String, default: '' },
-  semesters: { type: semesters, default: () => ({ "1st": [], "2nd": [], "3rd": [], "Midyear": [] }) },
+  semesters: { type: semesters, default: () => ({ "first": [], "second": [], "third": [], "midyear": [] }) },
 }, { _id: false });
 
 const curriculumSchema = new mongoose.Schema({
