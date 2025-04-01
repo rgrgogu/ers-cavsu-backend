@@ -4,6 +4,6 @@ const StudentController = require("./controller");
 
 const RequireAuth = require("../../../global/middleware/RequireAuth")
 
-router.get("/", RequireAuth, StudentController.listStudents);
+router.get("/get_new_firstyear", RequireAuth, StudentController.get_new_firstyear);
 
 module.exports = router;

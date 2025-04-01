@@ -2,9 +2,9 @@ const Student = require("../../student/login/model")
 
 const StudentController = {
     // List all Students
-    listStudents: async (req, res) => {
+    get_new_firstyear: async (req, res) => {
         try {
-            const students = await Student.find({ isArchived: false })
+            const students = await Student.find({ isArchived: false, year_level: 1, student_type: 'New' })
                 .select("-password")
                 .sort({ student_id: 1 })
                 .populate('program')
