@@ -56,6 +56,9 @@ const routes = [
     { api: "/api/admin/course_grps", router: require('./src/admin/course_group/route.js') },
     { api: "/api/admin/curriculums", router: require('./src/admin/curriculum/route.js') },
     { api: "/api/admin/users", router: require('./src/admin/users/route.js') },
+    { api: "/api/admin/ctgy_groups", router: require('./src/admin/evaluation/category/category.route.js') },
+    { api: "/api/admin/ctgy_questions", router: require('./src/admin/evaluation/question/question.route.js') },
+
 
     // PUBLIC API
     { api: "/api/public", router: require('./src/admin/website/public/public.router.js') },
