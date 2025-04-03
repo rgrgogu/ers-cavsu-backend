@@ -31,11 +31,7 @@ const CreateQuestions = async (req, res) => {
     const { id, group_id } = req.query; // id is admin_id, group_id is category group
     const data = req.body;
 
-    const result = await QuestiontModel.create({ 
-      ...data, 
-      created_by: id, 
-      group: group_id 
-    });
+    const result = await QuestiontModel.create({ ...data, created_by: id, group: group_id});
 
     res.status(201).json({ message: 'Question created', result });
   } catch (error) {
