@@ -18,14 +18,15 @@ const obj = new Schema({
     password: { type: String, required: true },
     role: { type: String, default: 'Student' },
     student_type: { type: String, enum: ['New', 'Old'], required: true, default: "New" },
-    enrollment_status: { type: String, enum: ['Regular', 'Irregular'], required: true, default: "Regular" },
+    student_status: { type: String, enum: ['Regular', 'Irregular'], required: true, default: "Regular" },
     program: { type: String, required: true },
     year_level: { type: Number, min: 1, max: 5, default: 1, index: true },
     updated_by: { type: mongoose.Schema.Types.ObjectId, refPath: 'updated_by_model', required: true },
     updated_by_model: { type: String, required: true, enum: ['stu_login', 'reg_login', 'adm_login'], default: "adm_login" },
     isArchived: { type: Boolean, default: false, index: true },
     folder_id: { type: String, default: '', required: true },
-    profile_id: { type: mongoose.Schema.Types.ObjectId, ref: 'app_profile', required: true }
+    profile_id: { type: mongoose.Schema.Types.ObjectId, ref: 'app_profile', required: true },
+    enrollment_id: { type: mongoose.Schema.Types.ObjectId, ref: 'enrollments', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },

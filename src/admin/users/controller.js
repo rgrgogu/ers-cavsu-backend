@@ -7,6 +7,7 @@ const FacLogin = require("../../faculty/login/model");
 const RegLogin = require("../../registrar/login/reg_login.model");
 const StuLogin = require("../../student/login/model");
 const BCrypt = require("../../../global/config/BCrypt")
+const NotificationController = require("../../applicant/app_notification/notification.controller")
 
 // Helper function to validate email
 const validateEmail = (email) => {
@@ -151,6 +152,7 @@ const UserController = {
   massCreateStudents: async (req, res) => {
     try {
       const studentsData = req.body; // Expecting an array of student objects
+      const ids = studentsData.map(item => item._id)
 
       // Validate that studentsData is an array
       if (!Array.isArray(studentsData)) {
@@ -213,9 +215,14 @@ const UserController = {
         appResult = await AppLogin.bulkWrite(idsBulkOps);
       }
 
+      await NotificationController.sendBulkNotification({
+        title: "Application Completed", 
+        log: "Your application has been completed. Congratulations and Welcome to Cavite State University - Bacoor Campus. For more updates, please check your personal email. Thank you.",
+      }, ids);
+
       res.status(201).json({
         message: 'Students created successfully',
-        data: studentsData.map(item => item._id),
+        data: ids,
         count: studentsData.length,
         bulkWriteResult: result,
       });
