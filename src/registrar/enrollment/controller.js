@@ -1,5 +1,7 @@
 const Enrollment = require('./model'); // Adjust the path as needed
 const mongoose = require('mongoose');
+const Student = require('../../student/login/model'); // Adjust the path as needed
+const Section = require("../section/model")
 
 // Mock models for population (replace with actual paths if different)
 // const Course = require('../course/course.model'); // Adjust path
@@ -157,6 +159,7 @@ const enrollmentController = {
   mass_enroll_firstyear: async (req, res) => {
     try {
       const enrollmentData = req.body; // Expecting an array of enrollment objects
+      const studentIds = enrollmentData.map((item) => item.student); // Array of student IDs
   
       // Validate that we have data to process
       if (!Array.isArray(enrollmentData) || enrollmentData.length === 0) {
@@ -166,23 +169,24 @@ const enrollmentController = {
         });
       }
   
-      // Prepare bulk operations
-      const bulkOperations = enrollmentData.map((data) => ({
+      // Prepare bulk operations for Enrollment collection
+      const bulkEnrollmentOperations = enrollmentData.map((data) => ({
         insertOne: {
           document: {
             student: data.student,
             curriculum_id: data.curriculum_id,
+            section: data.section, // Section ID from the enrollment data
             checklist: data.checklist.map((yearData) => ({
               school_year: yearData.school_year,
-              year: yearData.year, // Ensure this is "1st Year" or filter accordingly
+              year: yearData.year,
               semesters: {
                 first: yearData.semesters.first.map((course) => ({
                   course_id: course.course_id,
-                  schedule_id: course.schedule_id || null, // Default to null if not provided
-                  faculty_id: course.faculty_id || null, // Default to null if not provided
-                  grade: course.grade || null, // Default to null if not provided
-                  eval: course.eval || null, // Default to null if not provided
-                  status: course.status || 'Enlisted', // Default to 'Enlisted' if not provided
+                  schedule_id: course.schedule_id || null,
+                  faculty_id: course.faculty_id || null,
+                  grade: course.grade || null,
+                  eval: course.eval || null,
+                  status: course.status || 'Enlisted',
                 })),
                 second: yearData.semesters.second || [],
                 third: yearData.semesters.third || [],
@@ -194,8 +198,8 @@ const enrollmentController = {
         },
       }));
   
-      // Filter to ensure only first-year enrollments (optional, depending on your logic)
-      const firstYearOperations = bulkOperations.filter((op) =>
+      // Filter for first-year enrollments
+      const firstYearOperations = bulkEnrollmentOperations.filter((op) =>
         op.insertOne.document.checklist.some((year) => year.year === "1st Year")
       );
   
@@ -206,13 +210,53 @@ const enrollmentController = {
         });
       }
   
-      // Perform bulk write
-      const result = await Enrollment.bulkWrite(firstYearOperations);
+      // Perform bulk write to Enrollment collection
+      const enrollmentResult = await Enrollment.bulkWrite(firstYearOperations);
+  
+      // Get the inserted enrollment IDs
+      const insertedIds = Object.values(enrollmentResult.insertedIds);
+  
+      // Map student IDs to their corresponding enrollment IDs
+      const studentUpdates = enrollmentData.map((data, index) => ({
+        updateOne: {
+          filter: { _id: data.student },
+          update: { $set: { enrollment_id: insertedIds[index] } },
+        },
+      }));
+  
+      // Perform bulk update on Student collection
+      const studentUpdateResult = await Student.bulkWrite(studentUpdates);
+  
+      // Aggregate sections to update enrolled count
+      const sectionUpdates = {};
+      enrollmentData.forEach((data) => {
+        if (data.section) {
+          sectionUpdates[data.section] = (sectionUpdates[data.section] || 0) + 1;
+        }
+      });
+  
+      // Prepare bulk operations for Section collection
+      const bulkSectionOperations = Object.keys(sectionUpdates).map((sectionId) => ({
+        updateOne: {
+          filter: { _id: new mongoose.Types.ObjectId(sectionId) },
+          update: { $inc: { enrolled_count: sectionUpdates[sectionId] } }, // Increment enrolled count
+        },
+      }));
+  
+      // Perform bulk update on Section collection if there are updates
+      let sectionUpdateResult = null;
+      if (bulkSectionOperations.length > 0) {
+        sectionUpdateResult = await Section.bulkWrite(bulkSectionOperations);
+      }
   
       res.status(201).json({
         success: true,
-        message: `Successfully enrolled ${result.insertedCount} first-year students.`,
-        data: result,
+        message: `Successfully enrolled ${enrollmentResult.insertedCount} first-year students, updated ${studentUpdateResult.modifiedCount} student records, and updated ${sectionUpdateResult ? sectionUpdateResult.modifiedCount : 0} section(s).`,
+        data: {
+          enrollments: enrollmentResult,
+          studentUpdates: studentUpdateResult,
+          sectionUpdates: sectionUpdateResult,
+        },
       });
   
     } catch (error) {

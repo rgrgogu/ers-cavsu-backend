@@ -70,12 +70,19 @@ const Register = async (req, res) => {
 
     const acc = req.body;
     acc.password = await BCrypt.hash(acc.password)
+
     const folder_id = await CreateFolder(user_id, process.env.APPLICANT_GDRIVE_FOLDER);
-    const data = await User.create({ ...acc, user_id: user_id, folder_id: folder_id })
 
-    await Profile.create({ user_id: data.id })
+     // Step 1: Create User first
+    let user = await User.create({ ...acc, user_id, folder_id });
 
-    res.status(201).json({ message: 'User created', data });
+    // Step 2: Create Profile using the user _id
+    const profile = await Profile.create({ user_id: user._id });
+
+    // Step 3: Update User with profile_id
+    user = await User.findByIdAndUpdate(user._id, { profile_id: profile._id }, { new: true });
+
+    res.status(201).json({ message: 'User created', data: user });
   } catch (error) {
     res.status(400).json({ error: error.message })
   }
