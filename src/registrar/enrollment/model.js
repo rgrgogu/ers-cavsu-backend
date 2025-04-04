@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const enrollment = new mongoose.Schema({
     course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'courses', required: true },
     schedule_id: { type: mongoose.Schema.Types.ObjectId, ref: 'schedule', default: null }, // Assuming a Schedule collection or reference
-    faculty_id: { type: mongoose.Schema.Types.ObjectId, ref: 'faculty', default: null },
     grade: { type: String, enum: ['1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '5.00', 'DRP', 'INC', 'W'], default: null },
     eval: { type: mongoose.Schema.Types.ObjectId, ref: 'evaluation', default: null },
     status: { type: String, enum: ['Enrolled', 'Enlisted'], default: 'Enlisted' },
