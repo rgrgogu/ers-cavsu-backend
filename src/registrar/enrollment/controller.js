@@ -273,6 +273,7 @@ const enrollmentController = {
                   grade: course.grade || null,
                   eval: course.eval || null,
                   status: course.status || 'Enlisted',
+                  enlisted_by: course.enlisted_by || 'System',
                 })),
                 second: yearData.semesters.second || [],
                 third: yearData.semesters.third || [],
