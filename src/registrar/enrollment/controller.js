@@ -2,6 +2,7 @@ const Enrollment = require('./model'); // Adjust the path as needed
 const mongoose = require('mongoose');
 const Student = require('../../student/login/model'); // Adjust the path as needed
 const Section = require("../section/model")
+const SchoolYear = require('../../admin/school_year/model'); // Adjust the path as needed
 
 // Mock models for population (replace with actual paths if different)
 // const Course = require('../course/course.model'); // Adjust path
@@ -16,7 +17,7 @@ const enrollmentController = {
     try {
       const { student, school_year } = req.query;
 
-      const query = { };
+      const query = {};
       if (student) query.student = mongoose.Types.ObjectId(student);
       if (school_year) query.school_year = mongoose.Types.ObjectId(school_year);
 
@@ -56,6 +57,91 @@ const enrollmentController = {
         success: false,
         message: 'Server error while fetching enrollments',
         error: error.message
+      });
+    }
+  },
+
+  get_new_enrollment_firstyear: async (req, res) => {
+    try {
+      // Calculate the current academic year (e.g., "2024-2025")
+      const currentYear = new Date().getFullYear();
+      const academicYear = `${currentYear}-${currentYear + 1}`;
+  
+      // Find the school_year ObjectId based on the academic year
+      const schoolYearDoc = await SchoolYear.findOne({ year: academicYear });
+      if (!schoolYearDoc) {
+        return res.status(404).json({
+          message: `No school year found for ${academicYear}`,
+        });
+      }
+      const schoolYearId = schoolYearDoc._id;
+  
+      // Query the enrollment with the matching school_year and year level "1st Year"
+      const enrollment = await Enrollment.aggregate([
+        { $match: { 'checklist.year': '1st Year' } },
+        { $unwind: '$checklist' },
+        { $match: { 'checklist.year': '1st Year', 'checklist.school_year': schoolYearId } },
+        {
+          $lookup: {
+            from: 'stu_logins', // Adjusted to plural (check your actual collection name)
+            localField: 'student',
+            foreignField: '_id',
+            as: 'student_details',
+            pipeline: [ // Specify only attributes
+              {
+                $project: {
+                  student_id: 1, // Include only student_id
+                  name: 1,
+                  student_type: 1,
+                  student_status: 1,
+                  program: 1,
+                  _id: 1, // Exclude _id if not needed
+                },
+              },
+            ],
+          },
+        },
+        {
+          $lookup: {
+            from: 'sections', // Adjusted to match your collection name
+            localField: 'section',
+            foreignField: '_id',
+            as: 'section_details',
+            pipeline: [ // Specify only section_code
+              {
+                $project: {
+                  section_code: 1, // Include only section_code
+                  _id: 0, // Exclude _id if not needed
+                },
+              },
+            ],
+          },
+        },
+        {
+          $project: {
+            student: { $arrayElemAt: ['$student_details', 0] }, // Full student document
+            section: { $arrayElemAt: ['$section_details', 0] }, // Only section_code
+            updated_by: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        },
+      ]);
+  
+      if (!enrollment.length) {
+        return res.status(404).json({
+          message: `No enrollment found for 1st Year and school year ${academicYear}`,
+        });
+      }
+  
+      return res.status(200).json({
+        message: `Enrollment retrieved successfully for 1st Year and school year ${academicYear}`,
+        data: enrollment,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        message: 'Error retrieving enrollment',
+        error: error.message,
       });
     }
   },
@@ -160,7 +246,7 @@ const enrollmentController = {
     try {
       const enrollmentData = req.body; // Expecting an array of enrollment objects
       const studentIds = enrollmentData.map((item) => item.student); // Array of student IDs
-  
+
       // Validate that we have data to process
       if (!Array.isArray(enrollmentData) || enrollmentData.length === 0) {
         return res.status(400).json({
@@ -168,7 +254,7 @@ const enrollmentController = {
           message: 'No enrollment data provided or invalid format. Expected an array of enrollments.',
         });
       }
-  
+
       // Prepare bulk operations for Enrollment collection
       const bulkEnrollmentOperations = enrollmentData.map((data) => ({
         insertOne: {
@@ -197,25 +283,25 @@ const enrollmentController = {
           },
         },
       }));
-  
+
       // Filter for first-year enrollments
       const firstYearOperations = bulkEnrollmentOperations.filter((op) =>
         op.insertOne.document.checklist.some((year) => year.year === "1st Year")
       );
-  
+
       if (firstYearOperations.length === 0) {
         return res.status(400).json({
           success: false,
           message: 'No first-year enrollments found in the provided data.',
         });
       }
-  
+
       // Perform bulk write to Enrollment collection
       const enrollmentResult = await Enrollment.bulkWrite(firstYearOperations);
-  
+
       // Get the inserted enrollment IDs
       const insertedIds = Object.values(enrollmentResult.insertedIds);
-  
+
       // Map student IDs to their corresponding enrollment IDs
       const studentUpdates = enrollmentData.map((data, index) => ({
         updateOne: {
@@ -223,10 +309,10 @@ const enrollmentController = {
           update: { $set: { enrollment_id: insertedIds[index] } },
         },
       }));
-  
+
       // Perform bulk update on Student collection
       const studentUpdateResult = await Student.bulkWrite(studentUpdates);
-  
+
       // Aggregate sections to update enrolled count
       const sectionUpdates = {};
       enrollmentData.forEach((data) => {
@@ -234,7 +320,7 @@ const enrollmentController = {
           sectionUpdates[data.section] = (sectionUpdates[data.section] || 0) + 1;
         }
       });
-  
+
       // Prepare bulk operations for Section collection
       const bulkSectionOperations = Object.keys(sectionUpdates).map((sectionId) => ({
         updateOne: {
@@ -242,13 +328,13 @@ const enrollmentController = {
           update: { $inc: { enrolled_count: sectionUpdates[sectionId] } }, // Increment enrolled count
         },
       }));
-  
+
       // Perform bulk update on Section collection if there are updates
       let sectionUpdateResult = null;
       if (bulkSectionOperations.length > 0) {
         sectionUpdateResult = await Section.bulkWrite(bulkSectionOperations);
       }
-  
+
       res.status(201).json({
         success: true,
         message: `Successfully enrolled ${enrollmentResult.insertedCount} first-year students, updated ${studentUpdateResult.modifiedCount} student records, and updated ${sectionUpdateResult ? sectionUpdateResult.modifiedCount : 0} section(s).`,
@@ -258,7 +344,7 @@ const enrollmentController = {
           sectionUpdates: sectionUpdateResult,
         },
       });
-  
+
     } catch (error) {
       res.status(400).json({
         success: false,
