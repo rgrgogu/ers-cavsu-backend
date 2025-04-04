@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const obj = new mongoose.Schema({
-    section: { type: mongoose.Schema.Types.ObjectId, ref: 'sections', required: true },
+    section: { type: mongoose.Schema.Types.ObjectId, ref: 'sections', required: true, index: true },
     school_year: { type: mongoose.Schema.Types.ObjectId, ref: 'school_years', required: true }, // Updated
     semester: { type: String, enum: ['first', 'second', 'third', 'midyear'], required: true },
     schedule: [{
