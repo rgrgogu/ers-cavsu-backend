@@ -70,12 +70,12 @@ app.get("/", (req, res) => {
 mongoose.connection.once("open", () => {
     console.log("Database connected.");
 
-    //app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`))
-    // server.listen(process.env.PORT, () =>
-    //     console.log(`Server started on port ${process.env.PORT}`)
-    // );
-    server.listen(process.env.PORT || 4000, "0.0.0.0", () =>
-        console.log(`Server started on port ${process.env.PORT || 4000}`)
+    // app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`))
+    server.listen(process.env.PORT, () =>
+        console.log(`Server started on port ${process.env.PORT}`)
     );
-    
+    // server.listen(process.env.PORT || 4000, "0.0.0.0", () =>
+    //     console.log(`Server started on port ${process.env.PORT || 4000}`)
+    // );
+
 });
