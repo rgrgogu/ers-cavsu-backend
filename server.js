@@ -20,7 +20,8 @@ const allowedOrigins = [
     "http://localhost:5173",
     "https://cvsu-ers.netlify.app",
     "https://ers-cavsu-frontend.vercel.app",
-    "https://drive.google.com"
+    "https://drive.google.com",
+    "https://ominous-space-spoon-jvvj6rg54pw2q5jr-8080.app.github.dev"
 ];
 
 const corsOptions = {
@@ -70,7 +71,11 @@ mongoose.connection.once("open", () => {
     console.log("Database connected.");
 
     //app.listen(process.env.PORT, () => console.log(`Server started on port ${process.env.PORT}`))
-    server.listen(process.env.PORT, () =>
-        console.log(`Server started on port ${process.env.PORT}`)
+    // server.listen(process.env.PORT, () =>
+    //     console.log(`Server started on port ${process.env.PORT}`)
+    // );
+    server.listen(process.env.PORT || 4000, "0.0.0.0", () =>
+        console.log(`Server started on port ${process.env.PORT || 4000}`)
     );
+    
 });

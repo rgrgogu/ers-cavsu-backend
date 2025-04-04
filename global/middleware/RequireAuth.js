@@ -20,9 +20,10 @@ const RequireAuth = async (req, res, next) => {
     const token = authorization.split(' ')[1]
 
     try {
+        console.log()
         const { _id, role } = jwt.verify(token, process.env.SECRET)
         const extractedWord = req.baseUrl.split('/')[2];
-
+        console.log(extractedWord,role)
         if(extractedWord === role){
             // req.user = await models[role].findOne({ _id }).select('_id')
             next()

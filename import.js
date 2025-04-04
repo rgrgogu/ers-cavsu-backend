@@ -2,10 +2,14 @@ const routes = [
     // STUDENT
     { api: "/api/student/auth", router: require('./src/student/login/route.js') },
     { api: "/api/student/profile", router: require('./src/student/profile/route.js') },
-
+    { api: "/api/student/ctgy_groups", router: require('./src/student/evaluation/category/category.route.js') },
+    { api: "/api/student/ctgy_questions", router: require('./src/student/evaluation/question/question.route.js') },
+    
     // FACULTY
     { api: "/api/faculty/auth", router: require('./src/faculty/login/route.js') },
     { api: "/api/faculty/profile", router: require('./src/faculty/profile/route.js') },
+    { api: "/api/faculty/ctgy_groups", router: require('./src/faculty/evaluation/category/category.route.js') },
+    { api: "/api/faculty/ctgy_questions", router: require('./src/faculty/evaluation/question/question.route.js') },
 
     // REGISTRAR
     { api: "/api/registrar/auth", router: require('./src/registrar/login/reg_login.route.js') },

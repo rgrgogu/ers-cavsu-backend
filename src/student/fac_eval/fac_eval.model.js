@@ -4,20 +4,20 @@ const Schema = mongoose.Schema;
 const evaluationSchema = new Schema({
     professor: { 
         type: Schema.Types.ObjectId, 
-        ref: 'fac_login', // Reference to the faculty/professor model
+        ref: 'fac_login', 
         required: true,
         index: true 
     },
     student: { 
         type: Schema.Types.ObjectId, 
-        ref: 'stu_login', // Reference to the student model
+        ref: 'stu_login', 
         required: true,
         index: true 
     },
     responses: [{
         category: { 
             type: Schema.Types.ObjectId, 
-            ref: 'evaluation_categories', 
+            ref: 'eval_ctgy_question', // Fixed reference to match your category list model
             required: true 
         },
         grade: { 
