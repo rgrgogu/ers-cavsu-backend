@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const enrollment = new mongoose.Schema({
+    section: { type: mongoose.Schema.Types.ObjectId, ref: 'sections', required: true },
     course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'courses', required: true },
     schedule_id: { type: mongoose.Schema.Types.ObjectId, ref: 'schedule', default: null }, // Assuming a Schedule collection or reference
     grade: { type: String, enum: ['1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '5.00', 'DRP', 'INC', 'W'], default: null },
@@ -27,7 +28,6 @@ const years = new mongoose.Schema({
 
 const obj = new mongoose.Schema({
     student: { type: mongoose.Schema.Types.ObjectId, ref: 'stu_login', required: true },
-    section: { type: mongoose.Schema.Types.ObjectId, ref: 'sections', required: true },
     curriculum_id: { type: mongoose.Schema.Types.ObjectId, ref: 'curriculums', required: true },
     checklist: [years],
     updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },

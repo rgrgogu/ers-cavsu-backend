@@ -31,10 +31,7 @@ const courseController = {
         index: courses.findIndex(course => course.courseCode === doc.courseCode), // Match by courseCode
         courseCode: doc.courseCode,
         courseTitle: doc.courseTitle,
-        lectureCredits: doc.lectureCredits,
-        labCredits: doc.labCredits,
-        lectureContact: doc.lectureContact,
-        labContact: doc.labContact,
+        credits: doc.credits,
         isMajor: doc.isMajor,
         updatedAt: doc.updatedAt,
         updated_by: doc.updated_by,
@@ -114,7 +111,7 @@ const courseController = {
   // Update course
   updateCourse: async (req, res) => {
     try {
-      const { courseCode, courseTitle, lectureCredits, labCredits, lectureContact, labContact, isMajor, courseType, program } = req.body;
+      const { courseCode, courseTitle, credits, isMajor, courseType, program } = req.body;
       const course = await Course.findById(req.params.id);
 
       if (!course || course.isArchived) {
@@ -123,10 +120,7 @@ const courseController = {
 
       course.courseCode = courseCode || course.courseCode;
       course.courseTitle = courseTitle || course.courseTitle;
-      course.lectureCredits = lectureCredits || course.lectureCredits;
-      course.labCredits = labCredits || course.labCredits;
-      course.lectureContact = lectureContact || course.lectureContact;
-      course.labContact = labContact || course.labContact;
+      course.credits = credits || course.credits;
       course.isMajor = isMajor;
       course.courseType = courseType || course.courseType;
       course.program = program || course.program;

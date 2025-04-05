@@ -16,7 +16,7 @@ const semesters = new mongoose.Schema({
 const years = new mongoose.Schema({
   year: { type: String, default: '' },
   semesters: { type: semesters, default: () => ({ "first": [], "second": [], "third": [], "midyear": [] }) },
-}, { _id: false });
+});
 
 const curriculumSchema = new mongoose.Schema({
   code: { type: String, default: '', required: true, trim: true, match: [/^[A-Za-z0-9-]+$/, 'Identifier can only contain letters, numbers, and hyphens'], unique: true, index: true },
