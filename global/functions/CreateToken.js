@@ -8,8 +8,8 @@ const CreateRefreshToken = (_id, role) => {
     return jwt.sign({ _id, role }, process.env.SECRET, { expiresIn: '1d' })
 }
 
-const CreateEmailToken = (email) => {
-    return jwt.sign({ email }, process.env.SECRET, { expiresIn: '30m' })
+const CreateEmailToken = (_id) => {
+    return jwt.sign({ _id }, process.env.SECRET, { expiresIn: '30m' })
 }
 
 const VerifyRefreshToken = (refreshToken) => {
@@ -34,13 +34,13 @@ const VerifyTokenInReset = (token) => {
         throw new Error("Invalid authentication credentials");
     }
 
-    if (!decodedToken.hasOwnProperty("email")){
+    if (!decodedToken.hasOwnProperty("_id")) {
         throw new Error("Invalid authentication credentials");
     }
-        
-    const { email } = decodedToken;
 
-    return email
+    const { _id } = decodedToken;
+
+    return _id
 }
 
 module.exports = { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken };

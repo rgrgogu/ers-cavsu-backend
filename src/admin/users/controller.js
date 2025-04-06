@@ -1,11 +1,5 @@
 const mongoose = require("mongoose");
-const AdmLogin = require("../login/adm_login.model");
-const AdnLogin = require("../../admission/login/adn_login.model");
-const AppLogin = require("../../applicant/login/app_login.model");
-const AppProfile = require("../../applicant/profile/app_profile.model")
-const FacLogin = require("../../faculty/login/model");
-const RegLogin = require("../../registrar/login/reg_login.model");
-const StuLogin = require("../../student/login/model");
+const AuthLogin = require("../../auth/login/model");
 const BCrypt = require("../../../global/config/BCrypt")
 const NotificationController = require("../../applicant/app_notification/notification.controller")
 
@@ -20,7 +14,7 @@ const UserController = {
   // List all Admin users
   listAdmins: async (req, res) => {
     try {
-      const admins = await AdmLogin.find({ isArchived: false })
+      const admins = await AuthLogin.find({ isArchived: false, role: "admin" })
         .select("-password") // Exclude password from response
         .sort({ createdAt: -1 });
       res.json(admins);
@@ -44,7 +38,7 @@ const UserController = {
         return res.status(400).json({ message: "Invalid email format" });
       }
 
-      const newAdmin = new AdmLogin({
+      const newAdmin = new AuthLogin({
         email,
         name: {
           firstname: name.firstname || '',
@@ -68,7 +62,7 @@ const UserController = {
   // List all Admission users
   listAdmissions: async (req, res) => {
     try {
-      const admissions = await AdnLogin.find({ isArchived: false })
+      const admissions = await AuthLogin.find({ isArchived: false })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(admissions);
@@ -90,7 +84,7 @@ const UserController = {
         return res.status(400).json({ message: "Invalid email format" });
       }
 
-      const newAdmission = new AdnLogin({
+      const newAdmission = new AuthLogin({
         email,
         name: {
           firstname: name.firstname || '',
@@ -114,7 +108,7 @@ const UserController = {
   // List all Applicants/Students
   listApplicants: async (req, res) => {
     try {
-      const applicants = await AppLogin.aggregate([
+      const applicants = await AuthLogin.aggregate([
         { $match: { isArchived: false } },
         { $lookup: { from: "app_profiles", localField: "profile_id", foreignField: "_id", as: "profileDetails", pipeline: [{ $project: { _id: 0, program: "$application_details.program", firstname: "$application_details.firstname", middlename: "$application_details.middlename", lastname: "$application_details.lastname" } }] } },
         { $unwind: { path: "$profileDetails", preserveNullAndEmptyArrays: true } },
@@ -165,7 +159,7 @@ const UserController = {
       }
 
       // Get the current count to start sequencing
-      const currentCount = (await StuLogin.countDocuments()) + 1;
+      const currentCount = (await AuthLogin.countDocuments()) + 1;
 
       // Prepare bulk operations
       const bulkOps = [];
@@ -207,12 +201,12 @@ const UserController = {
       });
 
       // Execute bulk write
-      const result = await StuLogin.bulkWrite(bulkOps);
+      const result = await AuthLogin.bulkWrite(bulkOps);
 
       // Update status from Submitted to Application Completed
       let appResult = null;
       if (idsBulkOps.length > 0) {
-        appResult = await AppLogin.bulkWrite(idsBulkOps);
+        appResult = await AuthLogin.bulkWrite(idsBulkOps);
       }
 
       await NotificationController.sendBulkNotification({
@@ -253,7 +247,7 @@ const UserController = {
   // List all Faculty users
   listFaculty: async (req, res) => {
     try {
-      const faculty = await FacLogin.find({ isArchived: false })
+      const faculty = await AuthLogin.find({ isArchived: false })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(faculty);
@@ -275,7 +269,7 @@ const UserController = {
         return res.status(400).json({ message: "Invalid email format" });
       }
 
-      const newFaculty = new FacLogin({
+      const newFaculty = new AuthLogin({
         email,
         name: {
           firstname: name.firstname || '',
@@ -299,7 +293,7 @@ const UserController = {
   // List all Registrar users
   listRegistrars: async (req, res) => {
     try {
-      const registrars = await RegLogin.find({ isArchived: false })
+      const registrars = await AuthLogin.find({ isArchived: false })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(registrars);
@@ -321,7 +315,7 @@ const UserController = {
         return res.status(400).json({ message: "Invalid email format" });
       }
 
-      const newRegistrar = new RegLogin({
+      const newRegistrar = new AuthLogin({
         email,
         name: {
           firstname: name.firstname || '',
@@ -345,7 +339,7 @@ const UserController = {
   // List all Students
   listStudents: async (req, res) => {
     try {
-      const students = await StuLogin.find({ isArchived: false })
+      const students = await AuthLogin.find({ isArchived: false })
         .select("-password")
         .sort({ createdAt: -1 })
         .populate('program')
@@ -369,7 +363,7 @@ const UserController = {
         return res.status(400).json({ message: "Invalid email format" });
       }
 
-      const newStudent = new StuLogin({
+      const newStudent = new AuthLogin({
         personal_email,
         cvsu_email,
         name: {

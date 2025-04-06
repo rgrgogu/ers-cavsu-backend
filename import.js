@@ -1,4 +1,7 @@
 const routes = [
+    // AUTHENTICATION
+    { api: "/api/auth", router: require('./src/auth/login/route.js') },
+
     // STUDENT
     { api: "/api/student/auth", router: require('./src/student/login/route.js') },
     { api: "/api/student/profile", router: require('./src/student/profile/route.js') },
