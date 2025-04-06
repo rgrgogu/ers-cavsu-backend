@@ -62,7 +62,7 @@ const UserController = {
   // List all Admission users
   listAdmissions: async (req, res) => {
     try {
-      const admissions = await AuthLogin.find({ isArchived: false })
+      const admissions = await AuthLogin.find({ isArchived: false, role: "admission" })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(admissions);
@@ -109,7 +109,7 @@ const UserController = {
   listApplicants: async (req, res) => {
     try {
       const applicants = await AuthLogin.aggregate([
-        { $match: { isArchived: false } },
+        { $match: { isArchived: false, role: "applicant" } },
         { $lookup: { from: "app_profiles", localField: "profile_id", foreignField: "_id", as: "profileDetails", pipeline: [{ $project: { _id: 0, program: "$application_details.program", firstname: "$application_details.firstname", middlename: "$application_details.middlename", lastname: "$application_details.lastname" } }] } },
         { $unwind: { path: "$profileDetails", preserveNullAndEmptyArrays: true } },
         {
@@ -247,7 +247,7 @@ const UserController = {
   // List all Faculty users
   listFaculty: async (req, res) => {
     try {
-      const faculty = await AuthLogin.find({ isArchived: false })
+      const faculty = await AuthLogin.find({ isArchived: false, role: "faculty" })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(faculty);
@@ -293,7 +293,7 @@ const UserController = {
   // List all Registrar users
   listRegistrars: async (req, res) => {
     try {
-      const registrars = await AuthLogin.find({ isArchived: false })
+      const registrars = await AuthLogin.find({ isArchived: false, role: "registrar" })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(registrars);
@@ -339,7 +339,7 @@ const UserController = {
   // List all Students
   listStudents: async (req, res) => {
     try {
-      const students = await AuthLogin.find({ isArchived: false })
+      const students = await AuthLogin.find({ isArchived: false, role: "student" })
         .select("-password")
         .sort({ createdAt: -1 })
         .populate('program')
