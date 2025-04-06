@@ -22,9 +22,7 @@ const file = new Schema({
 const personal_info = new Schema({
     id_pic: { type: file, default: { ...file } },
     sex: { type: String, enum: ["Male", "Female"] },
-    dob: { type: Date },
     civil_status: { type: String, default: 'Single', enum: ['Single', 'Married', 'Widowed', 'Legally Separated'] },
-    contact: { type: String },
     religion: { type: String },
     nationality: { type: String },
     address: { type: address, default: { ...address } },

@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const jwt = require('jsonwebtoken')
 
 const User = require("./model");
-const Profile = require("../../applicant/profile/app_profile.model")
+const Profile = require("../../auth/profile_one/model")
 
 const BCrypt = require("../../../global/config/BCrypt");
 const { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");

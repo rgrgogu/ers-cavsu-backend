@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const AuthLogin = require("../../auth/login/model");
+const AuthLogin = require("../../auth/profile_one/model");
 const BCrypt = require("../../../global/config/BCrypt")
 const NotificationController = require("../../applicant/app_notification/notification.controller")
 

@@ -101,10 +101,10 @@ const LoginController = {
 
             // Create profile based on role
             if (role === 'applicant') {
-                const profileOne = await ProfileOne.create({ user_id: user._id });
+                const profileOne = await ProfileOne.create({});
                 await User.findByIdAndUpdate(user._id, { profile_id_one: profileOne._id });
             } else {
-                const profileTwo = await ProfileTwo.create({ user_id: user._id, sex: req.body.sex });
+                const profileTwo = await ProfileTwo.create({ sex: req.body.sex });
                 await User.findByIdAndUpdate(user._id, { profile_id_two: profileTwo._id });
             }
 

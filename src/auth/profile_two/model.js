@@ -12,7 +12,7 @@ const address = new Schema({
 });
 
 const obj = new Schema({
-    sex: { type: String, default: '', enum: ["Male", "Female"] },
+    sex: { type: String, default: 'Male', enum: ["Male", "Female"] },
     civil_status: { type: String, default: 'Single', enum: ['Single', 'Married', 'Widowed', 'Legally Separated'] },
     contact: { type: String, default: '' },
     religion: { type: String, default: '' },

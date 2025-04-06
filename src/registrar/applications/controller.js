@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const User = require("../../applicant/login/app_login.model");
-const Profile = require("../../applicant/profile/app_profile.model");
+const Profile = require("../../auth/profile_one/model");
 
 const GetApplicants = async (req, res) => {
     try {
