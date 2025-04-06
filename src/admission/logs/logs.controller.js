@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const User = require("../../applicant/login/app_login.model")
+const User = require("../../auth/login/model")
 const Model = require("./logs.model");
 const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO")
 const NotificationController = require("../../applicant/app_notification/notification.controller")

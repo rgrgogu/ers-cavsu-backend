@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const User = require("./reg_login.model");
+const User = require("../../auth/login/model");
 
 const BCrypt = require("../../../global/config/BCrypt");
 

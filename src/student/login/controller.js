@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const jwt = require('jsonwebtoken')
 
-const User = require("./model");
+const User = require("../../auth/login/model");
 const Profile = require("../../auth/profile_one/model")
 
 const BCrypt = require("../../../global/config/BCrypt");
