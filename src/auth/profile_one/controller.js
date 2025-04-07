@@ -114,8 +114,6 @@ const ApplicantProfileController = {
             const data = JSON.parse(body.obj)
             const DOCUMENT_MAX_SIZE = 1024 * 1024;
 
-            console.log(profile_id, folder_id, deleted_id, data, file)
-
             if (file) {
                 if (file.size > DOCUMENT_MAX_SIZE) {
                     return res.status(400).json({ error: `File ${file.originalname} exceeds ${DOCUMENT_MAX_SIZE / 1024}KB limit.` });
