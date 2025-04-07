@@ -11,5 +11,6 @@ router.post("/register", LoginController.Register);
 router.post("/reset", LoginController.RequestReset);
 router.post("/refresh/:id/:role", RequireAuth, LoginController.Refresh);
 router.put("/change_pass", RequireAuth, LoginController.ChangePass);
+router.put("/initial_reset/:id", RequireAuth, LoginController.InitialReset);
 
 module.exports = router;

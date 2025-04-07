@@ -15,8 +15,9 @@ const LoginController = {
 
             const user = await User.findOne({ username });
 
+            // User not found
             if (!user) {
-                return res.status(400).json({ error: 'User not found' });
+                return res.status(400).json({ error: 'An unexpected error occurred. Please contact the admin.' });
             }
 
             if (user.isArchived) {
@@ -37,7 +38,7 @@ const LoginController = {
                     maxAge: 24 * 60 * 60 * 1000,
                 });
 
-                return res.status(200).json({ user: user, accessToken });
+                return res.status(200).json({ user: user, accessToken, mustResetPassword: result.mustResetPassword });
             } else {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
@@ -156,6 +157,22 @@ const LoginController = {
 
             if (id && data.confirm === data.password) {
                 await User.findByIdAndUpdate(id, { password: await BCrypt.hash(data.password) })
+                res.status(200).json("Password successfully changed");
+            }
+            else
+                res.status(400).json("Password doesn't matched.");
+        } catch (error) {
+            res.status(400).send(error);
+        }
+    },
+
+    InitialReset: async (req, res) => {
+        try {
+            const data = req.body;
+            const id = req.params.id;
+
+            if (id && data.confirm === data.password) {
+                await User.findByIdAndUpdate(id, { username: data.username, password: await BCrypt.hash(data.password) })
                 res.status(200).json("Password successfully changed");
             }
             else
