@@ -1,11 +1,14 @@
 const AuthLogin = require("../../auth/login/model");
+const ProfileTwo = require("../../auth/profile_two/model");
 const BCrypt = require("../../../global/config/BCrypt")
 const NotificationController = require("../../applicant/app_notification/notification.controller")
+const { CreateFolder } = require("../../../global/utils/Drive")
 
-// Helper function to validate email
-const validateEmail = (email) => {
-  const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-  return emailRegex.test(email);
+const rolePrefixes = {
+  admission: { prefix: 'AD', folder: process.env.ADMISSION_GDRIVE_FOLDER },
+  faculty: { prefix: 'FT', folder: process.env.FACULTY_GDRIVE_FOLDER },
+  registrar: { prefix: 'RG', folder: process.env.REGISTRAR_GDRIVE_FOLDER },
+  admin: { prefix: 'AM', folder: process.env.ADMIN_GDRIVE_FOLDER },
 };
 
 // UserController
@@ -22,42 +25,6 @@ const UserController = {
     }
   },
 
-  // Create new Admin user
-  createAdmin: async (req, res) => {
-    try {
-      const { email, name, birthdate, username, password, role } = req.body;
-
-      // Validate required fields
-      if (!email || !name || !birthdate || !username || !password || !role) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-
-      // Validate email format
-      if (!validateEmail(email)) {
-        return res.status(400).json({ message: "Invalid email format" });
-      }
-
-      const newAdmin = new AuthLogin({
-        email,
-        name: {
-          firstname: name.firstname || '',
-          middlename: name.middlename || '',
-          lastname: name.lastname || '',
-          extension: name.extension || ''
-        },
-        birthdate,
-        username,
-        password,
-        role: role || 'Admin'
-      });
-
-      const savedAdmin = await newAdmin.save();
-      res.status(201).json(savedAdmin);
-    } catch (error) {
-      res.status(400).json({ message: "Error creating admin", error: error.message });
-    }
-  },
-
   // List all Admission users
   listAdmissions: async (req, res) => {
     try {
@@ -67,40 +34,6 @@ const UserController = {
       res.json(admissions);
     } catch (error) {
       res.status(400).json({ message: "Error fetching admissions", error: error.message });
-    }
-  },
-
-  // Create new Admission user
-  createAdmission: async (req, res) => {
-    try {
-      const { email, name, birthdate, username, password, role } = req.body;
-
-      if (!email || !name || !birthdate || !username || !password || !role) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-
-      if (!validateEmail(email)) {
-        return res.status(400).json({ message: "Invalid email format" });
-      }
-
-      const newAdmission = new AuthLogin({
-        email,
-        name: {
-          firstname: name.firstname || '',
-          middlename: name.middlename || '',
-          lastname: name.lastname || '',
-          extension: name.extension || ''
-        },
-        birthdate,
-        username,
-        password,
-        role: role || 'Admission'
-      });
-
-      const savedAdmission = await newAdmission.save();
-      res.status(201).json(savedAdmission);
-    } catch (error) {
-      res.status(400).json({ message: "Error creating admission user", error: error.message });
     }
   },
 
@@ -138,6 +71,91 @@ const UserController = {
       res.json(applicants);
     } catch (error) {
       res.status(400).json({ message: "Error fetching applicants", error: error.message });
+    }
+  },
+
+  // List all Faculty users
+  listFaculty: async (req, res) => {
+    try {
+      const faculty = await AuthLogin.find({ isArchived: false, role: "faculty" })
+        .select("-password")
+        .sort({ createdAt: -1 });
+      res.json(faculty);
+    } catch (error) {
+      res.status(400).json({ message: "Error fetching faculty", error: error.message });
+    }
+  },
+
+  // List all Registrar users
+  listRegistrars: async (req, res) => {
+    try {
+      const registrars = await AuthLogin.find({ isArchived: false, role: "registrar" })
+        .select("-password")
+        .sort({ createdAt: -1 });
+      res.json(registrars);
+    } catch (error) {
+      res.status(400).json({ message: "Error fetching registrars", error: error.message });
+    }
+  },
+
+  // List all Students
+  listStudents: async (req, res) => {
+    try {
+      const students = await AuthLogin.find({ isArchived: false, role: "student" })
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .populate('program')
+        .populate('updated_by');
+      res.json(students);
+    } catch (error) {
+      res.status(400).json({ message: "Error fetching students", error: error.message });
+    }
+  },
+
+  // Create Account for Admin, Admission, Faculty, and Registrar
+  CreateAccount: async (req, res) => {
+    try {
+      const { role } = req.body;
+
+      // Validate role
+      if (!role || !rolePrefixes[role]) {
+        return res.status(400).json({ error: 'Invalid or missing role.' });
+      }
+
+      // Extract prefix and folder from rolePrefixes
+      const { prefix, folder } = rolePrefixes[role];
+      if (!prefix) {
+        return res.status(400).json({ error: 'Role prefix is missing.' });
+      }
+
+      // Generate user_id
+      const count = await AuthLogin.countDocuments({ role }) + 1;
+      const year = new Date().getFullYear();
+      const paddedCount = count.toString().padStart(6, '0');
+      const user_id = `${prefix}${year}${paddedCount}`;
+
+      // Assign default values for username and password
+      const username = user_id;
+      const password = await BCrypt.hash(process.env.DEFAULT_PASS);
+
+      // Combine full name
+      const fullName = [req.body.name.firstname, req.body.name.middlename, req.body.name.lastname, req.body.name.extension]
+        .filter(Boolean)
+        .join(' ');
+
+      // Create user in the database
+      const user = await AuthLogin.create({ ...req.body, username, password, user_id });
+
+      // Use the folder from rolePrefixes or fallback to a default folder
+      const folder_id = await CreateFolder(fullName, folder);
+
+      const profileTwo = await ProfileTwo.create({ sex: req.body.sex });
+      const result = await AuthLogin.findByIdAndUpdate(user._id, { profile_id_two: profileTwo._id, folder_id }, { new: true }).select("-password");
+
+      return res.status(201).json(result);
+    } catch (error) {
+      if (error.code === 11000) return res.status(400).json({ error: "Please try another username." }) // Duplicate key error
+      else return res.status(400).json({ error: error.message })
     }
   },
 
@@ -209,7 +227,7 @@ const UserController = {
       }
 
       await NotificationController.sendBulkNotification({
-        title: "Application Completed", 
+        title: "Application Completed",
         log: "Your application has been completed. Congratulations and Welcome to Cavite State University - Bacoor Campus. For more updates, please check your personal email. Thank you.",
       }, ids);
 
@@ -243,153 +261,6 @@ const UserController = {
     }
   },
 
-  // List all Faculty users
-  listFaculty: async (req, res) => {
-    try {
-      const faculty = await AuthLogin.find({ isArchived: false, role: "faculty" })
-        .select("-password")
-        .sort({ createdAt: -1 });
-      res.json(faculty);
-    } catch (error) {
-      res.status(400).json({ message: "Error fetching faculty", error: error.message });
-    }
-  },
-
-  // Create new Faculty user
-  createFaculty: async (req, res) => {
-    try {
-      const { email, name, birthdate, username, password, role } = req.body;
-
-      if (!email || !name || !birthdate || !username || !password || !role) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-
-      if (!validateEmail(email)) {
-        return res.status(400).json({ message: "Invalid email format" });
-      }
-
-      const newFaculty = new AuthLogin({
-        email,
-        name: {
-          firstname: name.firstname || '',
-          middlename: name.middlename || '',
-          lastname: name.lastname || '',
-          extension: name.extension || ''
-        },
-        birthdate,
-        username,
-        password,
-        role: role || 'Faculty'
-      });
-
-      const savedFaculty = await newFaculty.save();
-      res.status(201).json(savedFaculty);
-    } catch (error) {
-      res.status(400).json({ message: "Error creating faculty", error: error.message });
-    }
-  },
-
-  // List all Registrar users
-  listRegistrars: async (req, res) => {
-    try {
-      const registrars = await AuthLogin.find({ isArchived: false, role: "registrar" })
-        .select("-password")
-        .sort({ createdAt: -1 });
-      res.json(registrars);
-    } catch (error) {
-      res.status(400).json({ message: "Error fetching registrars", error: error.message });
-    }
-  },
-
-  // Create new Registrar user
-  createRegistrar: async (req, res) => {
-    try {
-      const { email, name, birthdate, username, password, role } = req.body;
-
-      if (!email || !name || !birthdate || !username || !password || !role) {
-        return res.status(400).json({ message: "All fields are required" });
-      }
-
-      if (!validateEmail(email)) {
-        return res.status(400).json({ message: "Invalid email format" });
-      }
-
-      const newRegistrar = new AuthLogin({
-        email,
-        name: {
-          firstname: name.firstname || '',
-          middlename: name.middlename || '',
-          lastname: name.lastname || '',
-          extension: name.extension || ''
-        },
-        birthdate,
-        username,
-        password,
-        role: role || 'Registrar'
-      });
-
-      const savedRegistrar = await newRegistrar.save();
-      res.status(201).json(savedRegistrar);
-    } catch (error) {
-      res.status(400).json({ message: "Error creating registrar", error: error.message });
-    }
-  },
-
-  // List all Students
-  listStudents: async (req, res) => {
-    try {
-      const students = await AuthLogin.find({ isArchived: false, role: "student" })
-        .select("-password")
-        .sort({ createdAt: -1 })
-        .populate('program')
-        .populate('updated_by');
-      res.json(students);
-    } catch (error) {
-      res.status(400).json({ message: "Error fetching students", error: error.message });
-    }
-  },
-
-  // Create new Student
-  createStudent: async (req, res) => {
-    try {
-      const { personal_email, cvsu_email, name, username, password, role, student_type, enrollment_status, program, year_level, updated_by, updated_by_model, folder_id, profile_id } = req.body;
-
-      if (!personal_email || !cvsu_email || !name || !username || !password || !program || !updated_by || !updated_by_model || !folder_id || !profile_id) {
-        return res.status(400).json({ message: "All required fields are required" });
-      }
-
-      if (!validateEmail(personal_email) || !validateEmail(cvsu_email)) {
-        return res.status(400).json({ message: "Invalid email format" });
-      }
-
-      const newStudent = new AuthLogin({
-        personal_email,
-        cvsu_email,
-        name: {
-          firstname: name.firstname || '',
-          middlename: name.middlename || '',
-          lastname: name.lastname || '',
-          extension: name.extension || ''
-        },
-        username,
-        password,
-        role: role || 'Student',
-        student_type,
-        enrollment_status,
-        program,
-        year_level,
-        updated_by,
-        updated_by_model,
-        folder_id,
-        profile_id
-      });
-
-      const savedStudent = await newStudent.save();
-      res.status(201).json(savedStudent);
-    } catch (error) {
-      res.status(400).json({ message: "Error creating student", error: error.message });
-    }
-  }
 };
 
 module.exports = UserController;

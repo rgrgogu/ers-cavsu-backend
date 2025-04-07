@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+
 const RequireAuth = async (req, res, next) => {
     try {
         // verify user is authenticated

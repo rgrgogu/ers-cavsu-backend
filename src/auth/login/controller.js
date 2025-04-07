@@ -1,23 +1,11 @@
-const mongoose = require("mongoose");
-const jwt = require('jsonwebtoken')
-
 const User = require("./model");
 const ProfileOne = require("../profile_one/model") // used for student and applicant
-const ProfileTwo = require("../profile_two/model") // used for faculty, registrar, admin, and admission
 
 const BCrypt = require("../../../global/config/BCrypt");
 const { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
 const { CreateFolder } = require("../../../global/utils/Drive");
 const { Send } = require("../../../global/config/Nodemailer")
 const CheckUser = require("../../../global/functions/CheckUser");
-
-const rolePrefixes = {
-    applicant: { prefix: 'AP', folder: process.env.APPLICANT_STUDENT_GDRIVE_FOLDER },
-    admission: { prefix: 'AD', folder: process.env.ADMISSION_GDRIVE_FOLDER },
-    faculty: { prefix: 'FT', folder: process.env.FACULTY_GDRIVE_FOLDER },
-    registrar: { prefix: 'RG', folder: process.env.REGISTRAR_GDRIVE_FOLDER },
-    admin: { prefix: 'AM', folder: process.env.ADMIN_GDRIVE_FOLDER },
-};
 
 const LoginController = {
     // Login function for all users
@@ -58,28 +46,16 @@ const LoginController = {
         }
     },
 
-    // Register function for all users
-    // do not use register for student, since we are updating the role from applicant to student
+    // Register function for applicant
     Register: async (req, res) => {
         try {
-            const { role } = req.body;
-
-            // Validate role
-            if (!role || !rolePrefixes[role]) {
-                return res.status(400).json({ error: 'Invalid or missing role.' });
-            }
-
-            // Extract prefix and folder from rolePrefixes
-            const { prefix, folder } = rolePrefixes[role];
-            if (!prefix) {
-                return res.status(400).json({ error: 'Role prefix is missing.' });
-            }
+            const role = "applicant"
 
             // Generate user_id
             const count = await User.countDocuments({ role }) + 1;
             const year = new Date().getFullYear();
             const paddedCount = count.toString().padStart(6, '0');
-            const user_id = `${prefix}${year}${paddedCount}`;
+            const user_id = `AP${year}${paddedCount}`;
 
             // Assign default values for username and password
             const username = req.body.username || user_id;
@@ -90,23 +66,15 @@ const LoginController = {
                 .filter(Boolean)
                 .join(' ');
 
-            // Use the folder from rolePrefixes or fallback to a default folder
-            const folder_id = await CreateFolder(fullName, folder);
-
-            // Create user object
-            const userData = { ...req.body, username, password, user_id, folder_id };
-
             // Create user in the database
-            const user = await User.create(userData);
+            const user = await User.create({ ...req.body, role, username, password, user_id });
+
+            // Use the folder from rolePrefixes or fallback to a default folder
+            const folder_id = await CreateFolder(fullName, process.env.APPLICANT_STUDENT_GDRIVE_FOLDER);
 
             // Create profile based on role
-            if (role === 'applicant') {
-                const profileOne = await ProfileOne.create({});
-                await User.findByIdAndUpdate(user._id, { profile_id_one: profileOne._id });
-            } else {
-                const profileTwo = await ProfileTwo.create({ sex: req.body.sex });
-                await User.findByIdAndUpdate(user._id, { profile_id_two: profileTwo._id });
-            }
+            const profileOne = await ProfileOne.create({});
+            await User.findByIdAndUpdate(user._id, { profile_id_one: profileOne._id, folder_id });
 
             res.status(201).json({ message: 'User created successfully.' });
         } catch (error) {
@@ -187,7 +155,7 @@ const LoginController = {
             const id = VerifyTokenInReset(req.token)
 
             if (id && data.confirm === data.password) {
-                await User.findByIdAndUpdate( id, { password: await BCrypt.hash(data.password) })
+                await User.findByIdAndUpdate(id, { password: await BCrypt.hash(data.password) })
                 res.status(200).json("Password successfully changed");
             }
             else
