@@ -38,7 +38,7 @@ const LoginController = {
                     maxAge: 24 * 60 * 60 * 1000,
                 });
 
-                return res.status(200).json({ user: user, accessToken, mustResetPassword: result.mustResetPassword });
+                return res.status(200).json({ user: user, accessToken, mustResetPassword: result.mustResetPassword, mustResetUsername: username === user.username });
             } else {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
@@ -172,11 +172,17 @@ const LoginController = {
             const id = req.params.id;
 
             if (id && data.confirm === data.password) {
-                await User.findByIdAndUpdate(id, { username: data.username, password: await BCrypt.hash(data.password) })
+                // Build the update object dynamically
+                const updateData = { password: await BCrypt.hash(data.password) };
+                if (data.username) {
+                    updateData.username = data.username; // Only include username if it's provided
+                }
+
+                await User.findByIdAndUpdate(id, updateData);
                 res.status(200).json("Password successfully changed");
+            } else {
+                res.status(400).json("Password doesn't match.");
             }
-            else
-                res.status(400).json("Password doesn't matched.");
         } catch (error) {
             res.status(400).send(error);
         }
