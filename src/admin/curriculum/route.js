@@ -8,7 +8,7 @@ const RequireAuth = require("../../../global/middleware/RequireAuth");
 router.get('/', RequireAuth, curriculumController.getCurricula);
 router.get('/get_courses', RequireAuth, curriculumController.getGroupsWithCourses); // Count by program
 router.get('/get_curricula', RequireAuth, curriculumController.getCurriculaByProgramAndSemester)
-router.get('/:id', curriculumController.getCurriculum);
+router.get('/:id', RequireAuth, curriculumController.getCurriculum);
 router.post('/', RequireAuth, curriculumController.createCurriculum);
 router.put('/archive', RequireAuth, curriculumController.archiveCurriculum);
 router.put('/:id', RequireAuth, curriculumController.updateCurriculum);

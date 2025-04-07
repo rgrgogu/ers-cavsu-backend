@@ -12,8 +12,8 @@ const obj = new mongoose.Schema({
         faculty_id: { type: mongoose.Schema.Types.ObjectId, ref: 'faculty', default: null },
         type: { type: String, enum: ['Lecture', 'Laboratory'], default: null },
     }],
-    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
-    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('schedules', obj);

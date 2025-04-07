@@ -5,8 +5,8 @@ const Schema = mongoose.Schema;
 const obj = new Schema({
     office_group: {type: String, default: '', required: true},
     isArchived: {type: Boolean, default: false},
-    updated_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
-    created_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null}
+    updated_by: {type: Schema.Types.ObjectId, ref: 'login', default: null},
+    created_by: {type: Schema.Types.ObjectId, ref: 'login', default: null}
 }, {
     virtuals: {
         id: { get() { return this._id; } },

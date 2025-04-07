@@ -8,7 +8,7 @@ const logs_struct = new Schema({
     from: { type: String, default: "Admission", enum: ["Admission", "Applicant"] },
     log: { type: String, default: "" },
     processed_by: { type: Schema.Types.ObjectId, required: false, refPath: "logs.processed_by_model" },
-    processed_by_model: { type: String, enum: ["adn_login", "app_login"], required: true },
+    processed_by_model: { type: String, enum: ["login", "app_login"], required: true },
     timeline: {type: String, default: null, index: true, enum: ["DV", "EE", "AI", "EP"]}
 });
 

@@ -10,6 +10,5 @@ router.get('/:id', RequireAuth, courseGroupController.getCourseGroup);
 router.post('/', RequireAuth, courseGroupController.createCourseGroup);
 router.put('/archive', RequireAuth, courseGroupController.archiveCourseGroup);
 router.put('/:id', RequireAuth, courseGroupController.updateCourseGroup);
-// router.post('/:id/add-course', RequireAuth, courseGroupController.addCourseToGroup);
 
 module.exports = router;

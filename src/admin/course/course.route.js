@@ -4,7 +4,6 @@ const courseController = require('./course.controller');
 
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
-// CRUA Routes
 router.get('/', RequireAuth, courseController.getAllCourses);  
 router.post('/', RequireAuth, courseController.createCourse);     
 router.post('/mass', RequireAuth, courseController.createCoursesMass);  

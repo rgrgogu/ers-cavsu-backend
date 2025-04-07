@@ -1,29 +1,3 @@
-/* Homepage Information: Basic university information, news, and announcements
-    Mandate
-    Vision
-    Mithiin ng Pamantasan
-    Mission
-    Hangarin ng Pamantasan
-    Core Values
-    Quality policy
-    History
-    
- Admission Guidelines: View course offerings and entrance requirements
-    image
-
-Registration & Enrollment: Online registration forms for new and returning students, View available 	courses and enrollment schedules
-visit link nalang
-
-Contact Details: Directory and inquiry forms
-contact_info []
-    {
-     name, position, contact, email
-    }
-
-Campus Events: Access to public events and activities
-Create Event
-*/
-
 const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;

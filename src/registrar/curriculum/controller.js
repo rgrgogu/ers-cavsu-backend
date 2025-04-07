@@ -1,7 +1,6 @@
+const mongoose = require("mongoose")
 const CourseGroup = require("../../admin/course_group/model");
 const Curriculum = require("../../admin/curriculum/model")
-const Courses = require("../../admin/course/course.model")
-const mongoose = require("mongoose")
 
 const curriculumController = {
   getGroupsWithCourses: async (req, res) => {

@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {getAllPrograms} = require('./controller');
+const { getAllPrograms } = require('./controller');
 
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 

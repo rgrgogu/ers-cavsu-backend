@@ -5,7 +5,7 @@ const courseSchema = new mongoose.Schema({
     courseTitle: { type: String, required: true, trim: true },
     credits: { type: Number, required: true, min: 0 },
     isMajor: { type: Boolean, default: false },
-    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'adm_login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
     isArchived: { type: Boolean, default: false },
 }, {
     virtuals: {

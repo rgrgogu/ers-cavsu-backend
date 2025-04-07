@@ -27,10 +27,10 @@ const years = new mongoose.Schema({
 }, { _id: false });
 
 const obj = new mongoose.Schema({
-    student: { type: mongoose.Schema.Types.ObjectId, ref: 'stu_login', required: true },
+    student: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
     curriculum_id: { type: mongoose.Schema.Types.ObjectId, ref: 'curriculums', required: true },
     checklist: [years],
-    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'reg_login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
 }, { timestamps: true });
 
 module.exports = mongoose.model('enrollments', obj);

@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const Model = require("./faq_groups.model");
 const Model1 = require("../faq/faq.model");
 

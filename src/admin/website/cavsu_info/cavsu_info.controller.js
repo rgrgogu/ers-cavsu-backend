@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const Info = require("./cavsu_info.model");
 
 const GetCavsuInfo = async (req, res) => {

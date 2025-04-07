@@ -1,6 +1,5 @@
 const CourseGroup = require("../course_group/model");
 const Curriculum = require("./model")
-const Courses = require("../course/course.model")
 const mongoose = require("mongoose")
 
 const curriculumController = {

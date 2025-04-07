@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const Model = require("./faq.model");
 
 const GetFAQs = async (req, res) => {

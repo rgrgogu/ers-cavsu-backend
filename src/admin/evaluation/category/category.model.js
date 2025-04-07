@@ -4,8 +4,8 @@ const Schema = mongoose.Schema;
 const categoryGroupSchema = new Schema({
     title: { type: String, required: true },
     isArchived: { type: Boolean, default: false, required: true },
-    updated_by: { type: Schema.Types.ObjectId, ref: 'adm_login', default: null },
-    created_by: { type: Schema.Types.ObjectId, ref: 'adm_login', default: null },
+    updated_by: { type: Schema.Types.ObjectId, ref: 'login', default: null },
+    created_by: { type: Schema.Types.ObjectId, ref: 'login', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },

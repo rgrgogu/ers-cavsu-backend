@@ -1,6 +1,4 @@
 const Student = require('../../student/login/model'); // Adjust the path to your model
-const Program = require('../models/programs'); // Adjust path if needed for program validation
-const AppProfile = require('../models/app_profile'); // Adjust path if needed
 
 class StudentController {
   static async massCreateStudents(req, res) {

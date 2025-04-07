@@ -58,7 +58,7 @@ const MassUpdateLogs = async (req, res) => {
                                     processed_by: data.processed_by,
                                     title: data.title,
                                     from: "Admission",
-                                    processed_by_model: "adn_login",
+                                    processed_by_model: "login",
                                     timeline: data.timeline,
                                 }
                             }
@@ -76,7 +76,7 @@ const MassUpdateLogs = async (req, res) => {
                             processed_by: data.processed_by,
                             title: data.title,
                             from: "Admission",
-                            processed_by_model: "adn_login",
+                            processed_by_model: "login",
                             timeline: data.timeline
                         }]
                     }));

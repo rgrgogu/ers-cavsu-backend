@@ -1,22 +1,17 @@
 const routes = [
-    // AUTHENTICATION
+    // AUTHENTICATION AND PROFILE
     { api: "/api/auth", router: require('./src/auth/login/route.js') },
+    { api: "/api/applicant/profile", router: require('./src/auth/profile_one/route.js') },
 
     // STUDENT
-    { api: "/api/student/auth", router: require('./src/student/login/route.js') },
-    { api: "/api/student/profile", router: require('./src/student/profile/route.js') },
     { api: "/api/student/ctgy_groups", router: require('./src/student/evaluation/category/category.route.js') },
     { api: "/api/student/ctgy_questions", router: require('./src/student/evaluation/question/question.route.js') },
     
     // FACULTY
-    { api: "/api/faculty/auth", router: require('./src/faculty/login/route.js') },
-    { api: "/api/faculty/profile", router: require('./src/faculty/profile/route.js') },
     { api: "/api/faculty/ctgy_groups", router: require('./src/faculty/evaluation/category/category.route.js') },
     { api: "/api/faculty/ctgy_questions", router: require('./src/faculty/evaluation/question/question.route.js') },
 
     // REGISTRAR
-    { api: "/api/registrar/auth", router: require('./src/registrar/login/reg_login.route.js') },
-    { api: "/api/registrar/profile", router: require('./src/registrar/profile/reg_profile.route.js') },
     { api: "/api/registrar/sections", router: require('./src/registrar/section/route.js') },
     { api: "/api/registrar/school_year", router: require('./src/registrar/school_year/route.js') },
     { api: "/api/registrar/applications", router: require('./src/registrar/applications/route.js') },
@@ -29,8 +24,6 @@ const routes = [
     { api: "/api/registrar/enrollments", router: require('./src/registrar/enrollment/route.js') },
     
     // ADMISSION
-    { api: "/api/admission/auth", router: require('./src/admission/login/adn_login.route.js') },
-    { api: "/api/admission/profile", router: require('./src/admission/profile/adn_profile.route.js') },
     { api: "/api/admission/a_holidays", router: require('./src/admission/holidays/holiday.route.js') },
     { api: "/api/admission/applications", router: require('./src/admission/applications/applications.route.js') },
     { api: "/api/admission/appointments", router: require('./src/admission/appointments/appoint.route.js') },
@@ -38,15 +31,12 @@ const routes = [
     { api: "/api/admission/programs", router: require('./src/admission/programs/route.js') },
 
     // APPLICANT
-    { api: "/api/applicant/profile", router: require('./src/auth/profile_one/route.js') },
     { api: "/api/applicant/logs", router: require('./src/applicant/logs/logs.route.js') },
     { api: "/api/applicant/notif", router: require('./src/applicant/app_notification/notification.route.js') },
     { api: "/api/applicant/surveys", router: require('./src/applicant/survey/survey.route.js') },
     { api: "/api/applicant/programs", router: require('./src/applicant/programs/route.js') },
 
     // ADMIN
-    { api: "/api/admin/auth", router: require('./src/admin/login/adm_login.route.js') },
-    { api: "/api/admin/profile", router: require('./src/admin/profile/adm_profile.route.js') },
     { api: "/api/admin/w_adguide", router: require('./src/admin/website/admission_guide/admission_guide.route.js') },
     { api: "/api/admin/w_info", router: require('./src/admin/website/cavsu_info/cavsu_info.route.js') },
     { api: "/api/admin/w_ers", router: require('./src/admin/website/ers/ers.route.js') },
@@ -64,7 +54,6 @@ const routes = [
     { api: "/api/admin/users", router: require('./src/admin/users/route.js') },
     { api: "/api/admin/ctgy_groups", router: require('./src/admin/evaluation/category/category.route.js') },
     { api: "/api/admin/ctgy_questions", router: require('./src/admin/evaluation/question/question.route.js') },
-
 
     // PUBLIC API
     { api: "/api/public", router: require('./src/admin/website/public/public.router.js') },

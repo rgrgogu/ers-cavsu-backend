@@ -4,13 +4,13 @@ const Schema = mongoose.Schema;
 const evaluationSchema = new Schema({
     professor: { 
         type: Schema.Types.ObjectId, 
-        ref: 'fac_login', 
+        ref: 'login', 
         required: true,
         index: true 
     },
     student: { 
         type: Schema.Types.ObjectId, 
-        ref: 'stu_login', 
+        ref: 'login', 
         required: true,
         index: true 
     },

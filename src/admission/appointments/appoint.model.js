@@ -9,7 +9,7 @@ const appoint_struct = new Schema({
 
 const obj = new Schema({
     appointment: { type: appoint_struct, default: { ...appoint_struct } },
-    user: { type: Schema.Types.ObjectId, ref: 'adn_login', default: null },
+    user: { type: Schema.Types.ObjectId, ref: 'login', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },

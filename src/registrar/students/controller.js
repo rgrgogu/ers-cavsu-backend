@@ -1,4 +1,4 @@
-const Student = require("../../student/login/model")
+const Student = require("../../auth/login/model")
 
 const StudentController = {
     // List all Students

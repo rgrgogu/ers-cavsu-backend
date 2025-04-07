@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const Guide = require("../admission_guide/admission_guide.model");
 const Info = require("../cavsu_info/cavsu_info.model")
 const ERS = require("../ers/ers.model")

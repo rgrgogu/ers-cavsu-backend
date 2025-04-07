@@ -13,8 +13,8 @@ const obj = new Schema({
     desc: {type: String, default: '', required: true},
     image: {type: file, default: {...file}, required: true},
     hashtags: {type: [String], default: [], required: true},
-    updated_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
-    created_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
+    updated_by: {type: Schema.Types.ObjectId, ref: 'login', default: null},
+    created_by: {type: Schema.Types.ObjectId, ref: 'login', default: null},
 }, {
     virtuals: {
         id: { get() { return this._id; } },

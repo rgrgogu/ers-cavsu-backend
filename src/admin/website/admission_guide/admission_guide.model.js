@@ -13,8 +13,8 @@ const obj = new Schema({
     group_desc: {type: String, default: '', required: true},
     group_files: {type: [file], default: [], required: true },
     isArchived: {type: Boolean, default: false, required: true},
-    updated_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
-    created_by: {type: Schema.Types.ObjectId, ref: 'adm_login', default: null},
+    updated_by: {type: Schema.Types.ObjectId, ref: 'login', default: null},
+    created_by: {type: Schema.Types.ObjectId, ref: 'login', default: null},
     folder_id: {type: String, default: '', required: true},
 }, {
     virtuals: {

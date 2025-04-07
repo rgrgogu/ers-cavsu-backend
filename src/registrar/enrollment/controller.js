@@ -1,13 +1,9 @@
-const Enrollment = require('./model'); // Adjust the path as needed
 const mongoose = require('mongoose');
-const Student = require('../../student/login/model'); // Adjust the path as needed
-const Section = require("../section/model")
-const SchoolYear = require('../../admin/school_year/model'); // Adjust the path as needed
 
-// Mock models for population (replace with actual paths if different)
-// const Course = require('../course/course.model'); // Adjust path
-// const Faculty = require('../faculty/model'); // Adjust path
-// const Evaluation = require('../evaluation/model'); // Adjust path
+const Enrollment = require('./model'); 
+const Student = require('../../auth/login/model'); 
+const Section = require("../section/model")
+const SchoolYear = require('../../admin/school_year/model');
 
 const enrollmentController = {
   // @desc    Get all enrollments

@@ -1,5 +1,4 @@
 
-const mongoose = require("mongoose");
 const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO"); // Import getIO to get the existing `io`
 const Notification = require("./notification.model")
 
@@ -30,22 +29,6 @@ class NotificationController {
             console.log("error", error)
         }
     }
-
-    // // Create Notification
-    // static async createNotification(req, res) {
-    //     try {
-    //         const { title, message, user } = req.body;
-    //         const notification = new Notification({ title, message, user });
-    //         await notification.save();
-
-    //         const io = getIO();
-    //         io.to(user).emit("newNotification", { message: "New notification received", notification });
-
-    //         res.status(201).json({ message: "Notification created", notification });
-    //     } catch (error) {
-    //         res.status(400).json({ error: error.message });
-    //     }
-    // }
 
     // Get Notifications by User
     static async getNotifications(req, res) {

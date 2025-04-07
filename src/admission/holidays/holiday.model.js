@@ -12,8 +12,8 @@ const obj = new Schema({
     holidays: { type: [holiday_struct], default: [] },
     year: { type: Number, required: true },
     isArchived: { type: Boolean, required: true, index: true, default: false },
-    updated_by: { type: Schema.Types.ObjectId, ref: 'adn_login', default: null },
-    created_by: { type: Schema.Types.ObjectId, ref: 'adn_login', default: null },
+    updated_by: { type: Schema.Types.ObjectId, ref: 'login', default: null },
+    created_by: { type: Schema.Types.ObjectId, ref: 'login', default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },

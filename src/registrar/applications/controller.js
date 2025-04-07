@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const User = require("../../auth/login/model");
 const Profile = require("../../auth/profile_one/model");
 
@@ -45,23 +43,6 @@ const GetExaminees = async (req, res) => {
             b: ["Transferee from Other School"],
             c: ["Transferee from CVSU System", "Diploma/Certificate/Associate/Vocational Graduate", "Bachelor's Degree Graduate"]
         }
-
-        // const result = await User.aggregate([
-        //     { $match: { status: "For Exam", isArchived: false, batch_no: batchNo } },
-        //     { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
-        //     { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
-        //     {
-        //         $match: {
-        //             "profile.application_details.applicant_type": {
-        //                 $in: options[option]
-        //             }
-        //         }
-        //     },
-        //     { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname" } },
-        //     { $sort: { lastname: 1 } },
-        //     { $group: { _id: null, examinees: { $push: "$$ROOT" } } },
-        //     { $project: { _id: 0, chunks: { $cond: { if: { $eq: [{ $size: "$examinees" }, 0] }, then: [], else: { $reduce: { input: "$examinees", initialValue: [[]], in: { $cond: { if: { $eq: [{ $size: { $last: "$$value" } }, chunkSize] }, then: { $concatArrays: ["$$value", [["$$this"]]] }, else: { $let: { vars: { prefix: { $cond: { if: { $lte: [{ $size: "$$value" }, 1] }, then: [], else: { $slice: ["$$value", 0, { $subtract: [{ $size: "$$value" }, 1] }] } } }, lastChunk: { $last: "$$value" } }, in: { $concatArrays: ["$$prefix", [{ $concatArrays: ["$$lastChunk", ["$$this"]] }]] } } } } } } } } } } },
-        // ]);
 
         const result = await User.aggregate([
             { $match: { status: "For Exam", isArchived: false, batch_no: batchNo } },

@@ -1,15 +1,10 @@
-const mongoose = require("mongoose");
-
 const Profile = require("./model")
 const User = require("../login/model")
 
 const Appointment = require("../../admission/appointments/appoint.model")
 
 const UploadApplicantFiles = require("../../../global/functions/UploadApplicantFiles")
-
-const DeletedApplicantFiles = require("../../../global/functions/DeleteApplicantFiles")
-const { CreateFolder, UploadFiles, DeleteFiles } = require("../../../global/utils/Drive");
-const { profile } = require("console");
+const { UploadFiles, DeleteFiles } = require("../../../global/utils/Drive");
 
 function processAppointments(appointments) {
     const counts = {}

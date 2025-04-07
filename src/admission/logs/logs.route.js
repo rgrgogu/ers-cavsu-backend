@@ -6,7 +6,6 @@ const {
     MassUpdateLogs,
 } = require("./logs.controller");
 
-const upload = require("../../../global/config/Multer");
 const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 router.get("/get_logs/:id", RequireAuth, GetLogs)
