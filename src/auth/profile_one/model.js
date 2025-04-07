@@ -29,6 +29,19 @@ const personal_info = new Schema({
     disablity: { type: String, default: '' },
     indigenous: { type: Boolean, default: false },
     indigenous_group: { type: String, default: '' },
+}, {
+    virtuals: {
+        fullAddress: {
+            get() {
+                const address = this.applicant_profile
+
+                if (address !== null)
+                    return `${this.applicant_profile.address.house_num} ${this.applicant_profile.address.street}, Barangay ${this.applicant_profile.address.brgy}, ${this.applicant_profile.address.city}, ${this.applicant_profile.address.province}, ${this.applicant_profile.address.region}, ${this.applicant_profile.address.country}, ${this.applicant_profile.address.zip}`
+                else
+                    return null;
+            }
+        }
+    },
 })
 
 const fam_struct = new Schema({
@@ -91,20 +104,10 @@ const obj = new Schema({
     educational_profile: { type: educational_profile, default: null },
     upload_reqs: { type: [upload_struct], default: [] },
     appointment: { type: Schema.Types.ObjectId, ref: 'adn_appointments', default: null },
-    exam_details: {type: exam_details, default: null},
+    exam_details: { type: exam_details, default: null },
 }, {
     virtuals: {
         id: { get() { return this._id; } },
-        fullAddress: {
-            get() {
-                const address = this.applicant_profile
-
-                if (address !== null)
-                    return `${this.applicant_profile.address.house_num} ${this.applicant_profile.address.street}, Barangay ${this.applicant_profile.address.brgy}, ${this.applicant_profile.address.city}, ${this.applicant_profile.address.province}, ${this.applicant_profile.address.region}, ${this.applicant_profile.address.country}, ${this.applicant_profile.address.zip}`
-                else
-                    return null;
-            }
-        }
     },
     toJSON: { virtuals: true },
     toObject: { virtuals: true },

@@ -40,33 +40,9 @@ const UserController = {
   // List all Applicants/Students
   listApplicants: async (req, res) => {
     try {
-      const applicants = await AuthLogin.aggregate([
-        { $match: { isArchived: false, role: "applicant" } },
-        { $lookup: { from: "app_profiles", localField: "profile_id", foreignField: "_id", as: "profileDetails", pipeline: [{ $project: { _id: 0, program: "$application_details.program", firstname: "$application_details.firstname", middlename: "$application_details.middlename", lastname: "$application_details.lastname" } }] } },
-        { $unwind: { path: "$profileDetails", preserveNullAndEmptyArrays: true } },
-        {
-          $project: {
-            name: "$name",
-            profile_id: "$profile_id",
-            program: "$profileDetails.program",
-            user_id: "$user_id",
-            email: "$email",
-            status: "$status",
-            folder_id: "$folder_id",
-            createdAt: "$createdAt",
-            updatedAt: "$updatedAt",
-            fullName: {
-              $concat: [
-                { $ifNull: ["$name.firstname", ""] }, " ",
-                { $ifNull: ["$name.middlename", ""] }, " ",
-                { $ifNull: ["$name.lastname", ""] }, " ",
-                { $ifNull: ["$name.extension", ""] }
-              ]
-            }
-          }
-        },
-        { $sort: { createdAt: -1 } }
-      ]);
+      const applicants = await AuthLogin.find({ isArchived: false, role: "applicant" })
+        .populate('profile_id_one', 'application_details')
+        .select("-password")
 
       res.json(applicants);
     } catch (error) {
