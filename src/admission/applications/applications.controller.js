@@ -1,5 +1,6 @@
 const User = require("../../auth/login/model");
 const Profile = require("../../auth/profile_one/model");
+const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO");
 
 const GetApplicants = async (req, res) => {
     try {
@@ -13,7 +14,7 @@ const GetApplicants = async (req, res) => {
 
         const result = await User.aggregate([
             { $match: { status: Array.isArray(status) ? { $in: status } : status, isArchived: archived === true ? true : false } },
-            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+            { $lookup: { from: "profile_ones", localField: "profile_id_one", foreignField: "_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
             {
                 $match: {
@@ -22,7 +23,7 @@ const GetApplicants = async (req, res) => {
                     }
                 }
             },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, batch_no: 1, status: 1, "profile.exam_details": 1 } }
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1 } }
         ]);
 
         res.status(200).json(result)
@@ -44,7 +45,7 @@ const GetExaminees = async (req, res) => {
 
         const result = await User.aggregate([
             { $match: { status: "For Exam", isArchived: false, batch_no: batchNo } },
-            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+            { $lookup: { from: "profile_ones", localField: "profile_id_one", foreignField: "_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
             {
                 $match: {
@@ -55,7 +56,7 @@ const GetExaminees = async (req, res) => {
                     "profile.exam_details.time": time,
                 }
             },
-            { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname", venue: "$profile.exam_details.venue" } },
+            { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, lastname: "$name.lastname", venue: "$profile.exam_details.venue" } },
             { $sort: { lastname: 1 } },
         ]);
 
@@ -119,18 +120,28 @@ const UpdateApplication = async (req, res) => {
     try {
         const data = req.body;
 
-        // Define the update object with required status
-        const updateFields = { status: data.status };
-
-        // Add batch_no to updateFields only if it exists in the request body
-        if (data.batch_no) {
-            updateFields.batch_no = data.batch_no;
-        }
+        const io = getIO();
+        const onlineUsers = getOnlineUsers();
 
         await User.updateMany(
             { _id: { $in: data.ids } }, // Filter: Match documents with these IDs
-            { $set: updateFields }      // Update fields dynamically
+            { $set: { status: data.status } }      // Update fields dynamically
         );
+
+        console.log("answer", onlineUsers, data.status)
+
+        data.ids.map(id => {
+            const user_id = id.toString()
+            console.log(user_id)
+            // Check if user is online and send notification
+            if (onlineUsers.has(user_id)) {
+                console.log("yes we can send", onlineUsers.get(user_id))
+                io.to(onlineUsers.get(user_id)).emit("newStatus", {
+                    message: "New status received",
+                    status: data.status,
+                });
+            }
+        })
 
         res.status(200).json("Updated all items successfully");
     } catch (err) {

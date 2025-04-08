@@ -21,7 +21,7 @@ const SocketIO = (app) => {
 
     // Handle socket connection
     io.on("connection", (socket) => {
-        console.log("User connected:", socket.id);
+        // console.log("User connected:", socket.id);
 
         // Store userId when they join
         socket.on("registerUser", (userId) => {
