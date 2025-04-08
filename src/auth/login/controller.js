@@ -38,7 +38,7 @@ const LoginController = {
                     maxAge: 24 * 60 * 60 * 1000,
                 });
 
-                return res.status(200).json({ user: user, accessToken, mustResetPassword: result.mustResetPassword, mustResetUsername: username === user.username });
+                return res.status(200).json({ user: user, accessToken, mustResetPassword: result.mustResetPassword, mustResetUsername: username === user.user_id });
             } else {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }

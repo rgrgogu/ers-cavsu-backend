@@ -1,25 +1,18 @@
-const mongoose = require("mongoose");
-
 const User = require("../../auth/login/model");
 
-const {
-    CreateBrgyFolder,
-    CreateFolder,
-    UploadFiles,
-    DeleteFiles,
-} = require("../../../global/utils/Drive");
-
+// USED
 const GetAppointments = async (req, res) => {
     try {
-        const result = await User.aggregate([
-            { $match: { status: "Applied", isArchived: false } },
-            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
-            { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
-            { $lookup: { from: "adn_appointments", localField: "profile.appointment", foreignField: "_id", as: "profile.appointment" } },
-            { $unwind: { path: "$profile.appointment", preserveNullAndEmptyArrays: true } },
-            { $addFields: { "profile.appointment": "$profile.appointment.appointment" } },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "profile.appointment": 1, "updatedAt": 1 } }
-        ]);
+        const result = await User.find({ status: "Applied", isArchived: false })
+            .populate({
+                path: "profile_id_one",
+                select: "application_details appointment",
+                populate: {
+                    path: "appointment", 
+                    select: "appointment",
+                    model: "adn_appointments", 
+                },
+            })
 
         res.status(200).json(result)
     } catch (err) {
@@ -30,10 +23,10 @@ const GetAppointments = async (req, res) => {
 const GetSelectedAppointees = async (req, res) => {
     try {
         const date = req.query.date
-        
+
         const result = await User.aggregate([
             { $match: { status: "For Review", isArchived: false } },
-            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+            { $lookup: { from: "profile_ones", localField: "profile_id_one", foreignField: "_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
             { $lookup: { from: "adn_appointments", localField: "profile.appointment", foreignField: "_id", as: "profile.appointment" } },
             { $unwind: { path: "$profile.appointment", preserveNullAndEmptyArrays: true } },

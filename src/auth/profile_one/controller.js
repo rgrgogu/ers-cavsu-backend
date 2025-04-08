@@ -255,12 +255,12 @@ const ApplicantProfileController = {
 
             const result = await Appointment.findByIdAndUpdate(
                 profile_id,   // Search condition
-                { $set: { ...data, user: profile_id } }, // Create only if it doesn't exist
+                { $set: { ...data, user: data.user } }, // Create only if it doesn't exist
                 { upsert: true, new: true } // Ensures document is created if missing
             );
-
+            
             if (!result) {
-                return res.status(404).json({ message: "Cannot appointment" });
+                return res.status(404).json({ message: "Cannot create appointment" });
             }
 
             if (isUpdate === "true") {
@@ -270,8 +270,8 @@ const ApplicantProfileController = {
                     { new: true }
                 ).select('appointment');
 
-                const updateRole = await User.findOneAndUpdate(
-                    { profile_id_one: profile_id },
+                const updateRole = await User.findByIdAndUpdate(
+                    data.user,
                     { $set: { status: "Applied" } },
                     { new: true }
                 ).select('status')
