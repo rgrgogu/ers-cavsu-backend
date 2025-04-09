@@ -15,7 +15,7 @@ const curriculumController = {
         .populate({
           path: 'courses',
           match: { isArchived: false },
-          select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact'
+          select: 'courseCode courseTitle credits'
         })
         .select('groupName courses') // Select fields from the Group model
         .lean();
@@ -80,7 +80,7 @@ const curriculumController = {
       const result = await Curriculum.findById(id)
         .populate({
           path: 'years.semesters.1st.course_id years.semesters.2nd.course_id years.semesters.3rd.course_id years.semesters.Midyear.course_id',
-          select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
+          select: 'courseCode courseTitle credits',
         })
         .populate({
           path: 'years.semesters.1st.pre_req_ids years.semesters.2nd.pre_req_ids years.semesters.3rd.pre_req_ids years.semesters.Midyear.pre_req_ids',
@@ -143,7 +143,7 @@ const curriculumController = {
         })
         .populate({
           path: `years.semesters.${semester}.course_id`,
-          select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
+          select: 'courseCode courseTitle credits',
         })
         .populate({
           path: `years.semesters.${semester}.pre_req_ids`,

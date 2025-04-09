@@ -4,13 +4,22 @@ const StudentController = {
     // List all Students
     get_new_firstyear: async (req, res) => {
         try {
-            const students = await Student.find({ isArchived: false, year_level: 1, student_type: 'New', enrollment_id: null })
+            const students = await Student.find({ isArchived: false, role: "student" })
+                .populate('profile_id_one', 'application_details student_details')
                 .select("-password")
-                .sort({ student_id: 1 })
-                .populate('program')
-                .populate('updated_by');
+                .sort({ user_id: 1 });
 
-            res.json(students);
+            const filteredStudents = students.filter(student => {
+                const details = student.profile_id_one?.student_details;
+                return (
+                    details?.student_type === "New" &&
+                    details?.student_status === "Regular" &&
+                    details?.year_level === 1 &&
+                    !details?.enrollment_id
+                );
+            });
+
+            res.json(filteredStudents);
         } catch (error) {
             res.status(400).json({ message: "Error fetching students", error: error.message });
         }

@@ -8,7 +8,6 @@ exports.createSection = async (req, res) => {
 
         const result = await Section.findById({ _id: savedSection._id })
             .populate('program', 'name code')
-            .populate('school_year', 'year')
             .populate('updated_by', 'name');
 
         res.status(201).json(result);
@@ -24,7 +23,6 @@ exports.getAllSections = async (req, res) => {
 
         const sections = await Section.find({ isArchived: archived })
             .populate('program', 'name code')
-            .populate('school_year', 'year')
             .populate('updated_by', 'name');
 
         res.json(sections);
@@ -35,9 +33,9 @@ exports.getAllSections = async (req, res) => {
 
 exports.getSectionsByWildCard = async (req, res) => {
     try {
-        const { school_year, level } = req.query;
+        const { level } = req.query;
 
-        if (!level || !school_year) {
+        if (!level) {
             return res.status(400).json({ message: "Missing required query parameters" });
         }
 
@@ -50,13 +48,9 @@ exports.getSectionsByWildCard = async (req, res) => {
             section_code: levelRegex // Use dynamic regex
         })
             .populate('program', 'name code')
-            .populate('school_year', 'year') // Populating the year attribute
             .populate('updated_by', 'name');
 
-        // Filter sections based on school_year
-        const filteredSections = sections.filter(section => section.school_year.year === school_year);
-
-        res.json(filteredSections);
+        res.json(sections);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -68,7 +62,6 @@ exports.getSectionById = async (req, res) => {
     try {
         const section = await Section.findById(req.params.id)
             .populate('program')
-            .populate('school_year')
             .populate('updated_by');
         if (!section) {
             return res.status(404).json({ message: 'Section not found' });
@@ -90,7 +83,6 @@ exports.updateSection = async (req, res) => {
             { new: true, runValidators: true }
         )
             .populate('program', 'name code') // Populate program with specific fields
-            .populate('school_year', 'year') // Populate school_year with specific field
             .populate('updated_by', 'name'); // Populate updated_by with specific fields
 
         if (!section) {
