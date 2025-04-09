@@ -36,10 +36,11 @@ const obj = new Schema({
         enum: [
             'Created', 'Applied', 'For Review', 'Verified', 'Rejected', 'For Exam',
             'Failed', "Missed For Exam", "Waitlisted", "For Interview", "Missed For Interview",
-            "For Confirmation", "Confirmed", "Forfeited", "For Registrar", "Submitted", "Application Completed",
+            "For Confirmation", "Confirmed", "Forfeited", "For Registrar", "Application Completed",
         ],
         index: true
     },
+
     isArchived: { type: Boolean, required: true, index: true, default: false },
     folder_id: { type: String, default: '' },
     profile_id_one: { type: Schema.Types.ObjectId, ref: 'profile_one', default: null, index: true }, // applicable for applicant and student,

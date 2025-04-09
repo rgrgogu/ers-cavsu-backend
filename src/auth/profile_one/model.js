@@ -97,6 +97,13 @@ const exam_details = new Schema({
     processed_by: { type: Schema.Types.ObjectId, ref: 'login', required: true }
 })
 
+// STUDENT
+const student_details = new Schema({
+    student_type: { type: String, default: null, enum: ['New', 'Old', 'Graduated'] },
+    student_status: { type: String, default: null, enum: ['Regular', 'Irregular'] },
+    enrollment_id: { type: Schema.Types.ObjectId, ref: 'enrollment', default: null, index: true },
+})
+
 const obj = new Schema({
     application_details: { type: applicant_details, default: null },
     applicant_profile: { type: personal_info, default: null },
@@ -105,6 +112,7 @@ const obj = new Schema({
     upload_reqs: { type: [upload_struct], default: [] },
     appointment: { type: Schema.Types.ObjectId, ref: 'adn_appointments', default: null },
     exam_details: { type: exam_details, default: null },
+    student_details: { type: student_details, default: null }
 }, {
     virtuals: {
         id: { get() { return this._id; } },

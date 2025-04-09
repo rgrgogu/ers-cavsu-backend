@@ -1,4 +1,5 @@
 const AuthLogin = require("../../auth/login/model");
+const ProfileOne = require("../../auth/profile_one/model");
 const ProfileTwo = require("../../auth/profile_two/model");
 const BCrypt = require("../../../global/config/BCrypt")
 const NotificationController = require("../../applicant/app_notification/notification.controller")
@@ -80,8 +81,7 @@ const UserController = {
       const students = await AuthLogin.find({ isArchived: false, role: "student" })
         .select("-password")
         .sort({ createdAt: -1 })
-        .populate('program')
-        .populate('updated_by');
+        .populate('profile_id_one', "application_details student_details")
       res.json(students);
     } catch (error) {
       res.status(400).json({ message: "Error fetching students", error: error.message });
@@ -135,83 +135,96 @@ const UserController = {
     }
   },
 
-  // Create new Applicant/Student
   massCreateStudents: async (req, res) => {
     try {
-      const studentsData = req.body; // Expecting an array of student objects
-      const ids = studentsData.map(item => item._id)
+      const studentsIds = req.body; // Expecting an array of student objects
 
-      // Validate that studentsData is an array
-      if (!Array.isArray(studentsData)) {
-        return res.status(400).json({ message: 'Input must be an array of student objects' });
+      // Validate that studentsIds is an array
+      if (!Array.isArray(studentsIds)) {
+        return res.status(400).json({ message: 'Input must be an array of student ids' });
       }
 
       // Check if the array is empty
-      if (studentsData.length === 0) {
+      if (studentsIds.length === 0) {
         return res.status(400).json({ message: 'No applicants provided' });
       }
 
       // Get the current count to start sequencing
-      const currentCount = (await AuthLogin.countDocuments()) + 1;
+      const currentCount = (await AuthLogin.countDocuments({ role: "student" })) + 1;
+      const year = new Date().getFullYear();
 
-      // Prepare bulk operations
-      const bulkOps = [];
-      const idsBulkOps = [];
+      // Prepare bulk operations for AuthLogin (user_id updates)
+      const authBulkOps = [];
+      // Prepare bulk operations for ProfileOne (profile_id, student_type, student_status updates)
+      const profileBulkOps = [];
 
       // Process students and collect password hashing promises
-      const studentPromises = studentsData.map(async (student, index) => {
-        const year = new Date().getFullYear();
+      const studentPromises = studentsIds.map(async (student, index) => {
         const count = currentCount + index;
         const paddedCount = count.toString().padStart(6, '0');
-        const student_id = `${year}${paddedCount}`;
-        const username = student_id;
+        const user_id = `ST${year}${paddedCount}`;
+        const username = user_id;
 
         // Hash password
-        const password = await BCrypt.hash(process.env.DEFAULT_PASS, 10); // Added salt rounds (10 is a common default)
+        const password = await BCrypt.hash(process.env.DEFAULT_PASS, 10);
 
-        const { _id, ...rest } = student;
+        // Assuming the student object has a profile_id field (e.g., "67f336f37ac96f8a2cd277a6")
+        const profile_id = student.profile_id;
 
         return {
-          newStudent: { ...rest, student_id, username, password },
-          updateOp: _id ? {
+          authUpdate: {
             updateOne: {
-              filter: { _id: _id },
-              update: { $set: { status: "Application Completed" } },
-            }
-          } : null
+              filter: { _id: student.user_id }, // Match by user_id in AuthLogin
+              update: {
+                $set: {
+                  user_id,
+                  username,
+                  password,
+                  role: "student",
+                  status: "Created",
+                },
+              },
+              upsert: false, // Set to true if you want to create new documents when no match is found
+            },
+          },
+          profileUpdate: {
+            updateOne: {
+              filter: { _id: profile_id }, // Match by profile_id in ProfileOne
+              update: {
+                $set: {
+                  student_details: {
+                    student_type: "New",
+                    student_status: "Regular",
+                  }
+                },
+              },
+              upsert: false, // Set to true if you want to create new documents when no match is found
+            },
+          },
         };
       });
 
-      // Wait for all passwords to be hashed
+      // Wait for all passwords to be hashed and operations to be prepared
       const processedStudents = await Promise.all(studentPromises);
 
-      // Populate bulk operations
-      processedStudents.forEach(({ newStudent, updateOp }) => {
-        bulkOps.push({ insertOne: { document: newStudent } });
-        if (updateOp) {
-          idsBulkOps.push(updateOp);
-        }
+      // Populate bulk operations for both models
+      processedStudents.forEach(({ authUpdate, profileUpdate }) => {
+        authBulkOps.push(authUpdate);
+        profileBulkOps.push(profileUpdate);
       });
 
-      // Execute bulk write
-      const result = await AuthLogin.bulkWrite(bulkOps);
+      // Execute bulk write for AuthLogin
+      const authResult = await AuthLogin.bulkWrite(authBulkOps);
 
-      // Update status from Submitted to Application Completed
-      let appResult = null;
-      if (idsBulkOps.length > 0) {
-        appResult = await AuthLogin.bulkWrite(idsBulkOps);
-      }
+      // Execute bulk write for ProfileOne
+      const profileResult = await ProfileOne.bulkWrite(profileBulkOps);
 
-      await NotificationController.sendBulkNotification({
-        title: "Application Completed",
-        log: "Your application has been completed. Congratulations and Welcome to Cavite State University - Bacoor Campus. For more updates, please check your personal email. Thank you.",
-      }, ids);
-
-      res.status(201).json({
-        message: 'Students created successfully',
-        data: ids,
-        count: studentsData.length,
-        bulkWriteResult: result,
+      res.status(200).json({
+        message: 'Students and profiles updated successfully',
+        data: studentsIds,
+        count: studentsIds.length,
+        authBulkWriteResult: authResult,
+        profileBulkWriteResult: profileResult,
       });
 
     } catch (error) {
@@ -236,7 +249,6 @@ const UserController = {
       res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   },
-
 };
 
 module.exports = UserController;

@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const courseSchema = new mongoose.Schema({
-    courseCode: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    courseCode: { type: String, required: true, unique: true, trim: true },
     courseTitle: { type: String, required: true, trim: true },
-    credits: { type: Number, required: true, min: 0 },
+    credits: { type: Number, required: true },
     isMajor: { type: Boolean, default: false },
     updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
     isArchived: { type: Boolean, default: false },

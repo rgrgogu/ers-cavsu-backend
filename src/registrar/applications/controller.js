@@ -13,7 +13,7 @@ const GetApplicants = async (req, res) => {
 
         const result = await User.aggregate([
             { $match: { status: Array.isArray(status) ? { $in: status } : status, isArchived: archived === true ? true : false } },
-            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+            { $lookup: { from: "profile_ones", localField: "profile_id_one", foreignField: "_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
             {
                 $match: {
@@ -22,7 +22,7 @@ const GetApplicants = async (req, res) => {
                     }
                 }
             },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, batch_no: 1, status: 1, "profile.exam_details": 1 } }
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1, } }
         ]);
 
         res.status(200).json(result)
