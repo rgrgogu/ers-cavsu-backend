@@ -9,7 +9,7 @@ const obj = new mongoose.Schema({
     physical: { type: Number, default: null, min: 1, max: 5 },
     comfort: { type: Number, default: null, min: 1, max: 5 },
     comments: { type: String, default: '' },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "app_login", required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "login", required: true },
 });
 
 module.exports = mongoose.model("surveys", obj);

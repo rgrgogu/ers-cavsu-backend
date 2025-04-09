@@ -25,7 +25,7 @@ const UpdateApplicantLog = async (req, res) => {
                         processed_by: data.processed_by,
                         title: data.title,
                         from: "Applicant",
-                        processed_by_model: "app_login",
+                        processed_by_model: "login",
                         timeline: data.timeline
                     }
                 }

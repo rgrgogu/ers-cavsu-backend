@@ -23,7 +23,7 @@ const GetApplicants = async (req, res) => {
                     }
                 }
             },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1 } }
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1, "profile_id_one": 1 } }
         ]);
 
         res.status(200).json(result)
@@ -128,14 +128,10 @@ const UpdateApplication = async (req, res) => {
             { $set: { status: data.status } }      // Update fields dynamically
         );
 
-        console.log("answer", onlineUsers, data.status)
-
         data.ids.map(id => {
             const user_id = id.toString()
-            console.log(user_id)
             // Check if user is online and send notification
             if (onlineUsers.has(user_id)) {
-                console.log("yes we can send", onlineUsers.get(user_id))
                 io.to(onlineUsers.get(user_id)).emit("newStatus", {
                     message: "New status received",
                     status: data.status,
@@ -152,10 +148,13 @@ const UpdateApplication = async (req, res) => {
 const UpdateExamDetails = async (req, res) => {
     try {
         const data = req.body;
+        const { ids, ...rest } = data;
+
+        console.log(ids, rest)
 
         await Profile.updateMany(
-            { user_id: { $in: data.ids } }, // Filter: Match documents with these IDs
-            { $set: { exam_details: { ...data } } }      // Update fields dynamically
+            { _id: { $in: ids } }, // Filter: Match documents with these IDs
+            { $set: { exam_details: { ...rest } } }      // Update fields dynamically
         );
 
         res.status(200).json("Updated all items successfully");
