@@ -17,7 +17,8 @@ const UserController = {
   // List all Admin users
   listAdmins: async (req, res) => {
     try {
-      const admins = await AuthLogin.find({ isArchived: false, role: "admin" })
+      const archive = req.query.archive;
+      const admins = await AuthLogin.find({ isArchived: archive, role: "admin" })
         .select("-password") // Exclude password from response
         .sort({ createdAt: -1 });
       res.json(admins);
@@ -29,7 +30,8 @@ const UserController = {
   // List all Admission users
   listAdmissions: async (req, res) => {
     try {
-      const admissions = await AuthLogin.find({ isArchived: false, role: "admission" })
+      const archive = req.query.archive;
+      const admissions = await AuthLogin.find({ isArchived: archive, role: "admission" })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(admissions);
@@ -41,7 +43,8 @@ const UserController = {
   // List all Applicants/Students
   listApplicants: async (req, res) => {
     try {
-      const applicants = await AuthLogin.find({ isArchived: false, role: "applicant" })
+      const archive = req.query.archive;
+      const applicants = await AuthLogin.find({ isArchived: archive, role: "applicant" })
         .populate('profile_id_one', 'application_details')
         .select("-password")
 
@@ -54,7 +57,8 @@ const UserController = {
   // List all Faculty users
   listFaculty: async (req, res) => {
     try {
-      const faculty = await AuthLogin.find({ isArchived: false, role: "faculty" })
+      const archive = req.query.archive;
+      const faculty = await AuthLogin.find({ isArchived: archive, role: "faculty" })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(faculty);
@@ -66,7 +70,8 @@ const UserController = {
   // List all Registrar users
   listRegistrars: async (req, res) => {
     try {
-      const registrars = await AuthLogin.find({ isArchived: false, role: "registrar" })
+      const archive = req.query.archive;
+      const registrars = await AuthLogin.find({ isArchived: archive, role: "registrar" })
         .select("-password")
         .sort({ createdAt: -1 });
       res.json(registrars);
@@ -78,7 +83,8 @@ const UserController = {
   // List all Students
   listStudents: async (req, res) => {
     try {
-      const students = await AuthLogin.find({ isArchived: false, role: "student" })
+      const archive = req.query.archive;
+      const students = await AuthLogin.find({ isArchived: archive, role: "student" })
         .select("-password")
         .sort({ createdAt: -1 })
         .populate('profile_id_one', "application_details student_details")
@@ -249,6 +255,103 @@ const UserController = {
       res.status(500).json({ message: 'Internal server error', error: error.message });
     }
   },
+
+  bulkArchive: async (req, res) => {
+    try {
+
+      const { ids, archived } = req.body;
+      console.log(archived)
+
+      const result = await AuthLogin.updateMany(
+        { _id: { $in: ids } },
+        {
+          $set: {
+            isArchived: archived,
+          }
+        },
+        { new: true }
+      );
+
+      res.status(200).json({ message: 'Archived successfully', result });
+    } catch (error) {
+      res.status(400).json({ error: error.message })
+    }
+  },
+
+  bulkEmailUpdate: async (req, res) => {
+    try {
+      const { users } = req.body;
+      console.log(users)
+      // Validate the input array
+      if (!Array.isArray(users) || users.length === 0) {
+        return res.status(400).json({ message: "Request body must contain a non-empty array of user data." });
+      }
+  
+      // Prepare update operations
+      const updateOperations = users.map(user => ({
+        updateOne: {
+          filter: { _id: user.id },
+          update: { $set: { school_email: user.school_email } },
+          // Optional: Add upsert if you want to create users that don't exist
+          // upsert: true
+        }
+      }));
+  
+      // Perform bulk write with a size limit check (optional)
+      if (updateOperations.length > 1000) { // Arbitrary limit to avoid 16 MB threshold
+        return res.status(400).json({ message: "Too many users in a single request. Please limit to 1000 users." });
+      }
+  
+      const result = await AuthLogin.bulkWrite(updateOperations);
+  
+      // Return a simplified and meaningful response
+      res.status(200).json({
+        message: 'School emails updated successfully',
+        modifiedCount: result.modifiedCount,
+        matchedCount: result.matchedCount,
+        upsertedCount: result.upsertedCount || 0
+      });
+    } catch (error) {
+      // Enhanced error handling
+      console.error('Error in bulkEmailUpdate:', error);
+      if (error.name === 'MongoError' || error.name === 'BulkWriteError') {
+        return res.status(500).json({ 
+          message: 'Database error occurred while updating emails.', 
+          error: error.message 
+        });
+      }
+      res.status(400).json({ message: 'Failed to update school emails.', error: error.message });
+    }
+  },
+
+  bulkResetPassword: async (req, res) => {
+    try {
+      const { ids } = req.body;
+      console.log(ids)
+
+      // Validate that userIds is an array and not empty
+      if (!Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ message: 'Input must be a non-empty array of user IDs' });
+      }
+
+      // Hash the new password (using the same default or environment variable)
+      const newPassword = process.env.DEFAULT_PASS;
+      const hashedPassword = await BCrypt.hash(newPassword, 10);
+
+      // Update multiple users in a single operation
+      const result = await AuthLogin.updateMany(
+        { _id: { $in: ids } }, // Match all users with IDs in the array
+        { $set: { password: hashedPassword } }, // Only update the password
+        { new: true }
+      );
+
+      res.status(200).json({ message: 'Passwords reset successfully', result });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+
 };
 
 module.exports = UserController;
