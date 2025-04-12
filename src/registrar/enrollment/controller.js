@@ -15,7 +15,6 @@ const EnrollmentController = {
         school_year,
         semester,
         year_level,
-        enrollment_status
       }
 
       // Fetch enrollments with populated references
@@ -28,9 +27,10 @@ const EnrollmentController = {
             select: 'application_details student_details'
           }
         })
+        .populate('enrolled_courses.details', 'course_id')
+        .populate('enrolled_courses.enlisted_by', 'name')
         .populate('section_id', 'section_code') // Adjust fields as needed
         .populate('school_year', 'year') // Adjust fields as needed
-        .populate('enlisted_by', 'name') // Adjust fields as needed
 
       return res.status(200).json({
         success: true,
@@ -85,11 +85,13 @@ const EnrollmentController = {
                 school_year,
                 semester,
                 year_level, // Convert to string per schema
-                enrolled_courses: enrolledCoursesIds, // Shared across all enrollments
-                enrollment_status: 'Enlisted',
-                enlisted_by: user,
-                updated_by: user,
-                date_enlisted: new Date()
+                enrolled_courses: enrolledCoursesIds.map(id => ({
+                  details: id,        
+                  enrollment_status: 'Enlisted',
+                  enlisted_by: user,
+                  updated_by: user,
+                  date_enlisted: new Date()
+                })),
               }
             }
           };
@@ -113,7 +115,6 @@ const EnrollmentController = {
 
         // Commit transaction
         await session.commitTransaction();
-
 
         return res.status(201).json({
           success: true,
