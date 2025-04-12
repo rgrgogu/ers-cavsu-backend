@@ -22,7 +22,7 @@ const years = new mongoose.Schema({
 
 const checklistSchema = new mongoose.Schema({
     student_id: { type: mongoose.Schema.Types.ObjectId, ref: 'login', default: null },
-    code: { type: String, default: '', required: true, trim: true, match: [/^[A-Za-z0-9-]+$/, 'Identifier can only contain letters, numbers, and hyphens'], unique: true, index: true },
+    code: { type: String, default: '', required: true },
     name: { type: String, default: '', required: true },
     program: { type: mongoose.Schema.Types.ObjectId, ref: 'programs', required: true, index: true },
     hasFifthYear: { type: Boolean, default: false },

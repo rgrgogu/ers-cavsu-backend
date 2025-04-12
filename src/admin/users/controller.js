@@ -86,7 +86,7 @@ const UserController = {
       const archive = req.query.archive;
       const students = await AuthLogin.find({ isArchived: archive, role: "student" })
         .select("-password")
-        .sort({ createdAt: -1 })
+        .sort({ user_id: 1 })
         .populate('profile_id_one', "application_details student_details")
       res.json(students);
     } catch (error) {

@@ -1,396 +1,354 @@
 const mongoose = require('mongoose');
-
-const Enrollment = require('./model'); 
-const Student = require('../../auth/login/model'); 
+const Enrollment = require('./model'); // Adjust path to your enrollment model
+const Profile = require("../../auth/profile_one/model");
+const EnrollmentDetailsController = require('../enrollment_details/controller');
+const ChecklistController = require('../checklist/controller');
 const Section = require("../section/model")
-const SchoolYear = require('../../admin/school_year/model');
 
-const enrollmentController = {
-  // @desc    Get all enrollments
-  // @route   GET /api/enrollments
-  // @access  Private
-  getEnrollments: async (req, res) => {
+const EnrollmentController = {
+  // Get all enrollments with optional filters
+  GetEnrollmentAll: async (req, res) => {
     try {
-      const { student, school_year } = req.query;
+      const { school_year, semester, year_level, enrollment_status } = req.query;
 
-      const query = {};
-      if (student) query.student = mongoose.Types.ObjectId(student);
-      if (school_year) query.school_year = mongoose.Types.ObjectId(school_year);
+      const query = {
+        school_year,
+        semester,
+        year_level,
+        enrollment_status
+      }
 
+      // Fetch enrollments with populated references
       const enrollments = await Enrollment.find(query)
-        .populate('student', 'name email')
-        .populate('school_year', 'year')
-        .populate('curriculum_id', 'name')
-        .populate('updated_by', 'name')
         .populate({
-          path: 'checklist.years.semesters.first.course_id checklist.years.semesters.second.course_id checklist.years.semesters.third.course_id checklist.years.semesters.midyear.course_id',
-          select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
-          match: { isArchived: false }
+          path: 'student_id',
+          select: 'name profile_id_one user_id',
+          populate: {
+            path: 'profile_id_one',
+            select: 'application_details student_details'
+          }
         })
-        .populate({
-          path: 'checklist.years.semesters.first.faculty_id checklist.years.semesters.second.faculty_id checklist.years.semesters.third.faculty_id checklist.years.semesters.midyear.faculty_id',
-          select: 'name email'
-        })
-        .populate({
-          path: 'checklist.years.semesters.first.eval checklist.years.semesters.second.eval checklist.years.semesters.third.eval checklist.years.semesters.midyear.eval',
-          select: 'rating comments'
-        })
-        .select('student school_year curriculum_id checklist updated_by isArchived updatedAt')
-        .sort('createdAt')
-        .lean()
+        .populate('section_id', 'section_code') // Adjust fields as needed
+        .populate('school_year', 'year') // Adjust fields as needed
+        .populate('enlisted_by', 'name') // Adjust fields as needed
 
-      if (!enrollments || enrollments.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'No enrollments found matching the criteria'
-        });
-      }
-
-      res.status(200).json(enrollments);
-    } catch (error) {
-      console.error('Error fetching enrollments:', error);
-      res.status(400).json({
-        success: false,
-        message: 'Server error while fetching enrollments',
-        error: error.message
-      });
-    }
-  },
-
-  get_new_enrollment_firstyear: async (req, res) => {
-    try {
-      // Calculate the current academic year (e.g., "2024-2025")
-      const currentYear = new Date().getFullYear();
-      const academicYear = `${currentYear}-${currentYear + 1}`;
-  
-      // Find the school_year ObjectId based on the academic year
-      const schoolYearDoc = await SchoolYear.findOne({ year: academicYear });
-      if (!schoolYearDoc) {
-        return res.status(404).json({
-          message: `No school year found for ${academicYear}`,
-        });
-      }
-      const schoolYearId = schoolYearDoc._id;
-  
-      // Query the enrollment with the matching school_year and year level "1st Year"
-      const enrollment = await Enrollment.aggregate([
-        { $match: { 'checklist.year': '1st Year' } },
-        { $unwind: '$checklist' },
-        { $match: { 'checklist.year': '1st Year', 'checklist.school_year': schoolYearId } },
-        {
-          $lookup: {
-            from: 'stu_logins', // Adjusted to plural (check your actual collection name)
-            localField: 'student',
-            foreignField: '_id',
-            as: 'student_details',
-            pipeline: [ // Specify only attributes
-              {
-                $project: {
-                  student_id: 1, // Include only student_id
-                  name: 1,
-                  student_type: 1,
-                  student_status: 1,
-                  program: 1,
-                  _id: 1, // Exclude _id if not needed
-                },
-              },
-            ],
-          },
-        },
-        {
-          $lookup: {
-            from: 'sections', // Adjusted to match your collection name
-            localField: 'section',
-            foreignField: '_id',
-            as: 'section_details',
-            pipeline: [ // Specify only section_code
-              {
-                $project: {
-                  section_code: 1, // Include only section_code
-                  _id: 0, // Exclude _id if not needed
-                },
-              },
-            ],
-          },
-        },
-        {
-          $project: {
-            student: { $arrayElemAt: ['$student_details', 0] }, // Full student document
-            section: { $arrayElemAt: ['$section_details', 0] }, // Only section_code
-            updated_by: 1,
-            createdAt: 1,
-            updatedAt: 1,
-          },
-        },
-      ]);
-  
-      if (!enrollment.length) {
-        return res.status(404).json({
-          message: `No enrollment found for 1st Year and school year ${academicYear}`,
-        });
-      }
-  
       return res.status(200).json({
-        message: `Enrollment retrieved successfully for 1st Year and school year ${academicYear}`,
-        data: enrollment,
+        success: true,
+        data: enrollments,
+        message: `Retrieved ${enrollments.length} enrollments`
       });
     } catch (error) {
-      return res.status(400).json({
-        message: 'Error retrieving enrollment',
-        error: error.message,
-      });
-    }
-  },
-
-  // @desc    Get enrollments by criteria (e.g., student, school year)
-  // @route   GET /api/enrollments/get_enrollments
-  // @access  Private
-  getEnrollmentsByCriteria: async (req, res) => {
-    try {
-      const { student, school_year } = req.query;
-
-      const query = {};
-      if (student) query.student = mongoose.Types.ObjectId(student);
-      if (school_year) query.school_year = mongoose.Types.ObjectId(school_year);
-
-      const enrollments = await Enrollment.find(query)
-        .populate('student', 'name email')
-        .populate('school_year', 'year')
-        .populate('curriculum_id', 'name')
-        .populate('updated_by', 'name')
-        .populate({
-          path: 'checklist.years.semesters.first.course_id checklist.years.semesters.second.course_id checklist.years.semesters.third.course_id checklist.years.semesters.midyear.course_id',
-          select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
-          match: { isArchived: false }
-        })
-        .populate({
-          path: 'checklist.years.semesters.first.faculty_id checklist.years.semesters.second.faculty_id checklist.years.semesters.third.faculty_id checklist.years.semesters.midyear.faculty_id',
-          select: 'name email'
-        })
-        .populate({
-          path: 'checklist.years.semesters.first.eval checklist.years.semesters.second.eval checklist.years.semesters.third.eval checklist.years.semesters.midyear.eval',
-          select: 'rating comments'
-        })
-        .lean();
-
-      if (!enrollments.length) {
-        return res.status(404).json({
-          success: false,
-          message: 'No enrollments found for the given criteria'
-        });
-      }
-
-      res.status(200).json(enrollments);
-    } catch (error) {
-      console.error('Error fetching enrollments by criteria:', error);
-      res.status(400).json({
+      console.error('Error in GetEnrollmentAll:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Server error while fetching enrollments',
+        message: 'Failed to retrieve enrollments',
         error: error.message
       });
     }
   },
 
-  // @desc    Get single enrollment by ID
-  // @route   GET /api/enrollments/:id
-  // @access  Private
-  getEnrollment: async (req, res) => {
+  // Create multiple enrollment records efficiently using bulkWrite
+  MassCreateEnlistment: async (req, res) => {
     try {
-      const id = req.params.id;
+      const { enrollment, profile } = req.body;
+      const { student_id, curriculum_id, section_id, school_year, semester, year_level, user, courses } = enrollment;
 
-      const result = await Enrollment.findById(id)
-        .populate({
-          path: 'checklist.years.semesters.first.course_id checklist.years.semesters.second.course_id checklist.years.semesters.third.course_id checklist.years.semesters.midyear.course_id',
-          select: 'courseCode courseTitle lectureCredits labCredits lectureContact labContact',
-          match: { isArchived: false }
-        })
-        .populate({
-          path: 'checklist.years.semesters.first.faculty_id checklist.years.semesters.second.faculty_id checklist.years.semesters.third.faculty_id checklist.years.semesters.midyear.faculty_id',
-          select: 'name email'
-        })
-        .populate({
-          path: 'checklist.years.semesters.first.eval checklist.years.semesters.second.eval checklist.years.semesters.third.eval checklist.years.semesters.midyear.eval',
-          select: 'rating comments'
-        })
-        .populate('student', 'name email')
-        .populate('school_year', 'year')
-        .populate('curriculum_id', 'name')
-        .populate('updated_by', 'name')
-        .lean();
+      // Validate student_id and profile arrays
+      if (student_id.length !== profile.length) {
+        return res.status(400).json({
+          success: false,
+          message: 'student_id and profile arrays must have equal lengths'
+        });
+      }
 
-      if (!result) {
+      // Start a transaction for atomicity
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Step 1: Create Checklist for each student and create enrollment details (enrolled courses) if existing, get the ids.
+        const enrolledCoursesIds = await EnrollmentDetailsController.MassCreateEnlistmentDetails(
+          courses, school_year, semester, user, section_id, session
+        );
+
+        await ChecklistController.MassCreateChecklist(student_id, curriculum_id, session);
+
+        // Step 2: Prepare for Enrollment Data and Profile Update to student details as enrollment id.
+        const enrollmentBulkOps = student_id.map((sid) => {
+          const enrollmentId = new mongoose.Types.ObjectId();
+          return {
+            insertOne: {
+              document: {
+                _id: enrollmentId,
+                student_id: sid,
+                section_id,
+                school_year,
+                semester,
+                year_level, // Convert to string per schema
+                enrolled_courses: enrolledCoursesIds, // Shared across all enrollments
+                enrollment_status: 'Enlisted',
+                enlisted_by: user,
+                updated_by: user,
+                date_enlisted: new Date()
+              }
+            }
+          };
+        });
+
+        // Capture enrollment IDs
+        const enrollmentIds = enrollmentBulkOps.map(op => op.insertOne.document._id);
+
+        // Prepare profile update operations
+        const profileBulkOps = profile.map((profileId, index) => ({
+          updateOne: {
+            filter: { _id: profileId },
+            update: { $set: { 'student_details.enrollment_id': enrollmentIds[index] } }
+          }
+        }));
+
+        // Execute bulk writes
+        await Enrollment.bulkWrite(enrollmentBulkOps, { session });
+        await Profile.bulkWrite(profileBulkOps, { session });
+        await Section.findByIdAndUpdate(section_id, { $set: { enrolled_count: student_id.length } }, { session })
+
+        // Commit transaction
+        await session.commitTransaction();
+
+
+        return res.status(201).json({
+          success: true,
+          data: {
+            insertedEnrollments: enrollmentBulkOps.length,
+            updatedProfiles: profileBulkOps.length,
+            enrollmentIds
+          },
+          message: `${enrollmentBulkOps.length} enrollments created and ${profileBulkOps.length} profiles updated`
+        });
+      } catch (error) {
+        // Rollback transaction on error
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        session.endSession();
+      }
+    } catch (error) {
+      console.error('Error in MassCreateEnlistment:', error);
+      const status = error.name === 'ValidationError' || error.code === 11000 ? 400 : 500;
+      return res.status(status).json({
+        success: false,
+        message: 'Failed to create enrollments or update profiles',
+        error: error.message
+      });
+    }
+  },
+
+  UpdateToEnrolledFirstYear: async (req, res) => {
+    const { student_ids, enrolled_by } = req.body;
+
+    if (!Array.isArray(student_ids) || !enrolled_by) {
+      return res.status(400).json({
+        success: false,
+        message: 'student_ids (array) and enrolled_by (ID) are required.'
+      });
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const now = new Date();
+
+      const bulkOps = student_ids.map(id => ({
+        updateOne: {
+          filter: { student_id: new ObjectId(id) },
+          update: {
+            $set: {
+              enrollment_status: 'Enrolled',
+              enrolled_by: new ObjectId(enrolled_by),
+              date_enrolled: now
+            }
+          }
+        }
+      }));
+
+      const result = await Enrollment.bulkWrite(bulkOps, { session });
+
+      await session.commitTransaction();
+      session.endSession();
+
+      return res.status(200).json({
+        success: true,
+        message: `${result.modifiedCount} enrollments updated to Enrolled.`,
+        result
+      });
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      console.error('Error in UpdateToEnrolled:', error);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update enrollments to Enrolled status.',
+        error: error.message
+      });
+    }
+  },
+
+  UpdateToEnrolled: async (req, res) => {
+    try {
+      const { enrollment_id, user_id } = req.body;
+
+      if (!mongoose.Types.ObjectId.isValid(enrollment_id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid enrollment ID'
+        });
+      }
+
+      const updated = await Enrollment.findByIdAndUpdate(
+        enrollment_id,
+        {
+          $set: {
+            enrollment_status: 'Enrolled',
+            enrolled_by: user_id,
+            date_enrolled: new Date()
+          }
+        },
+        { new: true }
+      );
+
+      if (!updated) {
         return res.status(404).json({
           success: false,
           message: 'Enrollment not found'
         });
       }
 
-      res.status(200).json(result);
+      return res.status(200).json({
+        success: true,
+        message: 'Enrollment status updated to Enrolled',
+        data: updated
+      });
+
     } catch (error) {
-      res.status(400).json({
+      console.error('UpdateToEnrolled Error:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Error fetching enrollment',
+        message: 'Failed to update enrollment status',
         error: error.message
       });
     }
   },
 
-  // @desc    Create a new enrollment
-  // @route   POST /api/enrollments
-  // @access  Private
-  mass_enroll_firstyear: async (req, res) => {
-    try {
-      const enrollmentData = req.body; // Expecting an array of enrollment objects
-      const studentIds = enrollmentData.map((item) => item.student); // Array of student IDs
-
-      // Validate that we have data to process
-      if (!Array.isArray(enrollmentData) || enrollmentData.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'No enrollment data provided or invalid format. Expected an array of enrollments.',
-        });
-      }
-
-      // Prepare bulk operations for Enrollment collection
-      const bulkEnrollmentOperations = enrollmentData.map((data) => ({
-        insertOne: {
-          document: {
-            student: data.student,
-            curriculum_id: data.curriculum_id,
-            section: data.section, // Section ID from the enrollment data
-            checklist: data.checklist.map((yearData) => ({
-              school_year: yearData.school_year,
-              year: yearData.year,
-              semesters: {
-                first: yearData.semesters.first.map((course) => ({
-                  course_id: course.course_id,
-                  schedule_id: course.schedule_id || null,
-                  faculty_id: course.faculty_id || null,
-                  grade: course.grade || null,
-                  eval: course.eval || null,
-                  status: course.status || 'Enlisted',
-                  enlisted_by: course.enlisted_by || 'System',
-                })),
-                second: yearData.semesters.second || [],
-                third: yearData.semesters.third || [],
-                midyear: yearData.semesters.midyear || [],
-              },
-            })),
-            updated_by: data.updated_by,
-          },
-        },
-      }));
-
-      // Filter for first-year enrollments
-      const firstYearOperations = bulkEnrollmentOperations.filter((op) =>
-        op.insertOne.document.checklist.some((year) => year.year === "1st Year")
-      );
-
-      if (firstYearOperations.length === 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'No first-year enrollments found in the provided data.',
-        });
-      }
-
-      // Perform bulk write to Enrollment collection
-      const enrollmentResult = await Enrollment.bulkWrite(firstYearOperations);
-
-      // Get the inserted enrollment IDs
-      const insertedIds = Object.values(enrollmentResult.insertedIds);
-
-      // Map student IDs to their corresponding enrollment IDs
-      const studentUpdates = enrollmentData.map((data, index) => ({
-        updateOne: {
-          filter: { _id: data.student },
-          update: { $set: { enrollment_id: insertedIds[index] } },
-        },
-      }));
-
-      // Perform bulk update on Student collection
-      const studentUpdateResult = await Student.bulkWrite(studentUpdates);
-
-      // Aggregate sections to update enrolled count
-      const sectionUpdates = {};
-      enrollmentData.forEach((data) => {
-        if (data.section) {
-          sectionUpdates[data.section] = (sectionUpdates[data.section] || 0) + 1;
-        }
-      });
-
-      // Prepare bulk operations for Section collection
-      const bulkSectionOperations = Object.keys(sectionUpdates).map((sectionId) => ({
-        updateOne: {
-          filter: { _id: new mongoose.Types.ObjectId(sectionId) },
-          update: { $inc: { enrolled_count: sectionUpdates[sectionId] } }, // Increment enrolled count
-        },
-      }));
-
-      // Perform bulk update on Section collection if there are updates
-      let sectionUpdateResult = null;
-      if (bulkSectionOperations.length > 0) {
-        sectionUpdateResult = await Section.bulkWrite(bulkSectionOperations);
-      }
-
-      res.status(201).json({
-        success: true,
-        message: `Successfully enrolled ${enrollmentResult.insertedCount} first-year students, updated ${studentUpdateResult.modifiedCount} student records, and updated ${sectionUpdateResult ? sectionUpdateResult.modifiedCount : 0} section(s).`,
-        data: {
-          enrollments: enrollmentResult,
-          studentUpdates: studentUpdateResult,
-          sectionUpdates: sectionUpdateResult,
-        },
-      });
-
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: 'Error performing mass enrollment for first-year students',
-        error: error.message,
-      });
-    }
-  },
-
-  // @desc    Update enrollment
-  // @route   PUT /api/enrollments/:id
-  // @access  Private
-  updateEnrollment: async (req, res) => {
+  // Edit an existing enrollment by ID
+  EditEnrollment: async (req, res) => {
     try {
       const { id } = req.params;
-      const data = req.body;
+      const updates = req.body;
 
-      const updatedEnrollment = await Enrollment.findByIdAndUpdate(
+      // Validate ID
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid enrollment ID'
+        });
+      }
+
+      // Validate updates
+      const allowedUpdates = [
+        'student_id',
+        'section_id',
+        'school_year',
+        'semester',
+        'year_level',
+        'enrolled_courses',
+        'enrollment_status',
+        'enlisted_by',
+        'date_enlisted',
+        'enrolled_by',
+        'date_enrolled',
+        'updated_by'
+      ];
+      const updateKeys = Object.keys(updates);
+      const isValidUpdate = updateKeys.every(key => allowedUpdates.includes(key));
+      if (!isValidUpdate || updateKeys.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or empty update fields'
+        });
+      }
+
+      // Validate ObjectIds and enums
+      if (updates.student_id && !mongoose.Types.ObjectId.isValid(updates.student_id)) {
+        return res.status(400).json({ success: false, message: 'Invalid student_id' });
+      }
+      if (updates.section_id && !mongoose.Types.ObjectId.isValid(updates.section_id)) {
+        return res.status(400).json({ success: false, message: 'Invalid section_id' });
+      }
+      if (updates.school_year && !mongoose.Types.ObjectId.isValid(updates.school_year)) {
+        return res.status(400).json({ success: false, message: 'Invalid school_year' });
+      }
+      if (updates.enrolled_courses && !mongoose.Types.ObjectId.isValid(updates.enrolled_courses)) {
+        return res.status(400).json({ success: false, message: 'Invalid enrolled_courses' });
+      }
+      if (updates.updated_by && !mongoose.Types.ObjectId.isValid(updates.updated_by)) {
+        return res.status(400).json({ success: false, message: 'Invalid updated_by' });
+      }
+      if (updates.semester && !['first', 'second', 'third', 'midyear'].includes(updates.semester)) {
+        return res.status(400).json({ success: false, message: 'Invalid semester' });
+      }
+      if (updates.enrollment_status && !['Enrolled', 'Enlisted'].includes(updates.enrollment_status)) {
+        return res.status(400).json({ success: false, message: 'Invalid enrollment_status' });
+      }
+
+      // Update enrollment
+      const enrollment = await Enrollment.findByIdAndUpdate(
         id,
-        data,
+        { ...updates, updatedAt: Date.now() },
         { new: true, runValidators: true }
       );
 
-      if (!updatedEnrollment) {
+      if (!enrollment) {
         return res.status(404).json({
           success: false,
           message: 'Enrollment not found'
         });
       }
 
-      res.status(200).json(updatedEnrollment);
+      return res.status(200).json({
+        success: true,
+        data: enrollment,
+        message: 'Enrollment updated successfully'
+      });
     } catch (error) {
-      res.status(400).json({
+      console.error('Error in EditEnrollment:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Error updating enrollment',
+        message: 'Failed to update enrollment',
         error: error.message
       });
     }
   },
 
-  // @desc    Add subject to a specific semester and year in checklist
-  // @route   PUT /api/enrollments/add-subject/:id
-  // @access  Private
-  addSubjectToChecklist: async (req, res) => {
+  // Get an enrollment by ID
+  GetEnrollmentById: async (req, res) => {
     try {
       const { id } = req.params;
-      const { yearIndex, semester, course_id, schedule_id, faculty_id, grade, eval, status } = req.body;
 
-      const enrollment = await Enrollment.findById(id);
+      // Validate ID
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid enrollment ID'
+        });
+      }
+
+      // Fetch enrollment with populated references
+      const enrollment = await Enrollment.findById(id)
+        .populate('student_id', 'name email') // Adjust fields as needed
+        .populate('section_id', 'name') // Adjust fields as needed
+        .populate('school_year', 'year') // Adjust fields as needed
+        .populate('enrolled_courses', 'courses'); // Adjust fields as needed
 
       if (!enrollment) {
         return res.status(404).json({
@@ -399,80 +357,22 @@ const enrollmentController = {
         });
       }
 
-      if (!enrollment.checklist[yearIndex]) {
-        enrollment.checklist.push({ year: '', semesters: { first: [], second: [], third: [], midyear: [] } });
-      }
-
-      const semesterField = enrollment.checklist[yearIndex].semesters[semester];
-      if (!semesterField) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid semester'
-        });
-      }
-
-      semesterField.push({
-        course_id,
-        schedule_id,
-        faculty_id,
-        grade,
-        eval,
-        status
+      return res.status(200).json({
+        success: true,
+        data: enrollment,
+        message: 'Enrollment retrieved successfully'
       });
-
-      const updatedEnrollment = await enrollment.save();
-      res.status(200).json(updatedEnrollment);
     } catch (error) {
-      res.status(400).json({
+      console.error('Error in GetEnrollmentById:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Error adding subject to checklist',
+        message: 'Failed to retrieve enrollment',
         error: error.message
       });
     }
   },
 
-  // @desc    Update subject status in checklist
-  // @route   PUT /api/enrollments/update-subject-status/:id
-  // @access  Private
-  updateSubjectStatus: async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { yearIndex, semester, subjectIndex, status } = req.body;
 
-      const enrollment = await Enrollment.findById(id);
-
-      if (!enrollment) {
-        return res.status(404).json({
-          success: false,
-          message: 'Enrollment not found'
-        });
-      }
-
-      if (!enrollment.checklist[yearIndex] || !enrollment.checklist[yearIndex].semesters[semester] || !enrollment.checklist[yearIndex].semesters[semester][subjectIndex]) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid year, semester, or subject index'
-        });
-      }
-
-      if (!['Enrolled', 'Enlisted'].includes(status)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid status'
-        });
-      }
-
-      enrollment.checklist[yearIndex].semesters[semester][subjectIndex].status = status;
-      const updatedEnrollment = await enrollment.save();
-      res.status(200).json(updatedEnrollment);
-    } catch (error) {
-      res.status(400).json({
-        success: false,
-        message: 'Error updating subject status',
-        error: error.message
-      });
-    }
-  },
 };
 
-module.exports = enrollmentController;
+module.exports = EnrollmentController;
