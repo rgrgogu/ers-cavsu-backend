@@ -8,7 +8,9 @@ const RequireAuth = require("../../../global/middleware/RequireAuth");
 router.get('/', RequireAuth, enrollmentController.GetEnrollmentAll);
 router.get('/:id', RequireAuth, enrollmentController.GetEnrollmentById);
 router.post('/mass', RequireAuth, enrollmentController.MassCreateEnlistment);
+router.put("/update_to_enrolled", RequireAuth, enrollmentController.UpdateToEnrolled)
 router.put('/:id', RequireAuth, enrollmentController.EditEnrollment);
+
 
 // router.get('/', RequireAuth, enrollmentController.getEnrollments);
 // //router.get('/get_enrollments', RequireAuth, enrollmentController.getEnrollmentsByCriteria); // Custom route for filtered enrollments

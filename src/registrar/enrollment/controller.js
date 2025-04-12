@@ -9,7 +9,7 @@ const EnrollmentController = {
   // Get all enrollments with optional filters
   GetEnrollmentAll: async (req, res) => {
     try {
-      const { school_year, semester, year_level, enrollment_status } = req.query;
+      const { school_year, semester, year_level } = req.query;
 
       const query = {
         school_year,
@@ -29,6 +29,7 @@ const EnrollmentController = {
         })
         .populate('enrolled_courses.details', 'course_id')
         .populate('enrolled_courses.enlisted_by', 'name')
+        .populate('enrolled_courses.enrolled_by', 'name')
         .populate('section_id', 'section_code') // Adjust fields as needed
         .populate('school_year', 'year') // Adjust fields as needed
 
@@ -86,7 +87,7 @@ const EnrollmentController = {
                 semester,
                 year_level, // Convert to string per schema
                 enrolled_courses: enrolledCoursesIds.map(id => ({
-                  details: id,        
+                  details: id,
                   enrollment_status: 'Enlisted',
                   enlisted_by: user,
                   updated_by: user,
@@ -197,38 +198,25 @@ const EnrollmentController = {
 
   UpdateToEnrolled: async (req, res) => {
     try {
-      const { enrollment_id, user_id } = req.body;
+      // Construct the update object dynamically for each enrolled course
+      const { doc_id, enrolledCoursesIds, user } = req.body;
 
-      if (!mongoose.Types.ObjectId.isValid(enrollment_id)) {
-        return res.status(400).json({
-          success: false,
-          message: 'Invalid enrollment ID'
-        });
-      }
-
-      const updated = await Enrollment.findByIdAndUpdate(
-        enrollment_id,
+      const updatedDocument = await Enrollment.updateOne(
+        { _id: doc_id },
         {
           $set: {
-            enrollment_status: 'Enrolled',
-            enrolled_by: user_id,
-            date_enrolled: new Date()
+            "enrolled_courses.$[elem].enrollment_status": "Enrolled",
+            "enrolled_courses.$[elem].enrolled_by": user,
+            "enrolled_courses.$[elem].date_enrolled": new Date()
           }
         },
-        { new: true }
+        { arrayFilters: [{ "elem._id": { $in: enrolledCoursesIds } }] },
       );
-
-      if (!updated) {
-        return res.status(404).json({
-          success: false,
-          message: 'Enrollment not found'
-        });
-      }
 
       return res.status(200).json({
         success: true,
         message: 'Enrollment status updated to Enrolled',
-        data: updated
+        data: updatedDocument
       });
 
     } catch (error) {
