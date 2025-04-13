@@ -105,7 +105,12 @@ const EnrollmentController = {
         const profileBulkOps = profile.map((profileId, index) => ({
           updateOne: {
             filter: { _id: profileId },
-            update: { $set: { 'student_details.enrollment_id': enrollmentIds[index] } }
+            update: {
+              $set: {
+                'student_details.enrollment_id': enrollmentIds[index],
+                'student_details.section_id': section_id
+              }
+            }
           }
         }));
 

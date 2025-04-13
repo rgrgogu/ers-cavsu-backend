@@ -23,6 +23,7 @@ const routes = [
     { api: "/api/registrar/students", router: require('./src/registrar/students/route.js') },
     { api: "/api/registrar/enrollments", router: require('./src/registrar/enrollment/route.js') },
     { api: "/api/registrar/checklist", router: require('./src/registrar/checklist/route.js') },
+    { api: "/api/registrar/enrollment_details", router: require('./src/registrar/enrollment_details/route.js') },
 
     // ADMISSION
     { api: "/api/admission/a_holidays", router: require('./src/admission/holidays/holiday.route.js') },

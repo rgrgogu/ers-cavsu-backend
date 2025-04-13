@@ -7,8 +7,8 @@ const obj = new mongoose.Schema({
         day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], required: true },
         time_start: { type: String, required: true },
         time_end: { type: String, required: true },
+        room: { type: mongoose.Schema.Types.ObjectId, ref: 'rooms', required: true },
     }],
-    room: { type: mongoose.Schema.Types.ObjectId, ref: 'rooms', required: true },
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
     updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
 }, { timestamps: true });

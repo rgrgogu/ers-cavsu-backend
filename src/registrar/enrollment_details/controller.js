@@ -66,6 +66,42 @@ const EnrollmentDetailsController = {
             console.error('Error in MassCreateEnlistmentDetails:', error);
             throw error;
         }
+    },
+
+    GetCoursesBySection: async (req, res) => {
+        try {
+            const { section_id, school_year, semester } = req.query;
+
+            // Validate required fields
+            if (!section_id || !school_year || !semester) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'section_id, school_year, and semester are required'
+                });
+            }
+
+            const courses = await EnrollmentDetails
+                .find({ section_id, school_year, semester })
+                .populate('course_id', 'courseCode courseTitle credits')
+                .exec();
+
+            if (!courses.length) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No courses found for the specified criteria'
+                });
+            }
+
+            res.status(200).json({
+                success: true,
+                data: courses
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: `Error fetching courses: ${error.message}`
+            });
+        }
     }
 };
 

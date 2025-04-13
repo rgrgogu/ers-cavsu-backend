@@ -102,7 +102,8 @@ const student_details = new Schema({
     student_type: { type: String, default: null, enum: ['New', 'Old', 'Graduated'] },
     student_status: { type: String, default: null, enum: ['Regular', 'Irregular'] },
     enrollment_id: { type: Schema.Types.ObjectId, ref: 'enrollment', default: null, index: true },
-    year_level: { type: Number, default: 1, min: 1, max: 5, index: true }
+    year_level: { type: Number, default: 1, min: 1, max: 5, index: true },
+    section_id: { type: Schema.Types.ObjectId, ref: 'sections', default: null, index: true }
 })
 
 const obj = new Schema({
