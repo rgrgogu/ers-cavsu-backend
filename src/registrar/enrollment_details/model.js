@@ -5,7 +5,7 @@ const obj = new mongoose.Schema({
     pre_req_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'courses', default: null }],
     pre_req_strings: [{ type: String }],
     schedule_id: { type: mongoose.Schema.Types.ObjectId, ref: 'schedules', default: null },
-    faculty_id: { type: mongoose.Schema.Types.ObjectId, ref: 'faculty', default: null },
+    faculty_id: { type: mongoose.Schema.Types.ObjectId, ref: 'login', default: null },
     section_id: { type: mongoose.Schema.Types.ObjectId, ref: 'sections', default: null },
     school_year: { type: mongoose.Schema.Types.ObjectId, ref: 'school_years', required: true }, // Updated
     semester: { type: String, enum: ['first', 'second', 'third', 'midyear'], required: true },

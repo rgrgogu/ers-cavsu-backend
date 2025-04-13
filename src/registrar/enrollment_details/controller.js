@@ -84,6 +84,15 @@ const EnrollmentDetailsController = {
             const courses = await EnrollmentDetails
                 .find({ section_id, school_year, semester })
                 .populate('course_id', 'courseCode courseTitle credits')
+                .populate('faculty_id', 'name')
+                .populate({
+                    path: "schedule_id",
+                    select: "day_time",
+                    populate: {
+                        path: "day_time.room",
+                        select: "name"
+                    }
+                })
                 .exec();
 
             if (!courses.length) {
@@ -114,25 +123,23 @@ const EnrollmentDetailsController = {
 
             const updates = [];
 
-            for (const item of schedule) {
+            for (const elem of schedule) {
+                const item = elem.schedule
                 const scheduleId = await ScheduleController.CreateSchedule(
                     item.school_year,
                     item.semester,
-                    item.schedule.map((sched) => ({
-                        day: sched.day,
-                        time: sched.time,
-                        room: sched.room,
-                    })),
-                    session
+                    item.day_time,
+                    session,
+                    elem.schedule_id
                 );
 
                 updates.push({
                     updateOne: {
-                        filter: { _id: course._id },
+                        filter: { _id: elem.doc_id },
                         update: {
                             $set: {
                                 schedule_id: scheduleId,
-                                faculty_id: item.faculty,
+                                faculty_id: elem.faculty,
                                 updated_by: user
                             }
                         }
@@ -142,7 +149,7 @@ const EnrollmentDetailsController = {
 
             // Run bulk update
             if (updates.length > 0) {
-                await Course.bulkWrite(updates, { session });
+                await EnrollmentDetails.bulkWrite(updates, { session });
             }
 
             await session.commitTransaction();

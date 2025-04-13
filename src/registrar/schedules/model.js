@@ -6,7 +6,7 @@ const obj = new mongoose.Schema({
     day_time: [{
         day: { type: String, enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], required: true },
         time: { type: String, required: true },
-        room: { type: mongoose.Schema.Types.ObjectId, ref: 'rooms', required: true },
+        room: { type: mongoose.Schema.Types.ObjectId, ref: 'room', required: true },
     }],
 }, { timestamps: true });
 
