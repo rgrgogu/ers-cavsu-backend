@@ -10,7 +10,7 @@ const obj = new mongoose.Schema({
     school_year: { type: mongoose.Schema.Types.ObjectId, ref: 'school_years', required: true }, // Updated
     semester: { type: String, enum: ['first', 'second', 'third', 'midyear'], required: true },
     created_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
-    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', required: true },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: 'login', default: null},
 }, { timestamps: true });
 
 module.exports = mongoose.model('enrollment_details', obj);

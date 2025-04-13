@@ -57,6 +57,14 @@ const obj = new Schema({
                 return `${trimmed}`.trim();
             }
         },
+        lastFullName: {
+            get() {
+                const trimmed = [`${this.name.lastname},`, this.name.firstname, this.name.middlename, this.name.extension]
+                    .filter(Boolean) // Remove empty or null values
+                    .join(' ');
+                return `${trimmed}`.trim();
+            }
+        },
         fullNameInitial: {
             get() {
                 const middleInitial = this.name.middlename ? `${this.name.middlename[0].toUpperCase()}.` : '';

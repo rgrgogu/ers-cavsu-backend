@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const EnrollmentDetails = require('./model'); // Adjust path to your enrollment model
+const ScheduleController = require("../schedules/controller")
 
 const EnrollmentDetailsController = {
     MassCreateEnlistmentDetails: async (courses, school_year, semester = 'first', user, section_id, session) => {
@@ -101,6 +102,57 @@ const EnrollmentDetailsController = {
                 success: false,
                 message: `Error fetching courses: ${error.message}`
             });
+        }
+    },
+
+    MassUpdateSchedules: async (req, res) => {
+        const session = await mongoose.startSession();
+        const { user, schedule } = req.body;
+
+        try {
+            session.startTransaction();
+
+            const updates = [];
+
+            for (const item of schedule) {
+                const scheduleId = await ScheduleController.CreateSchedule(
+                    item.school_year,
+                    item.semester,
+                    item.schedule.map((sched) => ({
+                        day: sched.day,
+                        time: sched.time,
+                        room: sched.room,
+                    })),
+                    session
+                );
+
+                updates.push({
+                    updateOne: {
+                        filter: { _id: course._id },
+                        update: {
+                            $set: {
+                                schedule_id: scheduleId,
+                                faculty_id: item.faculty,
+                                updated_by: user
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Run bulk update
+            if (updates.length > 0) {
+                await Course.bulkWrite(updates, { session });
+            }
+
+            await session.commitTransaction();
+            session.endSession();
+
+            return res.json({ success: true });
+        } catch (err) {
+            await session.abortTransaction();
+            session.endSession();
+            return res.status(400).json({ success: false, message: err.message });
         }
     }
 };
