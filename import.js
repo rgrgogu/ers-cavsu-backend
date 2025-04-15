@@ -12,6 +12,7 @@ const routes = [
     { api: "/api/faculty/ctgy_questions", router: require('./src/faculty/evaluation/question/question.route.js') },
     { api: "/api/faculty/class_sched", router: require('./src/faculty/schedule/route.js') },
     { api: "/api/faculty/school_year", router: require('./src/faculty/school_year/route.js') },
+    { api: "/api/faculty/student", router: require('./src/faculty/student/route.js') },
 
     // REGISTRAR
     { api: "/api/registrar/sections", router: require('./src/registrar/section/route.js') },
