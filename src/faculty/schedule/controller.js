@@ -20,7 +20,7 @@ const EnrollmentDetailsController = {
                 })
                 .populate({
                     path: "section_id",
-                    select: "section_code",
+                    select: "section_code enrolled_count",
                 })
                 .exec();
 

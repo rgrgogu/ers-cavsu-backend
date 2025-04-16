@@ -20,7 +20,12 @@ const StudentController = {
             .find({section_id,school_year,semester})
             .populate({
                 path: 'student_id',
-                select: 'name user_id school_email',
+                select: 'name user_id school_email profile_id_one',
+                options: { sort: { 'name.lastname': 1 } },
+                populate:{
+                    path: 'profile_id_one',
+                    select: 'student_details applicant_profile'
+                }
             })
             .populate({
                 path: "section_id",
