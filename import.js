@@ -6,6 +6,9 @@ const routes = [
     // STUDENT
     { api: "/api/student/ctgy_groups", router: require('./src/student/evaluation/category/category.route.js') },
     { api: "/api/student/ctgy_questions", router: require('./src/student/evaluation/question/question.route.js') },
+    { api: "/api/student/school_year", router: require('./src/student/school_year/route.js') },
+    { api: "/api/student/enrollments", router: require('./src/student/enrollment/route.js') },
+    { api: "/api/student/class_sched", router: require('./src/student/schedule/route.js') },
     
     // FACULTY
     { api: "/api/faculty/ctgy_groups", router: require('./src/faculty/evaluation/category/category.route.js') },
