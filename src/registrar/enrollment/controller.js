@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Enrollment = require('./model'); // Adjust path to your enrollment model
+const EnrollmentDetails = require('../enrollment_details/model')
 const Profile = require("../../auth/profile_one/model");
 const EnrollmentDetailsController = require('../enrollment_details/controller');
 const ChecklistController = require('../checklist/controller');
@@ -117,7 +118,7 @@ const EnrollmentController = {
         // Execute bulk writes
         await Enrollment.bulkWrite(enrollmentBulkOps, { session });
         await Profile.bulkWrite(profileBulkOps, { session });
-        await Section.findByIdAndUpdate(section_id, { $set: { enrolled_count: student_id.length } }, { session })
+        await Section.findByIdAndUpdate(section_id, { $inc: { enrolled_count: student_id.length } }, { session })
 
         // Commit transaction
         await session.commitTransaction();
@@ -202,11 +203,13 @@ const EnrollmentController = {
   },
 
   UpdateToEnrolled: async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-      // Construct the update object dynamically for each enrolled course
-      const { doc_id, enrolledCoursesIds, user } = req.body;
-
-      const updatedDocument = await Enrollment.updateOne(
+      const { doc_id, enrolledCoursesIds, enrolledDetailsCourseIds, user } = req.body;
+  
+      // 1. Update enrollment status and metadata
+      const updatedEnrollment = await Enrollment.updateOne(
         { _id: doc_id },
         {
           $set: {
@@ -215,16 +218,31 @@ const EnrollmentController = {
             "enrolled_courses.$[elem].date_enrolled": new Date()
           }
         },
-        { arrayFilters: [{ "elem._id": { $in: enrolledCoursesIds } }] },
+        {
+          arrayFilters: [{ "elem._id": { $in: enrolledCoursesIds } }],
+          session
+        }
       );
-
+  
+      // 3. Increment enrolled_count for each referenced enrollment_details
+      await EnrollmentDetails.updateMany(
+        { course_id: { $in: enrolledDetailsCourseIds } },
+        { $inc: { enrolled_count: 1 } },
+        { session }
+      );
+  
+      await session.commitTransaction();
+      session.endSession();
+  
       return res.status(200).json({
         success: true,
-        message: 'Enrollment status updated to Enrolled',
-        data: updatedDocument
+        message: 'Enrollment status updated and count incremented',
+        data: updatedEnrollment
       });
-
+  
     } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
       console.error('UpdateToEnrolled Error:', error);
       return res.status(500).json({
         success: false,
@@ -232,7 +250,7 @@ const EnrollmentController = {
         error: error.message
       });
     }
-  },
+  },  
 
   // Edit an existing enrollment by ID
   EditEnrollment: async (req, res) => {

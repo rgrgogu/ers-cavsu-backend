@@ -4,8 +4,7 @@ const Enrollment = require('../../registrar/enrollment/model'); // Adjust path t
 const StudentController = {
     GetStudentsBySection: async (req, res) => {
         try {
-            const { section_id, school_year, semester } = req.query;
-            console.log(section_id, school_year, semester);
+            const { section_id, school_year, semester, course_doc_id } = req.query;
 
             // Validate semester
             if (!['first', 'second', 'third', 'midyear'].includes(semester)) {
@@ -17,21 +16,35 @@ const StudentController = {
 
             // Fetch enrollments
             const students = await Enrollment
-            .find({section_id,school_year,semester})
-            .populate({
-                path: 'student_id',
-                select: 'name user_id school_email profile_id_one',
-                options: { sort: { 'name.lastname': 1 } },
-                populate:{
-                    path: 'profile_id_one',
-                    select: 'student_details applicant_profile'
-                }
-            })
-            .populate({
-                path: "section_id",
-                select: "section_code",
-            })
-            .exec();
+                .find({
+                    section_id, school_year, semester, enrolled_courses: {
+                        $elemMatch: {
+                            'details': course_doc_id,
+                            'enrolled_by': { $ne: null },
+                            'date_enrolled': { $ne: null }
+                        }
+                    }
+                })
+                .populate({
+                    path: 'student_id',
+                    select: 'name user_id school_email profile_id_one',
+                    populate: {
+                        path: 'profile_id_one',
+                        select: 'student_details applicant_profile'
+                    }
+                })
+                .populate({
+                    path: "section_id",
+                    select: "section_code",
+                })
+                .exec();
+
+            // Sort students by student_id.lastname (you may need to adjust depending on structure)
+            students.sort((a, b) => {
+                const lastA = a.student_id?.name?.lastname || '';
+                const lastB = b.student_id?.name?.lastname || '';
+                return lastA.localeCompare(lastB);
+            });
 
             return res.status(200).json({
                 success: true,
