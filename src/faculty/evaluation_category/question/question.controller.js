@@ -1,4 +1,4 @@
-const QuestiontModel = require("../../../admin/evaluation/question/question.model.js"); // Adjust path to your model
+const QuestiontModel = require("../../../admin/evaluation_category/question/question.model.js"); // Adjust path to your model
 
 const GetQuestions = async (req, res) => {
   try {

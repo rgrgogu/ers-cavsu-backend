@@ -1,5 +1,5 @@
-const CategoryGroupModel = require('../../../admin/evaluation/category/category.model.js'); // Adjust path to your model
-const QuestionModel = require("../../../admin/evaluation/question/question.model.js");   // Adjust path to your model
+const CategoryGroupModel = require('../../../admin/evaluation_category/category/category.model.js'); // Adjust path to your model
+const QuestionModel = require("../../../admin/evaluation_category/question/question.model.js");   // Adjust path to your model
 
 const GetCategoryGroups = async (req, res) => {
   try {
