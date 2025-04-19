@@ -12,6 +12,7 @@ const routes = [
     { api: "/api/student/eval_list", router: require('./src/student/evaluation_list/route.js') },
     { api: "/api/student/faculty_eval", router: require('./src/student/faculty_evaluation/route.js') },
     { api: "/api/student/checklist", router: require('./src/student/checklist/route.js') },
+    { api: "/api/student/grades", router: require('./src/student/grades/route.js') },
 
     // FACULTY
     { api: "/api/faculty/ctgy_groups", router: require('./src/faculty/evaluation_category/category/category.route.js') },
