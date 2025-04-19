@@ -16,6 +16,10 @@ const ChecklistController = {
                     select: 'courseCode',
                 })
                 .populate({
+                    path: 'years.semesters.first.grade_id years.semesters.second.grade_id years.semesters.third.grade_id years.semesters.midyear.grade_id',
+                    select: 'grade_status',
+                })
+                .populate({
                     path: 'program',
                     select: 'name',
                 })

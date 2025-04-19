@@ -6,7 +6,7 @@ const EnrollmentController = {
   GetEnrollmentByStudentId: async (req, res) => {
     try {
       const { student_id, school_year, semester } = req.query;
-      console.log("GetEnrollmentByStudentId", req.query);
+
       // Validate student_id
       if (!student_id) {
         return res.status(400).json({
