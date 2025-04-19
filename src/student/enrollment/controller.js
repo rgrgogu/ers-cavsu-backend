@@ -5,8 +5,8 @@ const EnrollmentController = {
   // Get enrollments for a specific student by student_id (using query parameter)
   GetEnrollmentByStudentId: async (req, res) => {
     try {
-      const { student_id, school_year, semester, year_level } = req.query;
-
+      const { student_id, school_year, semester } = req.query;
+      console.log("GetEnrollmentByStudentId", req.query);
       // Validate student_id
       if (!student_id) {
         return res.status(400).json({
@@ -25,7 +25,6 @@ const EnrollmentController = {
       const query = { student_id };
       if (school_year) query.school_year = school_year;
       if (semester) query.semester = semester;
-      if (year_level) query.year_level = parseInt(year_level);
 
       // Fetch enrollments with populated references
       const enrollments = await Enrollment.find(query)
