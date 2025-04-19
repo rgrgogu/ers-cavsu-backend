@@ -27,7 +27,7 @@ const EnrollmentController = {
       if (semester) query.semester = semester;
 
       // Fetch enrollments with populated references
-      const enrollments = await Enrollment.find(query)
+      const enrollments = await Enrollment.findOne(query)
         .populate({
           path: 'student_id',
           select: 'name profile_id_one user_id',
