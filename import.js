@@ -65,6 +65,7 @@ const routes = [
     { api: "/api/admin/w_offgroups", router: require('./src/admin/website/official_group/office/office.route.js') },
     { api: "/api/admin/w_hero", router: require('./src/admin/website/hero/hero.route.js') },
     { api: "/api/admin/school_years", router: require('./src/admin/school_year/route.js') },
+    { api: "/api/admin/school_year", router: require('./src/registrar/school_year/route.js') },
     { api: "/api/admin/programs", router: require('./src/admin/programs/route.js') },
     { api: "/api/admin/courses", router: require('./src/admin/course/course.route.js') },
     { api: "/api/admin/course_grps", router: require('./src/admin/course_group/route.js') },
