@@ -44,7 +44,7 @@ const GetExaminees = async (req, res) => {
         }
 
         const result = await User.aggregate([
-            { $match: { status: "For Exam", isArchived: false, batch_no: batchNo } },
+            { $match: { status: "For Exam", isArchived: false } },
             { $lookup: { from: "profile_ones", localField: "profile_id_one", foreignField: "_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
             {
@@ -54,6 +54,7 @@ const GetExaminees = async (req, res) => {
                     },
                     "profile.exam_details.date": date,
                     "profile.exam_details.time": time,
+                    "profile.exam_details.batch_no": batchNo
                 }
             },
             { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, lastname: "$name.lastname", venue: "$profile.exam_details.venue" } },
@@ -78,20 +79,23 @@ const GetApplicantsByProgram = async (req, res) => {
         }
 
         const result = await User.aggregate([
-            { $match: { status: status, isArchived: false, batch_no: batchNo } },
-            { $lookup: { from: "app_profiles", localField: "_id", foreignField: "user_id", as: "profile" } },
+            { $match: { status: status, isArchived: false } },
+            { $lookup: { from: "profile_ones", localField: "profile_id_one", foreignField: "_id", as: "profile" } },
             { $unwind: { path: "$profile", preserveNullAndEmptyArrays: true } },
             {
                 $match: {
                     "profile.application_details.applicant_type": {
                         $in: options[option]
                     },
-                    "profile.application_details.program": program
+                    "profile.application_details.program": program,
+                    "profile.exam_details.batch_no": batchNo
                 }
             },
             { $project: { control_no: "$user_id", name: { $concat: ["$name.lastname", ", ", { $ifNull: ["$name.firstname", ""] }, " ", { $ifNull: ["$name.middlename", ""] }, " ", { $ifNull: ["$name.extension", ""] }] }, batch_no: 1, lastname: "$name.lastname" } },
             { $sort: { lastname: 1 } },
         ]);
+
+        console.log(result)
 
         res.status(200).json(result);
     } catch (err) {
