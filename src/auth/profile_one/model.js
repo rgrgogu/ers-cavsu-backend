@@ -33,15 +33,15 @@ const personal_info = new Schema({
     virtuals: {
         fullAddress: {
             get() {
-                const address = this.applicant_profile
-
-                if (address !== null)
-                    return `${this.applicant_profile.address.house_num} ${this.applicant_profile.address.street}, Barangay ${this.applicant_profile.address.brgy}, ${this.applicant_profile.address.city}, ${this.applicant_profile.address.province}, ${this.applicant_profile.address.region}, ${this.applicant_profile.address.country}, ${this.applicant_profile.address.zip}`
-                else
-                    return null;
+                if (this.address) {
+                    return `${this.address.house_num || ''} ${this.address.street || ''}, Barangay ${this.address.brgy || ''}, ${this.address.city || ''}, ${this.address.province || ''}, ${this.address.region || ''}, ${this.address.country || ''}, ${this.address.zip || ''}`.trim();
+                }
+                return null;
             }
         }
     },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 })
 
 const fam_struct = new Schema({

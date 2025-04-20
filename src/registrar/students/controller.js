@@ -1,5 +1,7 @@
 const Student = require("../../auth/login/model")
-
+const Checklist = require("../checklist/model")
+const Enrollment = require("../enrollment/model")
+const mongoose = require('mongoose')
 const StudentController = {
     // List all Students
     get_new_firstyear: async (req, res) => {
@@ -22,6 +24,107 @@ const StudentController = {
             res.json(filteredStudents);
         } catch (error) {
             res.status(400).json({ message: "Error fetching students", error: error.message });
+        }
+    },
+
+    get_all_students: async (req, res) => {
+        try {
+            const students = await Student.find({ isArchived: false, role: "student" })
+                .populate('profile_id_one', 'application_details student_details applicant_profile')
+                .select("-password")
+                .sort({ user_id: 1 });
+
+            res.json(students);
+        } catch (error) {
+            res.status(400).json({ message: "Error fetching students", error: error.message });
+        }
+    },
+
+    get_checklist_by_student: async (req, res) => {
+        try {
+            const student_doc_id = req.params.id
+
+            const result = await Checklist.findOne({ student_id: student_doc_id })
+                .populate({
+                    path: 'years.semesters.first.course_id years.semesters.second.course_id years.semesters.third.course_id years.semesters.midyear.course_id',
+                    select: 'courseCode courseTitle credits',
+                })
+                .populate({
+                    path: 'years.semesters.first.pre_req_ids years.semesters.second.pre_req_ids years.semesters.third.pre_req_ids years.semesters.midyear.pre_req_ids',
+                    select: 'courseCode',
+                })
+                .populate({
+                    path: 'years.semesters.first.grade_id years.semesters.second.grade_id years.semesters.third.grade_id years.semesters.midyear.grade_id',
+                    select: 'grade grade_status',
+                    populate: {
+                        path: "school_year",
+                        select: "year"
+                    }
+                })
+                .populate({
+                    path: 'program',
+                    select: 'name',
+                })
+                .lean();
+
+            if (!result) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Checklist not found',
+                });
+            }
+
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({
+                success: false,
+                message: 'Error fetching checklist',
+                error: error.message,
+            });
+        }
+    },
+
+    get_enrollment_by_student_id: async (req, res) => {
+        try {
+            const { student_id, school_year, semester } = req.query;
+
+            // Fetch enrollment with populated references
+            const enrollment = await Enrollment.findOne({ student_id, school_year, semester })
+                .populate({
+                    path: 'enrolled_courses.details',
+                    select: 'course_id schedule_id',
+                    populate: [
+                        {
+                            path: 'course_id',
+                            select: 'courseCode courseTitle credits' // Select specific fields from courses
+                        },
+                        {
+                            path: 'schedule_id',
+                            select: 'day_time', // Select day_time from schedules
+                            populate: {
+                                path: "day_time.room",
+                                select: "name"
+                            }
+                        }
+                    ]
+                })
+                .populate('section_id', 'section_code')
+                .populate('school_year', 'year');
+
+            if (!enrollment) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'No enrollment found for this student'
+                });
+            }
+
+            return res.status(200).json(enrollment);
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: 'Failed to retrieve enrollment for student',
+                error: error.message
+            });
         }
     },
 }
