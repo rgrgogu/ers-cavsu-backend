@@ -38,7 +38,6 @@ const routes = [
     { api: "/api/registrar/enrollment_details", router: require('./src/registrar/enrollment_details/route.js') },
     { api: "/api/registrar/rooms", router: require('./src/registrar/rooms/route.js') },
     { api: "/api/registrar/faculty", router: require('./src/registrar/faculty/route.js') },
-    { api: "/api/registrar/eval_list", router: require('./src/registrar/evaluation_list/route.js') },
     { api: "/api/registrar/ctgy_groups", router: require('./src/registrar/evaluation_category/category/category.route.js') },
    
     // ADMISSION
@@ -72,7 +71,7 @@ const routes = [
     { api: "/api/admin/users", router: require('./src/admin/users/route.js') },
     { api: "/api/admin/ctgy_groups", router: require('./src/admin/evaluation_category/category/category.route.js') },
     { api: "/api/admin/ctgy_questions", router: require('./src/admin/evaluation_category/question/question.route.js') },
-
+    { api: "/api/admin/eval_list", router: require('./src/admin/evaluation_list/route.js') },
     // PUBLIC API
     { api: "/api/public", router: require('./src/admin/website/public/public.router.js') },
 ]

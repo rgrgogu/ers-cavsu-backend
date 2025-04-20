@@ -3,7 +3,10 @@ const Info = require("./cavsu_info.model");
 const GetCavsuInfo = async (req, res) => {
   try {
     const result = await Info.find();
-    res.status(200).json( result[0] );
+    if (result.length === 0) {
+      return res.status(200).json(null);
+    }
+    return res.status(200).json( result[0] );
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
