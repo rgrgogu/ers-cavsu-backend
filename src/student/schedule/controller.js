@@ -4,10 +4,10 @@ const EnrollmentDetails = require('../../registrar/enrollment_details/model'); /
 const EnrollmentDetailsController = {
     GetCoursesByStudent: async (req, res) => {
         try {
-            const { course_ids, school_year, semester } = req.query;
+            const { section_id, course_ids, school_year, semester } = req.query;
     
             // Validate required query parameters
-            if (!course_ids || !school_year || !semester) {
+            if (!section_id || !course_ids || !school_year || !semester) {
                 return res.status(400).json({
                     success: false,
                     message: 'course_ids, school_year, and semester are required in query parameters'
@@ -35,6 +35,7 @@ const EnrollmentDetailsController = {
             // Query EnrollmentDetails using the list of course_ids
             const courses = await EnrollmentDetails
                 .find({
+                    section_id,
                     course_id: { $in: courseIdArray },
                     school_year,
                     semester
