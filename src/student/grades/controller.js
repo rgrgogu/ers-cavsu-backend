@@ -23,10 +23,16 @@ const GradeController = {
                 {
                     path: `years.semesters.${semester}.grade_id`,
                     select: 'grade grade_status',
-                    populate: {
-                        path: 'faculty_id',
-                        select: 'name'
-                    }
+                    populate: [
+                        {
+                            path: 'faculty_id',
+                            select: 'name'
+                        },
+                        {
+                            path: 'section_id',
+                            select: 'section_code'
+                        }
+                    ]
                 }
             ]);
 
