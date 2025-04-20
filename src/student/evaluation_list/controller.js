@@ -1,4 +1,4 @@
-const FacultyEvaluation = require('../../registrar/evaluation_list/model'); // Adjust path as needed
+const FacultyEvaluation = require('../../admin/evaluation_list/model'); // Adjust path as needed
 const mongoose = require('mongoose');
 
 
