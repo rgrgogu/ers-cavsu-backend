@@ -84,6 +84,56 @@ const StudentController = {
         }
     },
 
+    get_gradeslip_by_sem_yrlvl: async (req, res) => {
+        const { checklist_id, year, semester } = req.query;
+    
+        try {
+            // Dynamically construct populate paths
+            const coursePath = `years.semesters.${semester}.course_id`;
+            const preReqPath = `years.semesters.${semester}.pre_req_ids`;
+            const gradePath = `years.semesters.${semester}.grade_id`;
+    
+            const checklist = await Checklist.findById(checklist_id)
+                .populate({
+                    path: coursePath,
+                    select: 'courseCode courseTitle credits',
+                })
+                .populate({
+                    path: preReqPath,
+                    select: 'courseCode',
+                })
+                .populate({
+                    path: gradePath,
+                    select: 'grade grade_status',
+                })
+                .populate({
+                    path: 'program',
+                    select: 'name',
+                });
+    
+            if (!checklist) {
+                return res.status(404).json({ message: 'Checklist not found' });
+            }
+    
+            // Find the specific year level
+            const yearData = checklist.years.find(y => y.year === year);
+            if (!yearData) {
+                return res.status(404).json({ message: `Year '${year}' not found` });
+            }
+    
+            // Get the semester data
+            const semesterData = yearData.semesters[semester];
+            if (!semesterData) {
+                return res.status(404).json({ message: `Semester '${semester}' not found` });
+            }
+    
+            res.json(semesterData);
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({ message: 'Server error' });
+        }
+    },
+
     get_enrollment_by_student_id: async (req, res) => {
         try {
             const { student_id, school_year, semester } = req.query;
