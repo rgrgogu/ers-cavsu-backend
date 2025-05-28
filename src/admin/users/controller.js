@@ -167,7 +167,7 @@ const UserController = {
       // Process students and collect password hashing promises
       const studentPromises = studentsIds.map(async (student, index) => {
         const count = currentCount + index;
-        const paddedCount = count.toString().padStart(6, '0');
+        const paddedCount = count.toString().padStart(4, '0');
         const user_id = `ST${year}${paddedCount}`;
         const username = user_id;
 

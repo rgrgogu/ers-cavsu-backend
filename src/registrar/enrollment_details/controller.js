@@ -95,13 +95,6 @@ const EnrollmentDetailsController = {
                 })
                 .exec();
 
-            if (!courses.length) {
-                return res.status(404).json({
-                    success: false,
-                    message: 'No courses found for the specified criteria'
-                });
-            }
-
             res.status(200).json({
                 success: true,
                 data: courses
