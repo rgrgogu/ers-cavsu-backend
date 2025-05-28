@@ -348,11 +348,12 @@ const EnrollmentController = {
       );
 
       // 3. Increment enrolled_count for each referenced enrollment_details
-      await EnrollmentDetails.updateMany(
-        { course_id: { $in: enrolledDetailsCourseIds } },
-        { $inc: { enrolled_count: 1 } },
-        { session }
-      );
+      // Fix tommorrow
+      // await EnrollmentDetails.updateMany(
+      //   { course_id: { $in: enrolledDetailsCourseIds } },
+      //   { $inc: { enrolled_count: 1 } },
+      //   { session }
+      // );
 
       await session.commitTransaction();
       session.endSession();
