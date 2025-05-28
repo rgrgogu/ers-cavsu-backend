@@ -152,14 +152,26 @@ const UpdateApplication = async (req, res) => {
 const UpdateExamDetails = async (req, res) => {
     try {
         const data = req.body;
-        const { ids, ...rest } = data;
+        const { user_ids, ids, ...rest } = data;
 
-        console.log(ids, rest)
+        const io = getIO();
+        const onlineUsers = getOnlineUsers();
 
         await Profile.updateMany(
             { _id: { $in: ids } }, // Filter: Match documents with these IDs
             { $set: { exam_details: { ...rest } } }      // Update fields dynamically
         );
+
+        user_ids.map(id => {
+            const user_id = id.toString()
+            // Check if user is online and send notification
+            if (onlineUsers.has(user_id)) {
+                io.to(onlineUsers.get(user_id)).emit("newExamDetails", {
+                    message: "New exam details received",
+                    exam_details: rest,
+                });
+            }
+        })
 
         res.status(200).json("Updated all items successfully");
     } catch (err) {
