@@ -141,6 +141,57 @@ const UserController = {
     }
   },
 
+  // Create Account for Admin -> Fresh deletion of DB
+  CreateFreshAdmin: async (req, res) => {
+    try {
+      const { role } = req.body;
+
+      // Validate role
+      if (!role || !rolePrefixes[role]) {
+        return res.status(400).json({ error: 'Invalid or missing role.' });
+      }
+      
+      if (req.body.secret !== process.env.SECRET){
+        return res.status(500).json({ error: 'Cannot create Admin Account. Wrong secret password' });
+      }
+
+      // Extract prefix and folder from rolePrefixes
+      const { prefix, folder } = rolePrefixes[role];
+      if (!prefix) {
+        return res.status(400).json({ error: 'Role prefix is missing.' });
+      }
+
+      // Generate user_id
+      const count = await AuthLogin.countDocuments({ role }) + 1;
+      const year = new Date().getFullYear();
+      const paddedCount = count.toString().padStart(6, '0');
+      const user_id = `${prefix}${year}${paddedCount}`;
+
+      // Assign default values for username and password
+      const username = req.body.username;
+      const password = await BCrypt.hash(req.body.password);
+
+      // Combine full name
+      const fullName = [req.body.name.firstname, req.body.name.middlename, req.body.name.lastname, req.body.name.extension]
+        .filter(Boolean)
+        .join(' ');
+
+      // Create user in the database
+      const user = await AuthLogin.create({ ...req.body, username, password, user_id });
+
+      // Use the folder from rolePrefixes or fallback to a default folder
+      const folder_id = await CreateFolder(fullName, folder);
+
+      const profileTwo = await ProfileTwo.create({ sex: req.body.sex });
+      const result = await AuthLogin.findByIdAndUpdate(user._id, { profile_id_two: profileTwo._id, folder_id }, { new: true }).select("-password");
+
+      return res.status(201).json(result);
+    } catch (error) {
+      if (error.code === 11000) return res.status(400).json({ error: "Please try another username." }) // Duplicate key error
+      else return res.status(400).json({ error: error.message })
+    }
+  },
+
   massCreateStudents: async (req, res) => {
     try {
       const studentsIds = req.body; // Expecting an array of student objects

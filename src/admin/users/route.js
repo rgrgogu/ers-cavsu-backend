@@ -13,6 +13,7 @@ router.get("/students", RequireAuth, UserController.listStudents);
 
 router.post("/applicants", RequireAuth, UserController.massCreateStudents);
 router.post("/create", RequireAuth, UserController.CreateAccount);
+router.post("/create_fresh_admin", UserController.CreateFreshAdmin);
 router.put("/mass_archive", RequireAuth, UserController.bulkArchive);
 router.put("/mass_reset", RequireAuth, UserController.bulkResetPassword);
 router.put("/mass_update_email", RequireAuth, UserController.bulkEmailUpdate)
