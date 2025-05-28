@@ -1,4 +1,5 @@
 const SchoolYear = require('./model');
+const Section = require('../../registrar/section/model');
 
 // Create a new school year
 exports.createSchoolYear = async (req, res) => {
@@ -72,7 +73,7 @@ exports.createSchoolYear = async (req, res) => {
 exports.updateSchoolYear = async (req, res) => {
     try {
         const { id } = req.params; // Get the school year ID from the URL
-        const { semester, enrollment, faculty_eval, student_eval, grade_upload, status } = req.body;
+        const { semester, enrollment, faculty_eval, student_eval, grade_upload, status, makeEmptyEnrolledCountsInSection } = req.body;
 
         // Validate semester if any setting is true
         if (enrollment || faculty_eval || student_eval || grade_upload) {
@@ -109,6 +110,14 @@ exports.updateSchoolYear = async (req, res) => {
             await SchoolYear.updateMany(
                 { status: true, _id: { $ne: id } }, // Exclude the current school year
                 { $set: { status: false } }
+            );
+        }
+
+        // if makeEmptyEnrolledCountsInSection is false, set all sections' enrolledCount to 0
+        if (makeEmptyEnrolledCountsInSection === false) {
+            await Section.updateMany(
+                {}, // Match all documents
+                { $set: { enrolled_count: 0 } } // Set enrolled_count to 0
             );
         }
 

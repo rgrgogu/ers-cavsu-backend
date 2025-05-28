@@ -7,7 +7,9 @@ const RequireAuth = require("../../../global/middleware/RequireAuth");
 // Routes
 router.get('/', RequireAuth, enrollmentController.GetEnrollmentAll);
 router.get('/:id', RequireAuth, enrollmentController.GetEnrollmentById);
+router.get('/get_all_enrolled_courses/:student_id', RequireAuth, enrollmentController.GetAllEnrolledCourses);
 router.post('/mass', RequireAuth, enrollmentController.MassCreateEnlistment);
+router.post('/mass_old', RequireAuth, enrollmentController.MassCreateEnlistmentOld);
 router.put("/update_to_enrolled", RequireAuth, enrollmentController.UpdateToEnrolled)
 router.put('/:id', RequireAuth, enrollmentController.EditEnrollment);
 

@@ -74,7 +74,7 @@ const LoginController = {
             const folder_id = await CreateFolder(fullName, process.env.APPLICANT_STUDENT_GDRIVE_FOLDER);
 
             // Create profile based on role
-            const profileOne = await ProfileOne.create({});
+            const profileOne = await ProfileOne.create({ user_id: user._id });
             await User.findByIdAndUpdate(user._id, { profile_id_one: profileOne._id, folder_id });
 
             res.status(201).json({ message: 'User created successfully.' });
