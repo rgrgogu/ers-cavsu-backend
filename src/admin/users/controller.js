@@ -402,7 +402,43 @@ const UserController = {
     }
   },
 
+  mass_update_year_level: async (req, res) => {
+    try {
+      const students = req.body; // Expecting an array of student objects
 
+      // Validate that students is an array
+      if (!Array.isArray(students)) {
+        return res.status(400).json({ message: 'Input must be an array of students' });
+      }
+
+      // Check if the array is empty
+      if (students.length === 0) {
+        return res.status(400).json({ message: 'No students provided' });
+      }
+
+      // Prepare bulk operations for ProfileOne updates
+      const profileBulkOps = students.map(student => ({
+        updateOne: {
+          filter: { _id: student.profile_id },
+          update: { $set: { "student_details.year_level": student.year_level } },
+          upsert: false, // Set to true if you want to create new documents when no match is found
+        },
+      }));
+
+      // Execute bulk write for ProfileOne
+      const profileResult = await ProfileOne.bulkWrite(profileBulkOps);
+
+      res.status(200).json({
+        message: 'Year levels updated successfully',
+        data: students,
+        count: students.length,
+        profileBulkWriteResult: profileResult,
+      });
+
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  }
 };
 
 module.exports = UserController;

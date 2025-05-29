@@ -56,14 +56,25 @@ const EnrollmentController = {
 
   GetAllEnrolledCourses: async (req, res) => {
     try {
-      const enrollments = await Enrollment.find({ student_id: req.params.student_id })
+      const { student_id } = req.params;
+      const { semester, school_year, year_level } = req.query;
+
+      // Base query: required field
+      const query = { student_id };
+
+      // Optional filters
+      if (semester) query.semester = semester;
+      if (school_year) query.school_year = school_year;
+      if (year_level) query.year_level = parseInt(year_level);
+
+      const enrollments = await Enrollment.find(query)
         .populate('enrolled_courses.details', 'course_id')
         .populate('enrolled_courses.enlisted_by', 'name')
         .populate('enrolled_courses.enrolled_by', 'name')
-        .populate('section_id', 'section_code') // Adjust fields as needed
-        .populate('school_year', 'year') // Adjust fields as needed
+        .populate('section_id', 'section_code')
+        .populate('school_year', 'year');
 
-      res.status(200).json(enrollments)
+      res.status(200).json(enrollments);
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -348,12 +359,12 @@ const EnrollmentController = {
       );
 
       // 3. Increment enrolled_count for each referenced enrollment_details
-      // Fix tommorrow
-      // await EnrollmentDetails.updateMany(
-      //   { course_id: { $in: enrolledDetailsCourseIds } },
-      //   { $inc: { enrolled_count: 1 } },
-      //   { session }
-      // );
+      // Fix tommorrow TAGGED
+      await EnrollmentDetails.updateMany(
+        { course_id: { $in: enrolledDetailsCourseIds } },
+        { $inc: { enrolled_count: 1 } },
+        { session }
+      );
 
       await session.commitTransaction();
       session.endSession();

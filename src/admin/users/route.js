@@ -17,5 +17,6 @@ router.post("/create_fresh_admin", UserController.CreateFreshAdmin);
 router.put("/mass_archive", RequireAuth, UserController.bulkArchive);
 router.put("/mass_reset", RequireAuth, UserController.bulkResetPassword);
 router.put("/mass_update_email", RequireAuth, UserController.bulkEmailUpdate)
+router.put("/mass_update_year_level", RequireAuth, UserController.mass_update_year_level)
 
 module.exports = router;

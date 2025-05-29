@@ -105,9 +105,9 @@ const StudentController = {
 
         try {
             // Validate semester
-            if (semester !== 'second') {
-                return res.status(400).json({ message: 'This endpoint only supports second semester checks' });
-            }
+            // if (semester !== 'second') {
+            //     return res.status(400).json({ message: 'This endpoint only supports second semester checks' });
+            // }
 
             // Fetch checklist with all relevant populations
             const checklist = await Checklist.findOne({ student_id })
@@ -144,13 +144,21 @@ const StudentController = {
                 return res.status(404).json({ message: `Semester '${semester}' not found` });
             }
 
-            // Collect all courses from all semesters in the same year for prerequisite checks
-            const allSemCourses = [
-                ...(yearData.semesters.first || []),
-                ...(yearData.semesters.second || []),
-                ...(yearData.semesters.third || []),
-                ...(yearData.semesters.midyear || [])
-            ];
+            // Collect all courses with grade_id from all semesters in the same year
+            const allSemCourses = [];
+
+            checklist.years.forEach(year => {
+                ['first', 'second', 'third', 'midyear'].forEach(sem => {
+                    const semData = year.semesters[sem];
+                    if (semData && Array.isArray(semData)) {
+                        semData.forEach(course => {
+                            if (course.grade_id) {
+                                allSemCourses.push(course);
+                            }
+                        });
+                    }
+                });
+            });
 
             const studentStatus = allSemCourses.some(semCourse => semCourse.grade_id?.grade_status === 'Failed')
                 ? "Irregular"
@@ -189,7 +197,7 @@ const StudentController = {
             // Prepare response
             const responseData = {
                 courses,
-                studentStatus
+                studentStatus,
             };
 
             res.json(responseData);
