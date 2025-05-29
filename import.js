@@ -1,4 +1,9 @@
 const routes = [
+    // DASHBOARD TALLY (ADMIN, ADMISSION, REGISTRAR)
+    { api: "/api/dashboard/admin", router: require('./src/dashboard/admin/route.js') },
+    { api: "/api/dashboard/admission", router: require('./src/dashboard/admission/route.js') },
+    { api: "/api/dashboard/registrar", router: require('./src/dashboard/registrar/route.js') },   
+
     // AUTHENTICATION AND PROFILE
     { api: "/api/auth", router: require('./src/auth/login/route.js') },
     { api: "/api/applicant/profile", router: require('./src/auth/profile_one/route.js') },
