@@ -34,10 +34,7 @@ const StudentController = {
                 .select("-password")
                 .sort({ user_id: 1 });
 
-            const filteredStudents = students.filter(student => {
-                const details = student.profile_id_one?.student_details;
-                return details?.student_type === "Old"
-            });
+            const filteredStudents = students.filter(student => student.profile_id_one?.enrollment_id !== null);
 
             res.json(filteredStudents);
         } catch (error) {
@@ -105,13 +102,13 @@ const StudentController = {
     get_checklist_by_student_sem: async (req, res) => {
         const { year, semester } = req.query;
         const student_id = req.params.id;
-    
+
         try {
             // Validate semester
             if (semester !== 'second') {
                 return res.status(400).json({ message: 'This endpoint only supports second semester checks' });
             }
-    
+
             // Fetch checklist with all relevant populations
             const checklist = await Checklist.findOne({ student_id })
                 .populate({
@@ -130,23 +127,23 @@ const StudentController = {
                     path: 'program',
                     select: 'name',
                 });
-    
+
             if (!checklist) {
                 return res.status(404).json({ message: 'Checklist not found' });
             }
-    
+
             // Find the specific year level
             const yearData = checklist.years.find(y => y.year === year);
             if (!yearData) {
                 return res.status(404).json({ message: `Year '${year}' not found` });
             }
-    
+
             // Get the semester data
             const semesterData = yearData.semesters[semester];
             if (!semesterData) {
                 return res.status(404).json({ message: `Semester '${semester}' not found` });
             }
-    
+
             // Collect all courses from all semesters in the same year for prerequisite checks
             const allSemCourses = [
                 ...(yearData.semesters.first || []),
@@ -154,11 +151,15 @@ const StudentController = {
                 ...(yearData.semesters.third || []),
                 ...(yearData.semesters.midyear || [])
             ];
-    
+
+            const studentStatus = allSemCourses.some(semCourse => semCourse.grade_id?.grade_status === 'Failed')
+                ? "Irregular"
+                : "Regular";
+
             // Map through second semester courses and determine canEnlist for each
             const courses = semesterData.map(course => {
                 let canEnlist = true;
-    
+
                 // Check if the course has prerequisites
                 if (course.pre_req_ids && course.pre_req_ids.length > 0) {
                     for (const preReqId of course.pre_req_ids) {
@@ -166,7 +167,7 @@ const StudentController = {
                         const preReqCourse = allSemCourses.find(semCourse =>
                             semCourse.course_id && semCourse.course_id.equals(preReqId)
                         );
-    
+
                         // If prerequisite course or its grade is missing, or grade_status is not 'Passed', cannot enlist
                         if (!preReqCourse || !preReqCourse.grade_id || preReqCourse.grade_id.grade_status !== 'Passed') {
                             canEnlist = false;
@@ -174,22 +175,23 @@ const StudentController = {
                         }
                     }
                 }
-    
+
                 return {
                     course_id: course.course_id,
                     pre_req_ids: course.pre_req_ids,
                     pre_req_strings: course.pre_req_strings,
                     grade_id: course.grade_id,
                     eval_id: course.eval_id,
-                    canEnlist
+                    canEnlist,
                 };
             });
-    
+
             // Prepare response
             const responseData = {
-                courses
+                courses,
+                studentStatus
             };
-    
+
             res.json(responseData);
         } catch (err) {
             console.error(err);

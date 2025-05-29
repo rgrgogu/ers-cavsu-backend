@@ -5,42 +5,66 @@ const Profile = require("../../auth/profile_one/model");
 const EnrollmentDetailsController = require('../enrollment_details/controller');
 const ChecklistController = require('../checklist/controller');
 const Section = require("../section/model")
+const Students = require('../../auth/login/model');
 
 const EnrollmentController = {
   // Get all enrollments with optional filters
   GetEnrollmentAll: async (req, res) => {
     try {
-      const { school_year, semester, year_level } = req.query;
-
-      const query = {
-        school_year,
-        semester,
-        year_level,
-      }
-
-      // Fetch enrollments with populated references
-      const enrollments = await Enrollment.find(query)
+      const students = await Students.find({ role: 'student', isArchived: false })
+        .populate('profile_id_one', 'application_details student_details')
         .populate({
-          path: 'student_id',
-          select: 'name profile_id_one user_id',
+          path: 'profile_id_one',
+          select: 'application_details student_details',
           populate: {
-            path: 'profile_id_one',
-            select: 'application_details student_details'
+            path: 'student_details.section_id',
+            select: 'section_code'
           }
         })
+
+
+      // // Fetch enrollments with populated references
+      // const enrollments = await Enrollment.find({})
+      //   .populate({
+      //     path: 'student_id',
+      //     select: 'name profile_id_one user_id',
+      //     populate: {
+      //       path: 'profile_id_one',
+      //       select: 'application_details student_details'
+      //     }
+      //   })
+      //   .populate('enrolled_courses.details', 'course_id')
+      //   .populate('enrolled_courses.enlisted_by', 'name')
+      //   .populate('enrolled_courses.enrolled_by', 'name')
+      //   .populate('section_id', 'section_code') // Adjust fields as needed
+      //   .populate('school_year', 'year') // Adjust fields as needed
+
+      return res.status(200).json({
+        success: true,
+        data: students,
+        message: `Retrieved ${students.length} enrollments`
+      });
+    } catch (error) {
+      console.error('Error in GetEnrollmentAll:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve enrollments',
+        error: error.message
+      });
+    }
+  },
+
+  GetAllEnrolledCourses: async (req, res) => {
+    try {
+      const enrollments = await Enrollment.find({ student_id: req.params.student_id })
         .populate('enrolled_courses.details', 'course_id')
         .populate('enrolled_courses.enlisted_by', 'name')
         .populate('enrolled_courses.enrolled_by', 'name')
         .populate('section_id', 'section_code') // Adjust fields as needed
         .populate('school_year', 'year') // Adjust fields as needed
 
-      return res.status(200).json({
-        success: true,
-        data: enrollments,
-        message: `Retrieved ${enrollments.length} enrollments`
-      });
+      res.status(200).json(enrollments)
     } catch (error) {
-      console.error('Error in GetEnrollmentAll:', error);
       return res.status(500).json({
         success: false,
         message: 'Failed to retrieve enrollments',
@@ -150,6 +174,105 @@ const EnrollmentController = {
     }
   },
 
+  // Create multiple enrollment records efficiently using bulkWrite
+  MassCreateEnlistmentOld: async (req, res) => {
+    try {
+      const { enrollment, profile } = req.body;
+      const {
+        student_id,
+        section_id,
+        school_year,
+        semester,
+        year_level,
+        user,
+        courses,
+        student_type,
+        student_status
+      } = enrollment;
+
+      if (!student_id || !profile) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing student_id or profile data'
+        });
+      }
+
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Step 1: Create Enrollment Details
+        const enrolledCoursesIds = await EnrollmentDetailsController.MassCreateEnlistmentDetails(
+          courses, school_year, semester, user, section_id, session
+        );
+
+        // Step 2: Create Enrollment
+        const enrollmentId = new mongoose.Types.ObjectId();
+        await Enrollment.create([{
+          _id: enrollmentId,
+          student_id,
+          section_id,
+          school_year,
+          semester,
+          year_level,
+          enrolled_courses: enrolledCoursesIds.map(id => ({
+            details: id,
+            enrollment_status: 'Enlisted',
+            enlisted_by: user,
+            updated_by: user,
+            date_enlisted: new Date()
+          }))
+        }], { session });
+
+        // Step 3: Update Profile
+        await Profile.updateOne(
+          { _id: profile },
+          {
+            $set: {
+              'student_details.enrollment_id': enrollmentId,
+              'student_details.section_id': section_id,
+              'student_details.student_status': student_status,
+              'student_details.student_type': student_type
+            }
+          },
+          { session }
+        );
+
+        // Step 4: Update Section Count
+        await Section.findByIdAndUpdate(
+          section_id,
+          { $inc: { enrolled_count: 1 } },
+          { session }
+        );
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({
+          success: true,
+          data: {
+            enrollmentId,
+            message: `Enrollment created and profile updated`
+          }
+        });
+
+      } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+      }
+
+    } catch (error) {
+      console.error('Error in MassCreateEnlistmentSingle:', error);
+      const status = error.name === 'ValidationError' || error.code === 11000 ? 400 : 500;
+      return res.status(status).json({
+        success: false,
+        message: 'Failed to create enrollment or update profile',
+        error: error.message
+      });
+    }
+  },
+
   UpdateToEnrolledFirstYear: async (req, res) => {
     const { student_ids, enrolled_by } = req.body;
 
@@ -207,7 +330,7 @@ const EnrollmentController = {
     session.startTransaction();
     try {
       const { doc_id, enrolledCoursesIds, enrolledDetailsCourseIds, user } = req.body;
-  
+
       // 1. Update enrollment status and metadata
       const updatedEnrollment = await Enrollment.updateOne(
         { _id: doc_id },
@@ -223,23 +346,24 @@ const EnrollmentController = {
           session
         }
       );
-  
+
       // 3. Increment enrolled_count for each referenced enrollment_details
-      await EnrollmentDetails.updateMany(
-        { course_id: { $in: enrolledDetailsCourseIds } },
-        { $inc: { enrolled_count: 1 } },
-        { session }
-      );
-  
+      // Fix tommorrow
+      // await EnrollmentDetails.updateMany(
+      //   { course_id: { $in: enrolledDetailsCourseIds } },
+      //   { $inc: { enrolled_count: 1 } },
+      //   { session }
+      // );
+
       await session.commitTransaction();
       session.endSession();
-  
+
       return res.status(200).json({
         success: true,
         message: 'Enrollment status updated and count incremented',
         data: updatedEnrollment
       });
-  
+
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
@@ -250,7 +374,7 @@ const EnrollmentController = {
         error: error.message
       });
     }
-  },  
+  },
 
   // Edit an existing enrollment by ID
   EditEnrollment: async (req, res) => {
