@@ -11,7 +11,7 @@ const obj = {
 }
 
 const DetermineGradeStatus = (grade) => {
-    const failingGrades = ['5.00', 'DRP', 'W', 'INC'];
+    const failingGrades = ['5.00', 'DRP'];
     return failingGrades.includes(grade) ? 'Failed' : 'Passed';
 }
 
