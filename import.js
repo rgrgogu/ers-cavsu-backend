@@ -79,6 +79,7 @@ const routes = [
     { api: "/api/admin/ctgy_groups", router: require('./src/admin/evaluation_category/category/category.route.js') },
     { api: "/api/admin/ctgy_questions", router: require('./src/admin/evaluation_category/question/question.route.js') },
     { api: "/api/admin/eval_list", router: require('./src/admin/evaluation_list/route.js') },
+    
     // PUBLIC API
     { api: "/api/public", router: require('./src/admin/website/public/public.router.js') },
 ]

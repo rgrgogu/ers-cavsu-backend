@@ -44,6 +44,62 @@ const DashboardAdminController = {
       res.status(400).json({ message: "Error fetching user counts", error: error.message });
     }
   },
+
+  getLandingCounts: async (req, res) => {
+    try {
+      // Count students
+      const studentCount = await AuthLogin.countDocuments({ role: "student" });
+
+      // Aggregate unique staff by full name
+      const staffAggregation = await AuthLogin.aggregate([
+        {
+          $match: {
+            role: { $in: ["admin", "admission", "faculty", "registrar"] }
+          }
+        },
+        {
+          $addFields: {
+            fullName: {
+              $concat: [
+                { $ifNull: ["$name.firstname", ""] },
+                " ",
+                { $ifNull: ["$name.middlename", ""] },
+                " ",
+                { $ifNull: ["$name.lastname", ""] },
+                " ",
+                { $ifNull: ["$name.extension", ""] }
+              ]
+            }
+          }
+        },
+        {
+          $group: {
+            _id: "$fullName"
+          }
+        },
+        {
+          $count: "total"
+        }
+      ]);
+
+      const staffCount = staffAggregation[0]?.total || 0;
+
+      // Count programs
+      const programCount = await Programs.countDocuments();
+
+      // Respond
+      res.status(200).json({
+        programs: programCount,
+        students: studentCount,
+        staffs: staffCount,
+      });
+    } catch (error) {
+      res.status(400).json({
+        message: "Error fetching landing counts",
+        error: error.message
+      });
+    }
+  }
 };
 
 module.exports = DashboardAdminController;
