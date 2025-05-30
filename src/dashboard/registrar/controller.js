@@ -52,7 +52,6 @@ const RegistrarDashboardController = {
         students,
       };
 
-      console.log(response);
       res.status(200).json(response);
     } catch (error) {
       res.status(400).json({ message: "Error fetching registrar dashboard counts", error: error.message });
