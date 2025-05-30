@@ -261,22 +261,27 @@ const StudentController = {
         try {
             const { student_id, school_year, semester } = req.query;
 
+            // Build dynamic query
+            const query = { student_id };
+            if (school_year) query.school_year = school_year;
+            if (semester) query.semester = semester;
+
             // Fetch enrollment with populated references
-            const enrollment = await Enrollment.findOne({ student_id, school_year })
+            const enrollment = await Enrollment.findOne(query)
                 .populate({
                     path: 'enrolled_courses.details',
                     select: 'course_id schedule_id',
                     populate: [
                         {
                             path: 'course_id',
-                            select: 'courseCode courseTitle credits' // Select specific fields from courses
+                            select: 'courseCode courseTitle credits'
                         },
                         {
                             path: 'schedule_id',
-                            select: 'day_time', // Select day_time from schedules
+                            select: 'day_time',
                             populate: {
-                                path: "day_time.room",
-                                select: "name"
+                                path: 'day_time.room',
+                                select: 'name'
                             }
                         }
                     ]
