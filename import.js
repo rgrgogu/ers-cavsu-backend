@@ -57,6 +57,7 @@ const routes = [
     { api: "/api/applicant/notif", router: require('./src/applicant/app_notification/notification.route.js') },
     { api: "/api/applicant/surveys", router: require('./src/applicant/survey/survey.route.js') },
     { api: "/api/applicant/programs", router: require('./src/applicant/programs/route.js') },
+     { api: "/api/applicant/profile", router: require('./src/applicant/profile/route.js') },
 
     // ADMIN
     { api: "/api/admin/w_adguide", router: require('./src/admin/website/admission_guide/admission_guide.route.js') },

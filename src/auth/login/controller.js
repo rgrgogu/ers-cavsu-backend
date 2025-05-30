@@ -47,6 +47,25 @@ const LoginController = {
         }
     },
 
+    // Get user details by ID
+    GetUserById: async (req, res) => {
+        try {
+            const { id } = req.params;
+
+            const user = await User.findById(id)
+                .populate('profile_id_one'); // Optional: Populate profile if needed
+
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            return res.status(200).json({ user });
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    },
+
+
     // Register function for applicant
     Register: async (req, res) => {
         try {
