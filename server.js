@@ -18,7 +18,7 @@ const server = SocketIO(app)
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://cvsu-ers.netlify.app",
+    "https://cvsu-bacoor.netlify.app",
     "https://ers-cavsu-frontend.vercel.app",
     "https://drive.google.com",
     "https://ominous-space-spoon-jvvj6rg54pw2q5jr-8080.app.github.dev"

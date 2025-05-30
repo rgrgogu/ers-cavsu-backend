@@ -11,7 +11,7 @@ const SocketIO = (app) => {
         cors: {
             origin: [
                 "http://localhost:5173",
-                "https://cvsu-ers.netlify.app",
+                "https://cvsu-bacoor.netlify.app",
                 "https://ers-cavsu-frontend.vercel.app",
                 "https://drive.google.com"
             ],
