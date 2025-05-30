@@ -84,25 +84,25 @@ exports.updateSchoolYear = async (req, res) => {
                 });
             }
 
-            // Check if another school year has the same semester with any setting enabled
-            const existingSchoolYear = await SchoolYear.findOne({
-                _id: { $ne: id }, // Exclude the current school year
-                semester,
-                isArchived: false,
-                $or: [
-                    { enrollment: true },
-                    { faculty_eval: true },
-                    { student_eval: true },
-                    { grade_upload: true },
-                ],
-            });
+            // // Check if another school year has the same semester with any setting enabled
+            // const existingSchoolYear = await SchoolYear.findOne({
+            //     _id: { $ne: id }, // Exclude the current school year
+            //     semester,
+            //     isArchived: false,
+            //     $or: [
+            //         { enrollment: true },
+            //         { faculty_eval: true },
+            //         { student_eval: true },
+            //         { grade_upload: true },
+            //     ],
+            // });
 
-            if (existingSchoolYear) {
-                return res.status(400).json({
-                    success: false,
-                    message: `Another school year already has settings enabled for the ${semester} semester`,
-                });
-            }
+            // if (existingSchoolYear) {
+            //     return res.status(400).json({
+            //         success: false,
+            //         message: `Another school year already has settings enabled for the ${semester} semester`,
+            //     });
+            // }
         }
 
         // If the updated school year has status: true, set all other school years' status to false

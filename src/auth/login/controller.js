@@ -72,7 +72,7 @@ const LoginController = {
             const role = "applicant"
 
             // Generate user_id
-            const count = await User.countDocuments({ role }) + 1;
+            const count = await User.countDocuments({ role: { $in: ['applicant', 'student']} }) + 1;
             const year = new Date().getFullYear();
             const paddedCount = count.toString().padStart(6, '0');
             const user_id = `AP${year}${paddedCount}`;

@@ -2,6 +2,135 @@ const Student = require("../../auth/login/model")
 const Checklist = require("../checklist/model")
 const Enrollment = require("../enrollment/model")
 const mongoose = require('mongoose')
+
+function hasCompletedYearStanding(current_yearLevel, yearLevel) {
+    console.log(`Checking if current year level ${current_yearLevel} matches required year level ${yearLevel}`);
+    return parseInt(current_yearLevel) === yearLevel;
+}
+
+function hasCompletedFirstAndSecondYearStanding(checklistYears) {
+    const targetYears = ["1st Year", "2nd Year"];
+
+    for (const year of checklistYears) {
+        if (targetYears.includes(year.year)) {
+            const semesters = year.semesters;
+            for (const semKey in semesters) {
+                const semCourses = semesters[semKey];
+                if (Array.isArray(semCourses)) {
+                    for (const course of semCourses) {
+                        const passed = course.grade_id?.grade_status === 'Passed';
+                        if (!passed) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+function hasTaken70PercentUnits(courses) {
+    let totalUnits = 0;
+    let passedUnits = 0;
+
+    courses.forEach(c => {
+        const credits = c.course_id?.credits || 0;
+        totalUnits += credits;
+        if (c.grade_id?.grade_status === 'Passed') {
+            passedUnits += credits;
+        }
+    });
+
+    return totalUnits > 0 && (passedUnits / totalUnits) >= 0.7;
+}
+
+function hasPassedAllSubjects(courses) {
+    return courses.every(c => c.grade_id && c.grade_id.grade_status === 'Passed');
+}
+
+function hasPassedAllMajorSubjects(courses) {
+    return courses.every(c => {
+        if (!c.course_id || !c.course_id.isMajor) return true; // Non-major courses are ignored
+        return c.grade_id && c.grade_id.grade_status === 'Passed';
+    });
+}
+
+function CheckPreRequisites(course, yearLevel, allSemCourses, checklistYears) {
+    let canEnlist = true;
+
+    const hardcodedValues = [
+        "2nd Year Standing",
+        "3rd Year Standing",
+        "4th Year Standing",
+        "70% total units taken",
+        "All Major Subjects",
+        "All Subjects",
+        "All 1st and 2nd Year Courses",
+        "Incoming 4th Year"
+    ];
+
+    // Handle pre_req_ids
+    if (course.pre_req_ids && course.pre_req_ids.length > 0) {
+        for (const preReqId of course.pre_req_ids) {
+            const preReqCourse = allSemCourses.find(semCourse =>
+                semCourse.course_id && semCourse.course_id.equals(preReqId)
+            );
+
+            if (!preReqCourse || !preReqCourse.grade_id || preReqCourse.grade_id.grade_status !== 'Passed') {
+                canEnlist = false;
+                break;
+            }
+        }
+    }
+
+    // Handle pre_req_strings (hardcoded prerequisites)
+    if (course.pre_req_strings && course.pre_req_strings.length > 0) {
+        for (const req of course.pre_req_strings) {
+            if (hardcodedValues.includes(req)) {
+                switch (req) {
+                    case "2nd Year Standing":
+                        if (!hasCompletedYearStanding(yearLevel.charAt(0), 2)) canEnlist = false;
+                        break;
+                    case "3rd Year Standing":
+                        if (!hasCompletedYearStanding(yearLevel.charAt(0), 3)) canEnlist = false;
+                        break;
+                    case "4th Year Standing":
+                    case "Incoming 4th Year":
+                        if (!hasCompletedYearStanding(yearLevel.charAt(0), 4)) canEnlist = false;
+                        break;
+                    case "70% total units taken":
+                        if (!hasTaken70PercentUnits(allSemCourses)) canEnlist = false;
+                        break;
+                    case "All Subjects":
+                        if (!hasPassedAllSubjects(allSemCourses)) canEnlist = false;
+                        break;
+                    case "All Major Subjects":
+                        if (!hasPassedAllMajorSubjects(allSemCourses)) canEnlist = false;
+                        break;
+                    case "All 1st and 2nd Year Courses":
+                        if (!hasCompletedFirstAndSecondYearStanding(checklistYears)) canEnlist = false;
+                        break;
+                    default:
+                        break;
+                }
+
+                // if (!canEnlist) break; // Stop early if any string condition fails
+            }
+        }
+    }
+
+    return {
+        course_id: course.course_id,
+        pre_req_ids: course.pre_req_ids,
+        pre_req_strings: course.pre_req_strings,
+        grade_id: course.grade_id,
+        eval_id: course.eval_id,
+        canEnlist,
+    };
+}
+
 const StudentController = {
     // List all Students
     get_new_firstyear: async (req, res) => {
@@ -165,34 +294,9 @@ const StudentController = {
                 : "Regular";
 
             // Map through second semester courses and determine canEnlist for each
-            const courses = semesterData.map(course => {
-                let canEnlist = true;
-
-                // Check if the course has prerequisites
-                if (course.pre_req_ids && course.pre_req_ids.length > 0) {
-                    for (const preReqId of course.pre_req_ids) {
-                        // Find the prerequisite course in any semester of the same year
-                        const preReqCourse = allSemCourses.find(semCourse =>
-                            semCourse.course_id && semCourse.course_id.equals(preReqId)
-                        );
-
-                        // If prerequisite course or its grade is missing, or grade_status is not 'Passed', cannot enlist
-                        if (!preReqCourse || !preReqCourse.grade_id || preReqCourse.grade_id.grade_status !== 'Passed') {
-                            canEnlist = false;
-                            break;
-                        }
-                    }
-                }
-
-                return {
-                    course_id: course.course_id,
-                    pre_req_ids: course.pre_req_ids,
-                    pre_req_strings: course.pre_req_strings,
-                    grade_id: course.grade_id,
-                    eval_id: course.eval_id,
-                    canEnlist,
-                };
-            });
+            const courses = semesterData.map(course =>
+                CheckPreRequisites(course, year, allSemCourses, checklist.years)
+            );
 
             // Prepare response
             const responseData = {

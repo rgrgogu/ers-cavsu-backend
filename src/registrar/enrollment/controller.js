@@ -284,6 +284,92 @@ const EnrollmentController = {
     }
   },
 
+  MassUpdateEnlistmentOld: async (req, res) => {
+    try {
+      const { enrollment, profile } = req.body;
+      const {
+        student_id,
+        section_id,
+        school_year,
+        semester,
+        year_level,
+        user,
+        courses,
+        student_type,
+        student_status
+      } = enrollment;
+
+      if (!student_id || !profile) {
+        return res.status(400).json({
+          success: false,
+          message: 'Missing student_id or profile data'
+        });
+      }
+
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
+      try {
+        // Step 1: Create Enrollment Details
+        const enrolledCoursesIds = await EnrollmentDetailsController.MassCreateEnlistmentDetails(
+          courses, school_year, semester, user, section_id, session
+        );
+
+        // Step 2: Find and update existing Enrollment
+        const existingEnrollment = await Enrollment.findOne({
+          student_id,
+          school_year,
+          semester
+        }).session(session);
+
+        if (!existingEnrollment) {
+          throw new Error('Enrollment not found for this student, school year, and semester.');
+        }
+
+        // Update the existing enrollment
+        existingEnrollment.section_id = section_id;
+        existingEnrollment.year_level = year_level;
+
+        const newEnrolledCourses = enrolledCoursesIds.map(id => ({
+          details: id,
+          enrollment_status: 'Enlisted',
+          enlisted_by: user,
+          updated_by: user,
+          date_enlisted: new Date()
+        }));
+
+        existingEnrollment.enrolled_courses.push(...newEnrolledCourses);
+        
+        await existingEnrollment.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(200).json({
+          success: true,
+          data: {
+            enrollmentId: existingEnrollment._id,
+            message: 'Enrollment updated and profile refreshed'
+          }
+        });
+
+      } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+      }
+
+    } catch (error) {
+      console.error('Error in MassUpdateEnlistmentOnly:', error);
+      const status = error.name === 'ValidationError' || error.code === 11000 ? 400 : 500;
+      return res.status(status).json({
+        success: false,
+        message: 'Failed to update enrollment or profile',
+        error: error.message
+      });
+    }
+  },
+
   UpdateToEnrolledFirstYear: async (req, res) => {
     const { student_ids, enrolled_by } = req.body;
 
