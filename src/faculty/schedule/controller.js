@@ -11,6 +11,17 @@ const EnrollmentDetailsController = {
                 .populate('course_id', 'courseCode courseTitle credits')
                 .populate('faculty_id', 'name')
                 .populate({
+                    path: 'enrolled_count',
+                    select: 'user_id name school_email profile_id_one',
+                    populate: {
+                        path: 'profile_id_one',
+                        select: 'student_details',
+                        populate: {
+                            path: 'student_details'
+                        }
+                    }
+                })
+                .populate({
                     path: "schedule_id",
                     select: "day_time",
                     populate: {

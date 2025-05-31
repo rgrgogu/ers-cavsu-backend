@@ -339,7 +339,7 @@ const EnrollmentController = {
         }));
 
         existingEnrollment.enrolled_courses.push(...newEnrolledCourses);
-        
+
         await existingEnrollment.save({ session });
 
         await session.commitTransaction();
@@ -426,7 +426,7 @@ const EnrollmentController = {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const { doc_id, enrolledCoursesIds, enrolledDetailsCourseIds, user } = req.body;
+      const { doc_id, enrolledCoursesIds, enrolledDetailsCourseIds, user, student_id } = req.body;
 
       // 1. Update enrollment status and metadata
       const updatedEnrollment = await Enrollment.updateOne(
@@ -448,7 +448,7 @@ const EnrollmentController = {
       // Fix tommorrow TAGGED
       await EnrollmentDetails.updateMany(
         { course_id: { $in: enrolledDetailsCourseIds } },
-        { $inc: { enrolled_count: 1 } },
+        { $addToSet: { enrolled_count: student_id } },
         { session }
       );
 

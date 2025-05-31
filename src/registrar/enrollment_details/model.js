@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const obj = new mongoose.Schema({
     course_id: { type: mongoose.Schema.Types.ObjectId, ref: 'courses', default: null },
     pre_req_ids: [{ type: mongoose.Schema.Types.ObjectId, ref: 'courses', default: null }],
-    enrolled_count: { type: Number, min: 0, default: 0 },
+    enrolled_count: [{ type: mongoose.Schema.Types.ObjectId, ref: 'login', default: null }],
     pre_req_strings: [{ type: String }],
     schedule_id: { type: mongoose.Schema.Types.ObjectId, ref: 'schedules', default: null },
     faculty_id: { type: mongoose.Schema.Types.ObjectId, ref: 'login', default: null },
