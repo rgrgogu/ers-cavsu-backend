@@ -17,7 +17,7 @@ const StudentController = {
             // Fetch enrollments
             const students = await Enrollment
                 .find({
-                    section_id, school_year, semester, enrolled_courses: {
+                    school_year, semester, enrolled_courses: {
                         $elemMatch: {
                             'details': course_doc_id,
                             'enrolled_by': { $ne: null },

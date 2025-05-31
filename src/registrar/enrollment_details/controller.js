@@ -16,10 +16,17 @@ const EnrollmentDetailsController = {
                 return course.course_id;
             });
 
+            console.log({
+                course_id: { $in: courseIds },
+                section_id,
+                semester,
+                school_year
+            })
+
             // Single query to find existing records
             const existing = await EnrollmentDetails.find({
                 course_id: { $in: courseIds },
-                section_id,
+                // section_id,
                 semester,
                 school_year
             })
@@ -56,7 +63,7 @@ const EnrollmentDetailsController = {
                 });
                 return _id;
             });
-
+            
             // Execute bulkWrite only if needed
             if (bulkOps.length > 0) {
                 await EnrollmentDetails.bulkWrite(bulkOps, { session }); // Unordered for speed
@@ -153,6 +160,85 @@ const EnrollmentDetailsController = {
             await session.abortTransaction();
             session.endSession();
             return res.status(400).json({ success: false, message: err.message });
+        }
+    },
+
+    GetAvailableCoursesForIrreg: async (req, res) => {
+        try {
+            const { searchTerm = "", school_year, semester } = req.query;
+
+            if (!searchTerm) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Search term is required'
+                });
+            }
+
+            const enrollments = await EnrollmentDetails.aggregate([
+                {
+                    $match: {
+                        school_year: new mongoose.Types.ObjectId(school_year),
+                        semester
+                    }
+                },
+                {
+                    $lookup: {
+                        from: "courses", // the actual collection name of the course model
+                        localField: "course_id",
+                        foreignField: "_id",
+                        as: "course"
+                    }
+                },
+                {
+                    $unwind: { path: "$course", preserveNullAndEmptyArrays: true }
+                },
+                {
+                    $match: {
+                        $or: [
+                            { "course.courseCode": { $regex: searchTerm, $options: "i" } },
+                            { "course.courseTitle": { $regex: searchTerm, $options: "i" } }
+                        ]
+                    }
+                },
+                // Optional: join other referenced fields if needed
+                {
+                    $lookup: {
+                        from: "logins",
+                        localField: "faculty_id",
+                        foreignField: "_id",
+                        as: "faculty"
+                    }
+                },
+                { $unwind: { path: "$faculty", preserveNullAndEmptyArrays: true } },
+                {
+                    $lookup: {
+                        from: "sections",
+                        localField: "section_id",
+                        foreignField: "_id",
+                        as: "section"
+                    }
+                },
+                { $unwind: { path: "$section", preserveNullAndEmptyArrays: true } },
+                {
+                    $lookup: {
+                        from: "schedules",
+                        localField: "schedule_id",
+                        foreignField: "_id",
+                        as: "schedule"
+                    }
+                },
+                { $unwind: { path: "$schedule", preserveNullAndEmptyArrays: true } },
+            ]);
+
+            res.status(200).json({
+                success: true,
+                data: enrollments
+            });
+        } catch (error) {
+            res.status(500).json({
+                success: false,
+                message: `Error fetching courses: ${error.message}`
+            });
         }
     }
 };

@@ -330,6 +330,8 @@ const EnrollmentController = {
         existingEnrollment.section_id = section_id;
         existingEnrollment.year_level = year_level;
 
+        console.log('Enrolled Courses IDs:', enrolledCoursesIds);
+        
         const newEnrolledCourses = enrolledCoursesIds.map(id => ({
           details: id,
           enrollment_status: 'Enlisted',

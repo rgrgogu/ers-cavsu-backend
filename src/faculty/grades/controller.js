@@ -80,14 +80,17 @@ const GradeController = {
                     updateOne: {
                         filter: {
                             student_id: entry.student_id,
-                            'years.year': obj[entry.year_level],
+                            // 'years.year': obj[entry.year_level],
                         },
                         update: {
                             $set: {
-                                [`years.$.semesters.${semester}.$[course].grade_id`]: gradeId,
+                                [`years.$[year].semesters.${semester}.$[course].grade_id`]: gradeId,
                             },
                         },
-                        arrayFilters: [{ 'course.course_id': courseObjectId }],
+                        arrayFilters: [
+                            { 'year.semesters': { $exists: true } }, // ensure year-level is there
+                            { 'course.course_id': courseObjectId }
+                        ],
                     },
                 };
             });

@@ -35,13 +35,13 @@ const EnrollmentDetailsController = {
             // Query EnrollmentDetails using the list of course_ids
             const courses = await EnrollmentDetails
                 .find({
-                    section_id,
+                    // section_id,
                     course_id: { $in: courseIdArray },
                     school_year,
                     semester
                 })
                 .populate('course_id', 'courseCode courseTitle credits')
-                .populate('section_id', 'name')
+                .populate('section_id', 'section_code')
                 .populate({
                     path: 'faculty_id',
                     select: 'name'

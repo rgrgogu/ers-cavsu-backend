@@ -1,6 +1,7 @@
 const Student = require("../../auth/login/model")
 const Checklist = require("../checklist/model")
 const Enrollment = require("../enrollment/model")
+const EnrollmentDetails = require("../enrollment_details/model")
 const mongoose = require('mongoose')
 
 function hasCompletedYearStanding(current_yearLevel, yearLevel) {
@@ -163,7 +164,10 @@ const StudentController = {
                 .select("-password")
                 .sort({ user_id: 1 });
 
-            const filteredStudents = students.filter(student => student.profile_id_one?.enrollment_id !== null);
+            const filteredStudents = students.filter(student => {
+                const profile = student.profile_id_one;
+                return profile?.enrollment_id !== null || profile?.student_details?.student_type === "Old";
+            });
 
             res.json(filteredStudents);
         } catch (error) {
@@ -229,7 +233,7 @@ const StudentController = {
     },
 
     get_checklist_by_student_sem: async (req, res) => {
-        const { year, semester } = req.query;
+        const { year, semester, school_year } = req.query;
         const student_id = req.params.id;
 
         try {
@@ -294,9 +298,35 @@ const StudentController = {
                 : "Regular";
 
             // Map through second semester courses and determine canEnlist for each
-            const courses = semesterData.map(course =>
-                CheckPreRequisites(course, year, allSemCourses, checklist.years)
-            );
+            const courses = await Promise.all(semesterData.map(async (course) => {
+                const courseWithPrereqs = CheckPreRequisites(course, year, allSemCourses, checklist.years);
+
+                // Fetch schedule(s) for this course
+                const schedules = await EnrollmentDetails.find({
+                    course_id: course.course_id,
+                    semester,
+                    school_year
+                }).populate({
+                    path: "schedule_id",
+                    select: "day_time",
+                    populate: {
+                        path: "day_time.room",
+                        select: "name"
+                    }
+                }).select("schedule_id");
+
+                // Format schedule display string
+                const scheduleDisplay = schedules.flatMap(s =>
+                    (s.schedule_id?.day_time || []).map(dt =>
+                        `${dt.day} ${dt.time}${dt.room?.name ? ` [${dt.room.name}]` : ''}`
+                    )
+                ).join(" / ") || "TBA";
+
+                return {
+                    ...courseWithPrereqs,
+                    schedule: scheduleDisplay
+                };
+            }));
 
             // Prepare response
             const responseData = {
@@ -354,10 +384,30 @@ const StudentController = {
                 return res.status(404).json({ message: `Semester '${semester}' not found` });
             }
 
-            res.json(semesterData);
+            // if (forChecklist === "true") {
+            //     const allSemCourses = [];
+
+            //     checklist.years.forEach(year => {
+            //         ['first', 'second', 'third', 'midyear'].forEach(sem => {
+            //             const semData = year.semesters[sem];
+            //             if (semData && Array.isArray(semData)) {
+            //                 semData.forEach(course => {
+            //                     if (course.grade_id) {
+            //                         console.log("course", course)
+            //                         allSemCourses.push(course);
+            //                     }
+            //                 });
+            //             }
+            //         });
+            //     });
+
+            //     return res.status(200).json({allSemCourses, checklist});
+            // }
+
+            return res.status(200).json(semesterData);
         } catch (err) {
             console.error(err);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     },
 

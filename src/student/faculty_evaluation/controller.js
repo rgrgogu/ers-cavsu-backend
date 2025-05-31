@@ -55,20 +55,38 @@ exports.createEvaluation = async (req, res) => {
         const updateResult = await Checklist.updateOne(
             {
                 student_id: student_id,
-                'years.year': obj[year_level],
+                // 'years.year': obj[year_level],
             },
             {
                 $set: {
-                    [`years.$.semesters.${semester}.$[course].eval_id`]: evaluation._id
+                    // [`years.$.semesters.${semester}.$[course].eval_id`]: evaluation._id
+                    [`years.$[year].semesters.${semester}.$[course].eval_id`]: evaluation._id,
                 }
             },
             {
                 arrayFilters: [
+                    { 'year.semesters': { $exists: true } },
                     { 'course.course_id': courseObjectId }
                 ],
                 session
             }
         );
+
+        // updateOne: {
+        //                 filter: {
+        //                     student_id: entry.student_id,
+        //                     // 'years.year': obj[entry.year_level],
+        //                 },
+        //                 update: {
+        //                     $set: {
+        //                         [`years.$[year].semesters.${semester}.$[course].grade_id`]: gradeId,
+        //                     },
+        //                 },
+        //                 arrayFilters: [
+        //                     { 'year.semesters': { $exists: true } }, // ensure year-level is there
+        //                     { 'course.course_id': courseObjectId }
+        //                 ],
+        //             },
 
         if (updateResult.matchedCount === 0) {
             throw new Error("Checklist not found for the specified student and year");
