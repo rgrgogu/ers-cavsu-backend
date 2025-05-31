@@ -26,7 +26,7 @@ const personal_info = new Schema({
     nationality: { type: String },
     address: { type: address, default: { ...address } },
     disabled: { type: Boolean, default: false },
-    disablity: { type: String, default: '' },
+    disability: { type: String, default: '' },
     indigenous: { type: Boolean, default: false },
     indigenous_group: { type: String, default: '' },
 }, {

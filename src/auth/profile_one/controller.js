@@ -112,6 +112,7 @@ const ApplicantProfileController = {
 
             const { body, file } = req;
             const data = JSON.parse(body.obj)
+            console.log("Data received:", data);
             const DOCUMENT_MAX_SIZE = 1024 * 1024;
 
             if (file) {
