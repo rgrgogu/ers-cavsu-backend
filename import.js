@@ -7,6 +7,11 @@ const routes = [
     // AUTHENTICATION AND PROFILE
     { api: "/api/auth", router: require('./src/auth/login/route.js') },
     { api: "/api/applicant/profile", router: require('./src/auth/profile_one/route.js') },
+    { api: "/api/student/profile", router: require('./src/auth/profile_one/route.js') },
+    { api: "/api/admin/profile", router: require('./src/auth/profile_one/route.js') },
+    { api: "/api/faculty/profile", router: require('./src/auth/profile_one/route.js') },
+    { api: "/api/registrar/profile", router: require('./src/auth/profile_one/route.js') },
+    { api: "/api/admission/profile", router: require('./src/auth/profile_one/route.js') },
 
     // STUDENT
     { api: "/api/student/ctgy_groups", router: require('./src/student/evaluation_category/category/category.route.js') },
@@ -18,6 +23,7 @@ const routes = [
     { api: "/api/student/faculty_eval", router: require('./src/student/faculty_evaluation/route.js') },
     { api: "/api/student/checklist", router: require('./src/student/checklist/route.js') },
     { api: "/api/student/grades", router: require('./src/student/grades/route.js') },
+    { api: "/api/student/profile", router: require('./src/student/profile/route.js') },
 
     // FACULTY
     { api: "/api/faculty/ctgy_groups", router: require('./src/faculty/evaluation_category/category/category.route.js') },
@@ -27,6 +33,7 @@ const routes = [
     { api: "/api/faculty/student", router: require('./src/faculty/student/route.js') },
     { api: "/api/faculty/grades", router: require('./src/faculty/grades/route.js') },
     { api: "/api/faculty/faculty_eval", router: require('./src/faculty/faculty_evaluation/route.js') },
+    { api: "/api/faculty/profile", router: require('./src/faculty/profile/route.js') },
 
     // REGISTRAR
     { api: "/api/registrar/sections", router: require('./src/registrar/section/route.js') },
@@ -44,20 +51,22 @@ const routes = [
     { api: "/api/registrar/rooms", router: require('./src/registrar/rooms/route.js') },
     { api: "/api/registrar/faculty", router: require('./src/registrar/faculty/route.js') },
     { api: "/api/registrar/ctgy_groups", router: require('./src/registrar/evaluation_category/category/category.route.js') },
-   
+    { api: "/api/registrar/profile", router: require('./src/registrar/profile/route.js') },
+
     // ADMISSION
     { api: "/api/admission/a_holidays", router: require('./src/admission/holidays/holiday.route.js') },
     { api: "/api/admission/applications", router: require('./src/admission/applications/applications.route.js') },
     { api: "/api/admission/appointments", router: require('./src/admission/appointments/appoint.route.js') },
     { api: "/api/admission/logs", router: require('./src/admission/logs/logs.route.js') },
     { api: "/api/admission/programs", router: require('./src/admission/programs/route.js') },
+    { api: "/api/admission/profile", router: require('./src/admission/profile/route.js') },
 
     // APPLICANT
     { api: "/api/applicant/logs", router: require('./src/applicant/logs/logs.route.js') },
     { api: "/api/applicant/notif", router: require('./src/applicant/app_notification/notification.route.js') },
     { api: "/api/applicant/surveys", router: require('./src/applicant/survey/survey.route.js') },
     { api: "/api/applicant/programs", router: require('./src/applicant/programs/route.js') },
-     { api: "/api/applicant/profile", router: require('./src/applicant/profile/route.js') },
+    { api: "/api/applicant/profile", router: require('./src/applicant/profile/route.js') },
 
     // ADMIN
     { api: "/api/admin/w_adguide", router: require('./src/admin/website/admission_guide/admission_guide.route.js') },
@@ -79,7 +88,8 @@ const routes = [
     { api: "/api/admin/ctgy_groups", router: require('./src/admin/evaluation_category/category/category.route.js') },
     { api: "/api/admin/ctgy_questions", router: require('./src/admin/evaluation_category/question/question.route.js') },
     { api: "/api/admin/eval_list", router: require('./src/admin/evaluation_list/route.js') },
-    
+    { api: "/api/admin/profile", router: require('./src/admin/profile/route.js') },
+
     // PUBLIC API
     { api: "/api/public", router: require('./src/admin/website/public/public.router.js') },
 ]
