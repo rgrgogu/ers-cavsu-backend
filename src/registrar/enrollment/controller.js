@@ -428,7 +428,7 @@ const EnrollmentController = {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const { doc_id, enrolledCoursesIds, enrolledDetailsCourseIds, user, student_id } = req.body;
+      const { doc_id, enrolledCoursesIds, enrolledDetailsCourseIds, user, student_id, school_year, semester } = req.body;
 
       // 1. Update enrollment status and metadata
       const updatedEnrollment = await Enrollment.updateOne(
@@ -449,7 +449,7 @@ const EnrollmentController = {
       // 3. Increment enrolled_count for each referenced enrollment_details
       // Fix tommorrow TAGGED
       await EnrollmentDetails.updateMany(
-        { course_id: { $in: enrolledDetailsCourseIds } },
+        { course_id: { $in: enrolledDetailsCourseIds }, school_year, semester },
         { $addToSet: { enrolled_count: student_id } },
         { session }
       );

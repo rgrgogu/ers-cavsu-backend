@@ -91,44 +91,110 @@ const GradeController = {
             const preReqPath = `years.semesters.${semester}.pre_req_ids`;
             const gradePath = `years.semesters.${semester}.grade_id`;
 
+            // const checklist = await Checklist.findById(checklist_id)
+            //     .populate({
+            //         path: coursePath,
+            //         select: 'courseCode courseTitle credits',
+            //     })
+            //     .populate({
+            //         path: preReqPath,
+            //         select: 'courseCode',
+            //     })
+            //     .populate({
+            //         path: gradePath,
+            //         select: 'grade grade_status',
+            //     })
+            //     .populate({
+            //         path: 'program',
+            //         select: 'name',
+            //     });
+
             const checklist = await Checklist.findById(checklist_id)
                 .populate({
-                    path: coursePath,
+                    path: 'years.semesters.first.course_id years.semesters.second.course_id years.semesters.third.course_id years.semesters.midyear.course_id',
                     select: 'courseCode courseTitle credits',
                 })
                 .populate({
-                    path: preReqPath,
+                    path: 'years.semesters.first.pre_req_ids years.semesters.second.pre_req_ids years.semesters.third.pre_req_ids years.semesters.midyear.pre_req_ids',
                     select: 'courseCode',
                 })
                 .populate({
-                    path: gradePath,
-                    select: 'grade grade_status',
+                    path: 'years.semesters.first.grade_id years.semesters.second.grade_id years.semesters.third.grade_id years.semesters.midyear.grade_id',
+                    select: 'grade grade_status school_year semester year_level section_id',
+                    populate: [
+                        {
+                            path: 'section_id',
+                            select: 'section_code'
+                        },
+                        {
+                            path: 'school_year',
+                            select: 'year'
+                        },
+                        {
+                            path: 'faculty_id',
+                            select: 'name'
+                        }
+                    ],
                 })
                 .populate({
                     path: 'program',
-                    select: 'name',
-                });
+                    select: 'name'
+                })
+                .lean();
 
             if (!checklist) {
                 return res.status(404).json({ message: 'Checklist not found' });
             }
 
-            // Find the specific year level
-            const yearData = checklist.years.find(y => y.year === year);
-            if (!yearData) {
-                return res.status(404).json({ message: `Year '${year}' not found` });
-            }
+            const enrolledCoursesByYearAndSemester = {};
 
-            // Get the semester data
-            const semesterData = yearData.semesters[semester];
-            if (!semesterData) {
-                return res.status(404).json({ message: `Semester '${semester}' not found` });
-            }
+            checklist.years.forEach(yearEntry => {
+                const year = yearEntry.year;
+                Object.entries(yearEntry.semesters).forEach(([semester, courses]) => {
+                    courses.forEach(course => {
+                        const grade = course.grade_id;
+                        if (grade) {
+                            const yrLvl = grade.year_level;
+                            const sem = grade.semester;
 
-            res.json(semesterData);
+                            if (!enrolledCoursesByYearAndSemester[yrLvl]) {
+                                enrolledCoursesByYearAndSemester[yrLvl] = {};
+                            }
+
+                            if (!enrolledCoursesByYearAndSemester[yrLvl][sem]) {
+                                enrolledCoursesByYearAndSemester[yrLvl][sem] = [];
+                            }
+
+                            enrolledCoursesByYearAndSemester[yrLvl][sem].push({
+                                course_id: course.course_id,
+                                grade: grade.grade,
+                                grade_status: grade.grade_status,
+                                section: grade.section_id?.section_code || null,
+                                school_year: grade.school_year?.year || null,
+                                eval_id: course.eval_id,
+                                faculty: `${grade.faculty_id?.name?.lastname || ''}, ${grade.faculty_id?.name?.firstname || ''} ${grade.faculty_id?.name.middlename} ${grade.faculty_id?.name?.extension}`.trim()
+                            });
+                        }
+                    });
+                });
+            });
+
+            // // Find the specific year level
+            // const yearData = checklist.years.find(y => y.year === year);
+            // if (!yearData) {
+            //     return res.status(404).json({ message: `Year '${year}' not found` });
+            // }
+
+            // // Get the semester data
+            // const semesterData = yearData.semesters[semester];
+            // if (!semesterData) {
+            //     return res.status(404).json({ message: `Semester '${semester}' not found` });
+            // }
+
+            return res.json(enrolledCoursesByYearAndSemester);
         } catch (err) {
             console.error(err);
-            res.status(500).json({ message: 'Server error' });
+            return res.status(500).json({ message: 'Server error' });
         }
     },
 };
