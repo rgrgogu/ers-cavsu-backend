@@ -32,19 +32,19 @@ function hasCompletedFirstAndSecondYearStanding(checklistYears) {
     return true;
 }
 
-function hasTaken70PercentUnits(courses) {
-    let totalUnits = 0;
+function hasTaken70PercentUnits(courses, grandTotalUnits) {
     let passedUnits = 0;
 
     courses.forEach(c => {
         const credits = c.course_id?.credits || 0;
-        totalUnits += credits;
         if (c.grade_id?.grade_status === 'Passed') {
             passedUnits += credits;
         }
     });
 
-    return totalUnits > 0 && (passedUnits / totalUnits) >= 0.7;
+    console.log(`Total passed units: ${passedUnits}, Grand total units: ${grandTotalUnits}`);
+
+    return grandTotalUnits > 0 && (passedUnits / grandTotalUnits) >= 0.7;
 }
 
 function hasPassedAllSubjects(courses) {
@@ -58,7 +58,7 @@ function hasPassedAllMajorSubjects(courses) {
     });
 }
 
-function CheckPreRequisites(course, yearLevel, allSemCourses, checklistYears) {
+function CheckPreRequisites(course, yearLevel, allSemCourses, checklist) {
     let canEnlist = true;
 
     const hardcodedValues = [
@@ -102,7 +102,7 @@ function CheckPreRequisites(course, yearLevel, allSemCourses, checklistYears) {
                         if (!hasCompletedYearStanding(yearLevel.charAt(0), 4)) canEnlist = false;
                         break;
                     case "70% total units taken":
-                        if (!hasTaken70PercentUnits(allSemCourses)) canEnlist = false;
+                        if (!hasTaken70PercentUnits(allSemCourses, checklist.total_units)) canEnlist = false;
                         break;
                     case "All Subjects":
                         if (!hasPassedAllSubjects(allSemCourses)) canEnlist = false;
@@ -111,7 +111,7 @@ function CheckPreRequisites(course, yearLevel, allSemCourses, checklistYears) {
                         if (!hasPassedAllMajorSubjects(allSemCourses)) canEnlist = false;
                         break;
                     case "All 1st and 2nd Year Courses":
-                        if (!hasCompletedFirstAndSecondYearStanding(checklistYears)) canEnlist = false;
+                        if (!hasCompletedFirstAndSecondYearStanding(checklist.years)) canEnlist = false;
                         break;
                     default:
                         break;
@@ -299,7 +299,7 @@ const StudentController = {
 
             // Map through second semester courses and determine canEnlist for each
             const courses = await Promise.all(semesterData.map(async (course) => {
-                const courseWithPrereqs = CheckPreRequisites(course, year, allSemCourses, checklist.years);
+                const courseWithPrereqs = CheckPreRequisites(course, year, allSemCourses, checklist);
 
                 // Fetch schedule(s) for this course
                 const schedules = await EnrollmentDetails.find({
