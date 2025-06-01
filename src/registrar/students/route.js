@@ -11,5 +11,7 @@ router.get("/get_checklist_by_student_sem/:id", RequireAuth, StudentController.g
 router.get("/get_enrollment_by_student_id", RequireAuth, StudentController.get_enrollment_by_student_id);
 router.get("/get_gradeslip_by_sem_yrlvl", RequireAuth, StudentController.get_gradeslip_by_sem_yrlvl)
 router.get("/get_checklist_by_student/:id", RequireAuth, StudentController.get_checklist_by_student);
+router.get("/get_gradeslips/:id", RequireAuth, StudentController.get_gradeslips);
+router.get("/get_cors/:id", RequireAuth, StudentController.get_cors);
 
 module.exports = router;
