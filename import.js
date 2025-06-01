@@ -8,11 +8,15 @@ const routes = [
     { api: "/api/auth", router: require('./src/auth/login/route.js') },
     { api: "/api/applicant/profile", router: require('./src/auth/profile_one/route.js') },
     { api: "/api/student/profile", router: require('./src/auth/profile_one/route.js') },
+    { api: "/api/admin/profile", router: require('./src/auth/profile_two/route.js') },
+    { api: "/api/faculty/profile", router: require('./src/auth/profile_two/route.js') },
+    { api: "/api/registrar/profile", router: require('./src/auth/profile_two/route.js') },
+    { api: "/api/admission/profile", router: require('./src/auth/profile_two/route.js') },
     { api: "/api/admin/profile", router: require('./src/auth/profile_one/route.js') },
     { api: "/api/faculty/profile", router: require('./src/auth/profile_one/route.js') },
     { api: "/api/registrar/profile", router: require('./src/auth/profile_one/route.js') },
     { api: "/api/admission/profile", router: require('./src/auth/profile_one/route.js') },
-
+   
     // STUDENT
     { api: "/api/student/ctgy_groups", router: require('./src/student/evaluation_category/category/category.route.js') },
     { api: "/api/student/ctgy_questions", router: require('./src/student/evaluation_category/question/question.route.js') },

@@ -1,6 +1,4 @@
 const User = require("../../auth/login/model");
-const ProfileOne = require("../../auth/profile_one/model") // used for student and applicant
-const BCrypt = require("../../../global/config/BCrypt");
 const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO");
 const ProfileController = {
 
