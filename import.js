@@ -12,6 +12,7 @@ const routes = [
     { api: "/api/faculty/profile", router: require('./src/auth/profile_two/route.js') },
     { api: "/api/registrar/profile", router: require('./src/auth/profile_two/route.js') },
     { api: "/api/admission/profile", router: require('./src/auth/profile_two/route.js') },
+
     { api: "/api/admin/profile", router: require('./src/auth/profile_one/route.js') },
     { api: "/api/faculty/profile", router: require('./src/auth/profile_one/route.js') },
     { api: "/api/registrar/profile", router: require('./src/auth/profile_one/route.js') },

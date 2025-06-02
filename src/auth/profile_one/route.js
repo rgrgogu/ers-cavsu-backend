@@ -14,6 +14,7 @@ router.get("/get_profile/:id", RequireAuth, ApplicantProfileController.GetProfil
 router.get("/get_holiday/:name", RequireAuth, GetHoliday);
 router.get("/get_slots/:year/:month", RequireAuth, ApplicantProfileController.GetAppointmentSlots)
 router.put("/edit_app_details/:id", RequireAuth, ApplicantProfileController.EditApplicationDetails);
+router.put("/edit_details/bulk", RequireAuth, ApplicantProfileController.BulkEditApplicationDetails);
 router.put("/edit_app_profile/:id", uploadProfile, RequireAuth, ApplicantProfileController.EditApplicantProfile);
 router.put("/edit_app_family/:id", RequireAuth, ApplicantProfileController.EditFamilyProfile);
 router.put("/edit_app_education/:id", RequireAuth, ApplicantProfileController.EditEducationalProfile);

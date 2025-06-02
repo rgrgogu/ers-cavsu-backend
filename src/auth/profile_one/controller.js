@@ -103,6 +103,63 @@ const ApplicantProfileController = {
         }
     },
 
+    BulkEditApplicationDetails: async (req, res) => {
+        try {
+            const updates = req.body; // Expecting array: [{ profile_id, application_details: { program } }, ...]
+            console.log("Bulk updates received:", updates);
+
+            // Validate input
+            if (!Array.isArray(updates) || updates.length === 0) {
+                return res.status(400).json({ message: "Updates must be a non-empty array" });
+            }
+
+            // Validate each update object
+            for (const update of updates) {
+                if (!update.profile_id) {
+                    return res.status(400).json({ message: "Each update must include a profile_id" });
+                }
+                if (!update.application_details || typeof update.application_details.program !== 'string' || update.application_details.program.trim() === '') {
+                    return res.status(400).json({ message: "Each update must include a valid application_details.program" });
+                }
+            }
+
+            // Prepare bulk write operations to update only application_details.program
+            const bulkOps = updates.map(({ profile_id, application_details }) => ({
+                updateOne: {
+                    filter: { _id: profile_id },
+                    update: { $set: { "application_details.program": application_details.program } },
+                },
+            }));
+
+            // Execute bulk write
+            const result = await Profile.bulkWrite(bulkOps);
+
+            // Fetch updated profiles to return only application_details
+            const updatedProfileIds = updates.map((update) => update.profile_id);
+            const updatedProfiles = await Profile.find({
+                _id: { $in: updatedProfileIds },
+            }).select('application_details');
+
+            // Check if any profiles were not found
+            if (updatedProfiles.length < updates.length) {
+                const notFoundIds = updatedProfileIds.filter(
+                    (id) => !updatedProfiles.some((profile) => profile._id.toString() === id)
+                );
+                return res.status(404).json({
+                    message: "Some profiles not found",
+                    notFoundIds,
+                    updated: updatedProfiles.map((profile) => profile.application_details),
+                });
+            }
+
+            // Return updated application_details
+            res.status(200).json(updatedProfiles.map((profile) => profile.application_details));
+        } catch (error) {
+            console.error("Error in BulkEditApplicationDetails:", error);
+            res.status(400).json({ error: error.message });
+        }
+    },
+
     // USED
     EditApplicantProfile: async (req, res) => {
         try {
@@ -259,7 +316,7 @@ const ApplicantProfileController = {
                 { $set: { ...data, user: data.user } }, // Create only if it doesn't exist
                 { upsert: true, new: true } // Ensures document is created if missing
             );
-            
+
             if (!result) {
                 return res.status(404).json({ message: "Cannot create appointment" });
             }
