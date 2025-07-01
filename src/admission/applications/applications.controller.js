@@ -1,6 +1,7 @@
 const User = require("../../auth/login/model");
 const Profile = require("../../auth/profile_one/model");
 const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO");
+const { SendApplicantStatus, SendApplicantExamDetails } = require("../../../global/config/Nodemailer");
 
 const GetApplicants = async (req, res) => {
     try {
@@ -23,7 +24,7 @@ const GetApplicants = async (req, res) => {
                     }
                 }
             },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1, "profile_id_one": 1 } }
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1, "profile_id_one": 1, personal_email: 1 } }
         ]);
 
         res.status(200).json(result)
@@ -143,6 +144,13 @@ const UpdateApplication = async (req, res) => {
             }
         })
 
+        data.emails.map(async (email) => {
+            await SendApplicantStatus(
+                email,
+                data.status === "For Registrar" ? "For Enrollment Preparation" : data.status,
+            );
+        })
+
         res.status(200).json("Updated all items successfully");
     } catch (err) {
         res.status(400).json(err);
@@ -152,7 +160,7 @@ const UpdateApplication = async (req, res) => {
 const UpdateExamDetails = async (req, res) => {
     try {
         const data = req.body;
-        const { user_ids, ids, ...rest } = data;
+        const { user_ids, ids, emails, ...rest } = data;
 
         const io = getIO();
         const onlineUsers = getOnlineUsers();
@@ -171,6 +179,13 @@ const UpdateExamDetails = async (req, res) => {
                     exam_details: rest,
                 });
             }
+        })
+
+        emails.map(async (email) => {
+            await SendApplicantExamDetails(
+                email,
+                rest
+            );
         })
 
         res.status(200).json("Updated all items successfully");

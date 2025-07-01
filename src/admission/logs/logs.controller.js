@@ -4,6 +4,7 @@ const User = require("../../auth/login/model")
 const Model = require("./logs.model");
 const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO")
 const NotificationController = require("../../applicant/app_notification/notification.controller")
+const { SendApplicantUpdates } = require("../../../global/config/Nodemailer")
 
 const GetLogs = async (req, res) => {
     try {
@@ -155,6 +156,14 @@ const MassUpdateLogs = async (req, res) => {
                         logs: result,
                     });
                 }
+            })
+
+            data.emails.map(async (email) => {
+                await SendApplicantUpdates(
+                    email,
+                    data.title,
+                    data.log
+                )
             })
 
             await NotificationController.sendBulkNotification(data, userIds)

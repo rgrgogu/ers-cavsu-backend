@@ -1,6 +1,7 @@
 const User = require("../../auth/login/model")
 const Model = require("../../admission/logs/logs.model");
 const NotificationController = require("../../applicant/app_notification/notification.controller")
+const { SendApplicantUpdates } = require("../../../global/config/Nodemailer")
 
 const GetLogs = async (req, res) => {
     try {
@@ -80,6 +81,14 @@ const MassUpdateLogs = async (req, res) => {
 
                     await Model.insertMany(newDocs);
                 }
+
+                data.emails.map(async (email) => {
+                    await SendApplicantUpdates(
+                        email,
+                        data.title,
+                        data.log
+                    )
+                })
 
                 await NotificationController.sendBulkNotification(data, userIds)
             }

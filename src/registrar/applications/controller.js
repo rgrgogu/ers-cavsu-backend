@@ -1,5 +1,7 @@
 const User = require("../../auth/login/model");
 const Profile = require("../../auth/profile_one/model");
+const { getIO, getOnlineUsers } = require("../../../global/config/SocketIO");
+const { SendApplicantStatus } = require("../../../global/config/Nodemailer");
 
 const GetApplicants = async (req, res) => {
     try {
@@ -22,7 +24,7 @@ const GetApplicants = async (req, res) => {
                     }
                 }
             },
-            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1, } }
+            { $project: { user_id: 1, name: 1, "profile.application_details": 1, "updatedAt": 1, status: 1, "profile.exam_details": 1, personal_email: 1 } }
         ]);
 
         res.status(200).json(result)
@@ -112,6 +114,9 @@ const UpdateApplication = async (req, res) => {
         // Define the update object with required status
         const updateFields = { status: data.status };
 
+        const io = getIO();
+        const onlineUsers = getOnlineUsers();
+
         // Add batch_no to updateFields only if it exists in the request body
         if (data.batch_no) {
             updateFields.batch_no = data.batch_no;
@@ -121,6 +126,24 @@ const UpdateApplication = async (req, res) => {
             { _id: { $in: data.ids } }, // Filter: Match documents with these IDs
             { $set: updateFields }      // Update fields dynamically
         );
+
+        data.ids.map(id => {
+            const user_id = id.toString()
+            // Check if user is online and send notification
+            if (onlineUsers.has(user_id)) {
+                io.to(onlineUsers.get(user_id)).emit("newStatus", {
+                    message: "New status received",
+                    status: data.status,
+                });
+            }
+        })
+
+        data.emails.map(email => {
+            SendApplicantStatus(
+                email,
+                data.status,
+            );
+        })
 
         res.status(200).json("Updated all items successfully");
     } catch (err) {

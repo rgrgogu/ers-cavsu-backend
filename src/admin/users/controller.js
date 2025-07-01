@@ -4,6 +4,7 @@ const ProfileTwo = require("../../auth/profile_two/model");
 const BCrypt = require("../../../global/config/BCrypt")
 const NotificationController = require("../../applicant/app_notification/notification.controller")
 const { CreateFolder } = require("../../../global/utils/Drive")
+const { SendStudentAccount } = require("../../../global/config/Nodemailer");
 
 const rolePrefixes = {
   admission: { prefix: 'AD', folder: process.env.ADMISSION_GDRIVE_FOLDER },
@@ -150,8 +151,8 @@ const UserController = {
       if (!role || !rolePrefixes[role]) {
         return res.status(400).json({ error: 'Invalid or missing role.' });
       }
-      
-      if (req.body.secret !== process.env.SECRET){
+
+      if (req.body.secret !== process.env.SECRET) {
         return res.status(500).json({ error: 'Cannot create Admin Account. Wrong secret password' });
       }
 
@@ -227,6 +228,11 @@ const UserController = {
 
         // Assuming the student object has a profile_id field (e.g., "67f336f37ac96f8a2cd277a6")
         const profile_id = student.profile_id;
+
+        await SendStudentAccount(
+          student.email,
+          user_id,
+        );
 
         return {
           authUpdate: {
@@ -337,7 +343,7 @@ const UserController = {
       if (!Array.isArray(users) || users.length === 0) {
         return res.status(400).json({ message: "Request body must contain a non-empty array of user data." });
       }
-  
+
       // Prepare update operations
       const updateOperations = users.map(user => ({
         updateOne: {
@@ -347,14 +353,14 @@ const UserController = {
           // upsert: true
         }
       }));
-  
+
       // Perform bulk write with a size limit check (optional)
       if (updateOperations.length > 1000) { // Arbitrary limit to avoid 16 MB threshold
         return res.status(400).json({ message: "Too many users in a single request. Please limit to 1000 users." });
       }
-  
+
       const result = await AuthLogin.bulkWrite(updateOperations);
-  
+
       // Return a simplified and meaningful response
       res.status(200).json({
         message: 'School emails updated successfully',
@@ -366,9 +372,9 @@ const UserController = {
       // Enhanced error handling
       console.error('Error in bulkEmailUpdate:', error);
       if (error.name === 'MongoError' || error.name === 'BulkWriteError') {
-        return res.status(500).json({ 
-          message: 'Database error occurred while updating emails.', 
-          error: error.message 
+        return res.status(500).json({
+          message: 'Database error occurred while updating emails.',
+          error: error.message
         });
       }
       res.status(400).json({ message: 'Failed to update school emails.', error: error.message });
