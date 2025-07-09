@@ -12,6 +12,10 @@ const CreateEmailToken = (_id) => {
     return jwt.sign({ _id }, process.env.SECRET, { expiresIn: '30m' })
 }
 
+const CreateOTPToken = (otp) => {
+    return jwt.sign({ otp }, process.env.SECRET, { expiresIn: '5m' })
+}
+
 const VerifyRefreshToken = (refreshToken) => {
     // Verifying refresh token
     try {
@@ -43,4 +47,27 @@ const VerifyTokenInReset = (token) => {
     return _id
 }
 
-module.exports = { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken };
+const VerifyOTP = (token, existingOTP) => {
+    if (!token) {
+        throw new Error("Invalid OTP token");
+    }
+
+    let decodedToken;
+    try {
+        decodedToken = jwt.verify(token, process.env.SECRET);
+    } catch {
+        throw new Error("Invalid authentication credentials");
+    }
+
+    if (!decodedToken.hasOwnProperty("otp")) {
+        throw new Error("Invalid authentication credentials");
+    }
+
+    const { otp } = decodedToken;
+
+    console.log(otp, existingOTP)
+    
+    return otp === existingOTP;
+}
+
+module.exports = { CreateOTPToken, CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken, VerifyOTP };

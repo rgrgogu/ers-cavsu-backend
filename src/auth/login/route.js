@@ -7,6 +7,7 @@ const RequireAuth = require("../../../global/middleware/RequireAuth");
 
 router.get("/verify/:token", LoginController.Verify)
 router.post("/login", LoginController.Login);
+router.post("/login_otp", LoginController.LoginOTP);
 router.post("/register", LoginController.Register);
 router.post("/reset", LoginController.RequestReset);
 router.post("/refresh/:id/:role", RequireAuth, LoginController.Refresh);

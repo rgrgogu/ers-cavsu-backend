@@ -2,9 +2,9 @@ const User = require("./model");
 const ProfileOne = require("../profile_one/model") // used for student and applicant
 
 const BCrypt = require("../../../global/config/BCrypt");
-const { CreateEmailToken, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
+const { CreateOTPToken, CreateEmailToken, VerifyOTP, VerifyTokenInReset, CreateAccessToken, CreateRefreshToken, VerifyRefreshToken } = require("../../../global/functions/CreateToken");
 const { CreateFolder } = require("../../../global/utils/Drive");
-const { Send } = require("../../../global/config/Nodemailer")
+const { Send, SendOTP } = require("../../../global/config/Nodemailer")
 const CheckUser = require("../../../global/functions/CheckUser");
 
 const LoginController = {
@@ -27,18 +27,52 @@ const LoginController = {
             const result = await CheckUser(user, password);
 
             if (result.isValid) {
+                const email = user.school_email || user.personal_email;
+                const otp = Math.floor(100000 + Math.random() * 900000).toString();
+                const token = CreateOTPToken(otp);
+                await SendOTP(email, otp);
+
+                return res.status(200).json({ email, otpToken: token });
+            } else {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+        } catch (error) {
+            return res.status(400).json({ error: error.message });
+        }
+    },
+
+    LoginOTP: async (req, res) => {
+        try {
+            const { otp, otpToken, username, password } = req.body;
+
+            const user = await User.findOne({ username })
+
+            // User not found
+            if (!user) {
+                return res.status(400).json({ error: 'An unexpected error occurred. Please contact the admin.' });
+            }
+
+            if (user.isArchived) {
+                return res.status(400).json({ error: 'User is deactivated. Please contact the admin.' });
+            }
+            // Check if OTP is valid
+            if (!VerifyOTP(otpToken, otp)) {
+                return res.status(400).json({ error: 'Invalid OTP' });
+            }
+
+            const result = await CheckUser(user, password);
+
+            if (result.isValid) {
                 const accessToken = CreateAccessToken(user._id, user.role);
                 const refreshToken = CreateRefreshToken(user._id, user.role);
-
-                // Assigning refresh token in http-only cookie 
+                // Assigning refresh token in http-only cookie
                 res.cookie('refreshToken', refreshToken, {
                     httpOnly: true,
                     sameSite: 'None',
                     secure: true,
-                    maxAge: 24 * 60 * 60 * 1000,
+                    maxAge: 24 * 60 * 60 * 1000, // 1 day
                 });
-
-                return res.status(200).json({ user: user, accessToken, mustResetPassword: result.mustResetPassword, mustResetUsername: username === user.user_id });
+                return res.status(200).json({ user, accessToken, mustResetPassword: result.mustResetPassword, mustResetUsername: username === user.user_id });
             } else {
                 return res.status(401).json({ error: 'Invalid credentials' });
             }
